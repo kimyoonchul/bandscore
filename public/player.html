@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<!--
+  ================================================================
+  AsomeScorePlayer — Player View
+  ================================================================
+  악보 표시 + 실시간 재생 엔진
+
+  [아키텍처]
+  1. init()        → PDF 로드 → 캔버스 캐시 → 타임라인 빌드
+  2. buildTimeline() → 시스템(줄) 데이터 → 시간 매핑 (도돌이표/볼타 지원)
+  3. startAnim()   → requestAnimationFrame 루프
+     → highlightSys(idx, prog) → 현재 시스템 하이라이트 + 진행선 이동
+     → updateSeekbar(sec)      → 시크바 동기화
+  4. Socket.IO     → 다중 세션 동기화 (play/pause/stop/seek/tempo)
+
+  [뷰 모드]
+  - single:   1페이지 가로 (curDispPage 기준)
+  - dual:     2페이지 쌍 (1-2, 3-4... 홀수 시작)
+  - portrait: 전체 페이지 세로 연속 스크롤
+
+  [스타일 설정] (파트별 DB 저장)
+  padL/padR, sysTopPad/sysBotPad, lineColor, lineWidth, dimOpacity
+  ================================================================
+-->
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width,initial-scale=1.0,viewport-fit=cover,user-scalable=no,maximum-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>AsomeScorePlayer</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    * {
+      box-sizing: border-box
+    }
+
+    .player-container {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      display: flex;
+      flex-direction: column
+    }
+
+    .player-top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(16px);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 50;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .player-top-bar.hidden {
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none
+    }
+
+    .player-top-bar .song-title {
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--primary)
+    }
+
+    .player-top-bar .part-label {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-left: 10px
+    }
+
+    .player-canvas-area {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #1a1a1a;
+      cursor: pointer
+    }
+
+    .score-display {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .score-page-wrapper {
+      position: relative;
+      display: inline-block
+    }
+
+    .score-page-wrapper canvas {
+      display: block
+    }
+
+    .system-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5
+    }
+
+    .system-dim {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.55);
+      transition: all 0.35s ease
+    }
+
+    .sys-active-border {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      border: 2px solid var(--primary);
+      border-radius: 3px;
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
+      transition: all 0.35s ease;
+      z-index: 6;
+      pointer-events: none
+    }
+
+    .sys-progress {
+      position: absolute;
+      top: 0;
+      width: 2px;
+      background: var(--primary);
+      box-shadow: 0 0 6px var(--primary);
+      z-index: 7;
+      pointer-events: none;
+      transition: left 0.1s linear
+    }
+
+    .score-dual {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px
+    }
+
+    .score-dual .score-page-wrapper {
+      margin: auto
+    }
+
+    .score-portrait {
+      position: absolute;
+      inset: 0;
+      overflow: hidden
+    }
+
+    .score-portrait-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.5s ease
+    }
+
+    .score-portrait .score-page-wrapper {
+      margin: 0 auto
+    }
+
+    .nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 20;
+      background: rgba(0, 0, 0, 0.4);
+      color: #fff;
+      border: none;
+      font-size: 1.5rem;
+      padding: 12px 8px;
+      cursor: pointer;
+      border-radius: 6px;
+      opacity: 0.5;
+      transition: opacity 0.2s
+    }
+
+    .nav-arrow:hover {
+      opacity: 1
+    }
+
+    .nav-arrow.left {
+      left: 4px
+    }
+
+    .nav-arrow.right {
+      right: 4px
+    }
+
+    .player-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      z-index: 50;
+      flex-wrap: wrap;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .player-controls.hidden {
+      transform: translateY(100%);
+      opacity: 0;
+      pointer-events: none
+    }
+
+    .seekbar-wrap {
+      width: 100%;
+      cursor: pointer;
+      order: -1;
+      padding: 0 2px 6px;
+    }
+    .seekbar-track {
+      position: relative;
+      height: 6px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 3px;
+      overflow: visible;
+    }
+    .seekbar-fill {
+      height: 100%;
+      background: var(--primary, #c8956c);
+      border-radius: 3px;
+      width: 0%;
+    }
+    .seekbar-thumb {
+      position: absolute;
+      top: 50%;
+      left: 0%;
+      transform: translate(-50%, -50%);
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--primary, #c8956c);
+      box-shadow: 0 0 6px rgba(200,149,108,0.5);
+      pointer-events: none;
+    }
+    .seekbar-time {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.5);
+      margin-top: 2px;
+      user-select: none;
+    }
+
+    .bpm-display {
+      text-align: center;
+      line-height: 1;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 8px;
+      transition: background 0.2s
+    }
+
+    .bpm-display:hover {
+      background: rgba(255, 255, 255, 0.1)
+    }
+
+    .bpm-display .val {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--primary)
+    }
+
+    .bpm-display .lbl {
+      font-size: 0.65rem;
+      color: var(--text-muted)
+    }
+
+    .beat-flash {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 100;
+      border: 3px solid transparent;
+      transition: border-color 0.08s
+    }
+
+    .beat-flash.flash {
+      border-color: var(--primary)
+    }
+
+    .count-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s
+    }
+
+    .count-overlay.active {
+      opacity: 1;
+      pointer-events: auto
+    }
+
+    .count-number {
+      font-size: 8rem;
+      font-weight: 900;
+      color: var(--primary);
+      animation: countPop 0.4s ease
+    }
+
+    @keyframes countPop {
+      0% {
+        transform: scale(2);
+        opacity: 0
+      }
+
+      50% {
+        transform: scale(1);
+        opacity: 1
+      }
+
+      100% {
+        opacity: 1
+      }
+    }
+
+    .status-badge {
+      font-size: 0.8rem;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-weight: 600
+    }
+
+    .st-idle {
+      background: rgba(100, 100, 100, 0.3);
+      color: #999
+    }
+
+    .st-play {
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e
+    }
+
+    .st-pause {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--primary)
+    }
+
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: -320px;
+      width: 310px;
+      height: 100%;
+      z-index: 300;
+      background: rgba(17, 24, 39, 0.95);
+      backdrop-filter: blur(20px);
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 16px;
+      overflow-y: auto;
+      transition: right 0.3s ease;
+      font-size: 0.85rem;
+    }
+
+    .settings-panel.open {
+      right: 0
+    }
+
+    .settings-panel h3 {
+      color: var(--primary);
+      margin: 0 0 16px;
+      font-size: 1rem
+    }
+
+    .setting-group {
+      margin-bottom: 16px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08)
+    }
+
+    .setting-group label {
+      display: block;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-bottom: 4px
+    }
+
+    .setting-group .guide {
+      color: rgba(255, 255, 255, 0.35);
+      font-size: 0.7rem;
+      margin-top: 2px
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px
+    }
+
+    .setting-row input[type=range] {
+      flex: 1;
+      accent-color: var(--primary)
+    }
+
+    .setting-row .val {
+      min-width: 40px;
+      text-align: right;
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 0.8rem
+    }
+
+    .setting-row input[type=color] {
+      width: 32px;
+      height: 26px;
+      border: none;
+      background: none;
+      cursor: pointer
+    }
+
+    .settings-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 1.2rem;
+      cursor: pointer
+    }
+  </style>
+</head>
+
+<body style="overflow:hidden">
+
+  <div class="player-container" id="pc">
+    <div class="beat-flash" id="beatFlash"></div>
+
+    <div class="player-top-bar" id="topBar">
+      <div style="display:flex;align-items:center;gap:6px">
+        <a href="/" style="color:#888;text-decoration:none;font-size:1rem">←</a>
+        <span class="song-title" id="songName">...</span>
+        <span class="part-label" id="partName"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="status-badge st-idle" id="statusBadge">대기</span>
+        <span style="color:var(--primary);font-weight:700;font-size:0.75rem" id="memberCount">0</span>
+      </div>
+    </div>
+
+    <div class="player-canvas-area" id="canvasArea" onclick="onCanvasTap()">
+      <button class="nav-arrow left" onclick="manualNav(-1)">‹</button>
+      <button class="nav-arrow right" onclick="manualNav(1)">›</button>
+
+      <div class="score-display" id="viewSingle">
+        <div class="score-page-wrapper" id="wS">
+          <canvas id="cS"></canvas>
+          <div class="system-overlay" id="oS"></div>
+          <div class="sys-active-border" id="bS" style="display:none"></div>
+          <div class="sys-progress" id="pS" style="display:none"></div>
+        </div>
+      </div>
+      <div class="score-dual" id="viewDual" style="display:none">
+        <div style="position:relative;display:flex;align-items:center;justify-content:center">
+          <div class="score-page-wrapper" id="wDL"><canvas id="cDL"></canvas>
+            <div class="system-overlay" id="oDL"></div>
+            <div class="sys-active-border" id="bDL" style="display:none"></div>
+            <div class="sys-progress" id="pDL" style="display:none"></div>
+          </div>
+        </div>
+        <div style="position:relative;display:flex;align-items:center;justify-content:center">
+          <div class="score-page-wrapper" id="wDR"><canvas id="cDR"></canvas>
+            <div class="system-overlay" id="oDR"></div>
+            <div class="sys-active-border" id="bDR" style="display:none"></div>
+            <div class="sys-progress" id="pDR" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+      <div class="score-portrait" id="viewPortrait" style="display:none">
+        <div class="score-portrait-inner" id="ptInner">
+          <!-- 모든 페이지가 동적으로 생성됨 -->
+        </div>
+      </div>
+    </div>
+
+
+    <div class="player-controls" id="ctrlBar">
+      <div class="seekbar-wrap" id="seekBarWrap">
+        <div class="seekbar-track" id="seekTrack">
+          <div class="seekbar-fill" id="seekFill"></div>
+          <div class="seekbar-thumb" id="seekThumb" style="left:0%"></div>
+        </div>
+        <div class="seekbar-time">
+          <span id="seekCur">0:00</span>
+          <span id="seekTotal">0:00</span>
+        </div>
+      </div>
+      <button class="btn btn-success btn-icon" id="btnStart" onclick="doStart()">▶</button>
+      <button class="btn btn-ghost btn-icon" id="btnPause" onclick="doPause()" style="display:none">⏸</button>
+      <button class="btn btn-ghost btn-icon" id="btnResume" onclick="doResume()" style="display:none">▶</button>
+      <button class="btn btn-danger btn-icon" id="btnStop" onclick="doStop()">⏹</button>
+      <div style="width:1px;height:20px;background:rgba(255,255,255,0.15)"></div>
+      <button class="btn btn-ghost" onclick="changeBpm(-1)" style="font-size:1.2rem;padding:8px 14px;min-height:44px">−</button>
+      <div class="bpm-display" onclick="editBpm()">
+        <div class="val" id="bpmVal">120</div>
+        <div class="lbl">BPM</div>
+      </div>
+      <button class="btn btn-ghost" onclick="changeBpm(1)" style="font-size:1.2rem;padding:8px 14px;min-height:44px">+</button>
+      <div style="width:1px;height:20px;background:rgba(255,255,255,0.15)"></div>
+      <div class="view-toggle">
+        <button class="active" onclick="setView('single',this)">1벌</button>
+        <button onclick="setView('dual',this)">2벌</button>
+        <button onclick="setView('portrait',this)">세로</button>
+      </div>
+      <button class="btn btn-ghost" onclick="toggleFullscreen()">⛶</button>
+      <button class="btn btn-ghost" onclick="toggleSettings()">⚙</button>
+      <span style="font-size:0.7rem;color:var(--text-muted)" id="pgInd">1/1</span>
+    </div>
+
+    <div class="settings-panel" id="settingsPanel">
+      <button class="settings-close" onclick="toggleSettings()">✕</button>
+      <h3>🎵 악보 상세 조정</h3>
+
+      <div class="setting-group">
+        <label>진행선 좌측 여백 (오선보 시작점)</label>
+        <div class="setting-row"><input type="range" min="0" max="15" step="0.5" value="7"
+            oninput="updateStyle('padL',this.value)"><span class="val" id="padLVal">7%</span></div>
+      </div>
+      <div class="setting-group">
+        <label>진행선 우측 여백</label>
+
+        <div class="setting-row"><input type="range" min="0" max="10" step="0.5" value="3"
+            oninput="updateStyle('padR',this.value)"><span class="val" id="padRVal">3%</span></div>
+      </div>
+      <div class="setting-group">
+        <label>활성 줄 상단 여백</label>
+
+        <div class="setting-row"><input type="range" min="0" max="80" step="2" value="0"
+            oninput="updateStyle('sysTopPad',this.value)"><span class="val" id="sysTopPadVal">0px</span></div>
+      </div>
+      <div class="setting-group">
+        <label>활성 줄 하단 여백</label>
+
+        <div class="setting-row"><input type="range" min="0" max="80" step="2" value="0"
+            oninput="updateStyle('sysBotPad',this.value)"><span class="val" id="sysBotPadVal">0px</span></div>
+      </div>
+      <div class="setting-group">
+        <label>진행선 색상</label>
+
+        <div class="setting-row"><input type="color" value="#f59e0b" id="colorPicker"
+            oninput="updateStyle('lineColor',this.value)"><span class="val" id="lineColorVal">#f59e0b</span></div>
+        <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+          <button onclick="setLineColor('#f59e0b')"
+            style="width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);background:#f59e0b;cursor:pointer"
+            title="주황"></button>
+          <button onclick="setLineColor('#ef4444')"
+            style="width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);background:#ef4444;cursor:pointer"
+            title="빨강"></button>
+          <button onclick="setLineColor('#22c55e')"
+            style="width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);background:#22c55e;cursor:pointer"
+            title="초록"></button>
+          <button onclick="setLineColor('#3b82f6')"
+            style="width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);background:#3b82f6;cursor:pointer"
+            title="파랑"></button>
+          <button onclick="setLineColor('#a855f7')"
+            style="width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);background:#a855f7;cursor:pointer"
+            title="보라"></button>
+          <button onclick="setLineColor('#ec4899')"
+            style="width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);background:#ec4899;cursor:pointer"
+            title="분홍"></button>
+          <button onclick="setLineColor('#ffffff')"
+            style="width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);background:#ffffff;cursor:pointer"
+            title="흰색"></button>
+          <button onclick="setLineColor('#06b6d4')"
+            style="width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);background:#06b6d4;cursor:pointer"
+            title="시안"></button>
+        </div>
+      </div>
+      <div class="setting-group">
+        <label>진행선 굵기</label>
+
+        <div class="setting-row"><input type="range" min="1" max="6" step="0.5" value="2"
+            oninput="updateStyle('lineWidth',this.value)"><span class="val" id="lineWidthVal">2px</span></div>
+      </div>
+      <div class="setting-group">
+        <label>어두운 영역 투명도</label>
+
+        <div class="setting-row"><input type="range" min="0" max="90" step="5" value="35"
+            oninput="updateStyle('dimOpacity',this.value)"><span class="val" id="dimOpacityVal">35%</span></div>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn btn-ghost" style="width:100%" onclick="resetStyleDefaults()">↺ 기본값으로 복원</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="count-overlay" id="countOv">
+    <div class="count-number" id="countNum"></div>
+  </div>
+
+  <script>
+    // ── 의존성 ──
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    // ── URL 파라미터 ──
+    const P = new URLSearchParams(location.search), songId = P.get('songId'), partId = P.get('partId');
+
+    // ── 핵심 상태 ──
+    let song, part, pdfDoc;
+    let pgCache = {};           // 페이지별 캔버스 캐시 { pageNum: canvas }
+    let totalPages = 1;
+    let bpm = 120;
+    let viewMode = 'single';    // 'single' | 'dual' | 'portrait'
+    let state = 'idle';         // 'idle' | 'counting' | 'playing' | 'paused'
+    let animFrame = null;       // requestAnimationFrame ID
+    let playStartTime = 0;      // Date.now() 기준 재생 시작 시각
+    let elapsedBefore = 0;      // 누적 경과 시간 (ms)
+    let tapTimes = [];          // 탭 템포 기록
+    let countingIn = false;     // 카운트인 진행 중 플래그
+    let uiVisible = true;       // 헤더/푸터 표시 여부
+    let allSystems = [];        // 오선 시스템 데이터 배열
+    let playbackOrder = [];     // 페이지 재생 순서
+    let timeline = [];          // 빌드된 타임라인 [{start, dur, page, topPct, bottomPct, ...}]
+    let curDispPage = 1;        // 현재 표시 중인 페이지 번호
+
+    // ── 스타일 기본값 (파트별 DB 저장) ──
+    const STYLE_DEFAULTS = { padL: 7, padR: 3, sysTopPad: 0, sysBotPad: 0, lineColor: '#c8956c', lineWidth: 2, dimOpacity: 35 };
+    const styleSettings = { ...STYLE_DEFAULTS };
+    let previewAnim = null;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const socket = io();
+
+    /** 초기화: API에서 곡/파트 로드 → PDF 렌더 → 타임라인 빌드 → 소켓 연결 */
+    async function init() {
+      if (!songId || !partId) return alert('잘못된 접근');
+      song = await (await fetch(`/api/songs/${songId}`)).json();
+      part = song.parts.find(p => p.id === partId);
+      if (!part) return alert('파트 없음');
+      document.getElementById('songName').textContent = song.name;
+      document.getElementById('partName').textContent = part.name;
+      bpm = song.bpm; document.getElementById('bpmVal').textContent = bpm;
+      pdfDoc = await pdfjsLib.getDocument(`/uploads/${part.pdf_filename}`).promise;
+      totalPages = pdfDoc.numPages;
+      for (let i = 1; i <= totalPages; i++)await renderCache(i);
+      allSystems = part.systems || [];
+      playbackOrder = (part.playbackOrder && part.playbackOrder.length) ? part.playbackOrder.map(o => o.page_number) : Array.from({ length: totalPages }, (_, i) => i + 1);
+      if (!allSystems.length) {
+        for (let p = 1; p <= totalPages; p++) {
+          const pi = part.pages.find(pg => pg.page_number === p);
+          allSystems.push({ page_number: p, system_index: 0, top_pct: 0, bottom_pct: 100, measures: pi ? pi.measures : 4, has_repeat_start: 0, has_repeat_end: 0 });
+        }
+      }
+      buildTimeline(); showView();
+      socket.emit('join-room', { songId, partId });
+      // 저장된 스타일 설정 로드
+      try {
+        const savedStyle = await (await fetch(`/api/parts/${partId}/style`)).json();
+        if (savedStyle && Object.keys(savedStyle).length > 0) {
+          Object.assign(styleSettings, savedStyle);
+          applyStyleToUI();
+        }
+      } catch(e) {}
+    }
+
+    function applyStyleToUI() {
+      const units = { padL: '%', padR: '%', sysTopPad: 'px', sysBotPad: 'px', lineWidth: 'px', dimOpacity: '%' };
+      ['padL', 'padR', 'sysTopPad', 'sysBotPad', 'lineWidth', 'dimOpacity'].forEach(k => {
+        const el = document.querySelector(`[oninput*="'${k}'"]`);
+        if (el) el.value = styleSettings[k] ?? STYLE_DEFAULTS[k];
+        const valEl = document.getElementById(k + 'Val');
+        if (valEl) valEl.textContent = (styleSettings[k] ?? STYLE_DEFAULTS[k]) + (units[k] || '');
+      });
+      const colorEl = document.querySelector('[oninput*="lineColor"]');
+      if (colorEl) colorEl.value = styleSettings.lineColor || STYLE_DEFAULTS.lineColor;
+      const colorValEl = document.getElementById('lineColorVal');
+      if (colorValEl) colorValEl.textContent = styleSettings.lineColor || STYLE_DEFAULTS.lineColor;
+      const pickerEl = document.getElementById('colorPicker');
+      if (pickerEl) pickerEl.value = styleSettings.lineColor || STYLE_DEFAULTS.lineColor;
+    }
+
+    /**
+     * 타임라인 빌드: allSystems → timeline[]
+     * 도돌이표(repeat_start/end) 및 볼타(1번/2번 괄호) 처리
+     * 각 엔트리: { start(초), dur(초), page, topPct, bottomPct, measures, ... }
+     */
+    function buildTimeline() {
+      timeline = [];
+      const bpb = parseInt(song.time_signature.split('/')[0]) || 4;
+      let t = 0;
+      // Build flat list from playback order
+      const flatSystems = [];
+      for (const pg of playbackOrder) {
+        const sysList = allSystems.filter(s => s.page_number === pg).sort((a, b) => a.system_index - b.system_index);
+        sysList.forEach(s => flatSystems.push({ ...s }));
+      }
+      // Split systems at repeat boundaries into sub-segments
+      // Each segment: {original system data, measFrom, measTo, isRepeatStart, isRepeatEnd}
+      const segments = [];
+      flatSystems.forEach(s => {
+        const rs = s.repeat_start_at || 0; // |: at measure N (1-based)
+        const re = s.repeat_end_at || 0;   // :| at measure N (1-based)
+        const m = s.measures;
+        if (rs > 0 && rs > 1) {
+          // Before repeat start
+          segments.push({ ...s, measFrom: 1, measTo: rs - 1, _repStart: false, _repEnd: false });
+          // From repeat start to end of line (or repeat end)
+          const endM = re > 0 ? re : m;
+          segments.push({ ...s, measFrom: rs, measTo: endM, _repStart: true, _repEnd: re > 0 });
+          if (re > 0 && re < m) {
+            // After repeat end
+            segments.push({ ...s, measFrom: re + 1, measTo: m, _repStart: false, _repEnd: false });
+          }
+        } else if (re > 0) {
+          // Repeat end at specific measure
+          segments.push({ ...s, measFrom: 1, measTo: re, _repStart: rs === 1, _repEnd: true });
+          if (re < m) {
+            segments.push({ ...s, measFrom: re + 1, measTo: m, _repStart: false, _repEnd: false });
+          }
+        } else if (rs === 1) {
+          // Repeat starts at beginning of line
+          segments.push({ ...s, measFrom: 1, measTo: m, _repStart: true, _repEnd: false });
+        } else {
+          // No repeat markers
+          segments.push({ ...s, measFrom: 1, measTo: m, _repStart: false, _repEnd: false });
+        }
+      });
+      // Process repeats with volta
+      // 전략: pass1은 순서대로 진행 (volta=2 스킵)
+      //       pass2는 repeat구간을 다시 진행하되 volta=1을 만나면 거기서부터 repEnd까지 스킵 → volta=2로 점프
+      const expanded = [];
+      let i = 0;
+      while (i < segments.length) {
+        const s = segments[i];
+        expanded.push({ ...s, _pass: 1 });
+        if (s._repEnd) {
+          let startIdx = i;
+          for (let j = i - 1; j >= 0; j--) {
+            if (segments[j]._repStart) { startIdx = j; break; }
+          }
+          // Pass 2: repeat 구간을 다시 추가
+          for (let j = startIdx; j <= i; j++) {
+            expanded.push({ ...segments[j], _pass: 2 });
+          }
+          // Pass 2: repeat_end 직후의 volta=2 줄들도 추가
+          let k = i + 1;
+          while (k < segments.length && (segments[k].volta || 0) === 2) {
+            expanded.push({ ...segments[k], _pass: 2 });
+            k++;
+          }
+        }
+        i++;
+      }
+
+      // volta 필터링
+      const final = [];
+      let skipUntilRepEnd = false;
+      expanded.forEach(s => {
+        const v = s.volta || 0;
+        const vf = s.volta_from || 0;
+        const vt = s.volta_to || 0;
+        const mFrom = s.measFrom, mTo = s.measTo;
+
+        // pass2 스킵 중: repEnd까지 모두 건너뜀
+        if (s._pass === 2 && skipUntilRepEnd) {
+          if (s._repEnd) skipUntilRepEnd = false;
+          return;
+        }
+
+        // Pass 1: volta=2 스킵 (전체)
+        if (s._pass === 1 && v === 2 && vf === 0 && vt === 0) return;
+        // Pass 1: volta=2 부분 → volta 구간만 제거
+        if (s._pass === 1 && v === 2 && vf > 0 && vt > 0) {
+          if (vf > mFrom) final.push({ ...s, measFrom: mFrom, measTo: Math.min(vf - 1, mTo), volta: 0 });
+          if (vt < mTo) final.push({ ...s, measFrom: Math.max(vt + 1, mFrom), measTo: mTo, volta: 0 });
+          return;
+        }
+
+        // Pass 2: volta=1 만나면 → 스킵 시작
+        if (s._pass === 2 && v === 1) {
+          // 부분 volta: volta 이전 마디만 넣기
+          if (vf > 0 && vt > 0 && vf > mFrom) {
+            final.push({ ...s, measFrom: mFrom, measTo: Math.min(vf - 1, mTo), volta: 0 });
+          }
+          // 이 시점부터 repEnd까지 전부 스킵
+          skipUntilRepEnd = true;
+          return;
+        }
+
+        final.push(s);
+      });
+
+      // Build timeline entries
+      final.forEach(s => {
+        const segMeasures = s.measTo - s.measFrom + 1;
+        const origTotal = s.measures;
+        const dur = (segMeasures * bpb) / (bpm / 60);
+        timeline.push({
+          page: s.page_number, si: s.system_index, topPct: s.top_pct, bottomPct: s.bottom_pct,
+          measures: segMeasures, totalMeasures: origTotal, measFrom: s.measFrom, measTo: s.measTo, dur, start: t
+        });
+        t += dur;
+      });
+    }
+
+    function totalDur() { return timeline.length ? timeline[timeline.length - 1].start + timeline[timeline.length - 1].dur : 10 }
+
+    async function renderCache(n) {
+      const pg = await pdfDoc.getPage(n); const s = 2.5; const vp = pg.getViewport({ scale: s });
+      const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+      await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise; pgCache[n] = c;
+    }
+
+    function drawTo(tgt, n) {
+      const src = pgCache[n]; if (!src) return;
+      const area = document.getElementById('canvasArea');
+      const r = src.width / src.height;
+      const dpr = window.devicePixelRatio || 1;
+      let w, h;
+      if (viewMode === 'portrait') {
+        w = area.clientWidth; h = w / r;
+      } else {
+        const wrap = tgt.parentElement, cont = wrap.parentElement;
+        const aW = cont.clientWidth - 4, aH = cont.clientHeight - 4;
+        if (aW / aH > r) { h = aH; w = h * r } else { w = aW; h = w / r }
+      }
+      tgt.width = w * dpr; tgt.height = h * dpr;
+      tgt.style.width = w + 'px'; tgt.style.height = h + 'px';
+      const ctx = tgt.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.drawImage(src, 0, 0, w, h);
+    }
+
+    /** 뷰 모드 변경: single(1벌) / dual(2벌) / portrait(세로 연속 스크롤) */
+    function setView(m, btn) {
+      viewMode = m;
+      document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      document.getElementById('viewSingle').style.display = m === 'single' ? 'flex' : 'none';
+      document.getElementById('viewDual').style.display = m === 'dual' ? 'grid' : 'none';
+      document.getElementById('viewPortrait').style.display = m === 'portrait' ? 'block' : 'none';
+      if (m === 'portrait') {
+        const inner = document.getElementById('ptInner');
+        if (inner) inner.style.transform = 'translateY(0)';
+        buildPortraitPages();
+      }
+      showView();
+    }
+
+    /** 세로 모드: 모든 페이지를 동적으로 이어붙여 연속 스크롤 환경 구성 */
+    function buildPortraitPages() {
+      const inner = document.getElementById('ptInner');
+      inner.innerHTML = '';
+      for (let pg = 1; pg <= totalPages; pg++) {
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;width:100%';
+        wrap.id = 'ptPage' + pg;
+        const canvas = document.createElement('canvas');
+        canvas.id = 'cPT' + pg;
+        const overlay = document.createElement('div');
+        overlay.className = 'system-overlay';
+        overlay.id = 'oPT' + pg;
+        wrap.appendChild(canvas);
+        wrap.appendChild(overlay);
+        inner.appendChild(wrap);
+      }
+      // 활성 시스템 UI 요소를 첫 페이지에 추가
+      const border = document.createElement('div');
+      border.className = 'sys-active-border';
+      border.id = 'bPT';
+      border.style.display = 'none';
+      const progress = document.createElement('div');
+      progress.className = 'sys-progress';
+      progress.id = 'pPT';
+      progress.style.display = 'none';
+      inner.appendChild(border);
+      inner.appendChild(progress);
+    }
+
+    function drawPortraitAll() {
+      const area = document.getElementById('canvasArea');
+      const aW = area.clientWidth;
+      const dpr = window.devicePixelRatio || 1;
+      for (let pg = 1; pg <= totalPages; pg++) {
+        const src = pgCache[pg];
+        const canvas = document.getElementById('cPT' + pg);
+        if (!src || !canvas) continue;
+        const r = src.width / src.height;
+        const w = aW, h = w / r;
+        canvas.width = w * dpr; canvas.height = h * dpr;
+        canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.drawImage(src, 0, 0, w, h);
+      }
+    }
+
+    /** 현재 뷰 모드에 맞게 캔버스를 (재)렌더링 */
+    function showView() {
+      const pg = curDispPage;
+      if (viewMode === 'single') { drawTo(document.getElementById('cS'), pg) }
+      else if (viewMode === 'dual') {
+        drawTo(document.getElementById('cDL'), pg);
+        const n = pg + 1 <= totalPages ? pg + 1 : null;
+        if (n) drawTo(document.getElementById('cDR'), n); else { const c = document.getElementById('cDR'); c.width = 1; c.height = 1 }
+      } else {
+        drawPortraitAll();
+      }
+      document.getElementById('pgInd').textContent = pg + '/' + totalPages;
+      if (state === 'idle') clearHL();
+    }
+
+    function manualNav(dir) {
+      const np = curDispPage + dir;
+      if (np < 1 || np > totalPages) return;
+      curDispPage = np; showView();
+    }
+
+    /**
+     * 핵심 렌더링: 현재 시스템(줄)을 하이라이트 + 진행선 이동
+     * @param {number} idx - timeline 인덱스
+     * @param {number} prog - 해당 시스템 내 진행률 (0~1)
+     */
+    function highlightSys(idx, prog) {
+      const e = timeline[idx]; if (!e) return;
+      const prevDispPage = curDispPage;
+
+      if (viewMode === 'portrait') {
+        curDispPage = e.page;
+        // 연속 스크롤 모드: 해당 페이지의 캔버스 기준으로 계산
+        const canvas = document.getElementById('cPT' + e.page);
+        if (!canvas) return;
+        const pageWrap = document.getElementById('ptPage' + e.page);
+        const cH = canvas.clientHeight;
+        const stp = styleSettings.sysTopPad || 0, sbp = styleSettings.sysBotPad || 0;
+        const topPx = Math.max(0, (e.topPct / 100) * cH - stp);
+        const botPx = Math.min(cH, (e.bottomPct / 100) * cH + sbp);
+        const sH = botPx - topPx;
+
+        // 모든 페이지 오버레이 초기화: 비활성 페이지는 전체 음영
+        const dimBg = `rgba(0,0,0,${(styleSettings.dimOpacity || 35) / 100})`;
+        for (let pg = 1; pg <= totalPages; pg++) {
+          const ov = document.getElementById('oPT' + pg);
+          if (!ov) continue;
+          ov.innerHTML = '';
+          if (pg !== e.page) {
+            const d = document.createElement('div');
+            d.className = 'system-dim';
+            d.style.top = '0'; d.style.height = '100%';
+            d.style.background = dimBg;
+            ov.appendChild(d);
+          } else {
+            if (topPx > 0) { const d = document.createElement('div'); d.className = 'system-dim'; d.style.top = '0'; d.style.height = topPx + 'px'; d.style.background = dimBg; ov.appendChild(d) }
+            if (botPx < cH) { const d = document.createElement('div'); d.className = 'system-dim'; d.style.top = botPx + 'px'; d.style.height = (cH - botPx) + 'px'; d.style.background = dimBg; ov.appendChild(d) }
+          }
+        }
+
+        const absTop = pageWrap.offsetTop + topPx;
+        const b = document.getElementById('bPT');
+        b.style.display = 'block'; b.style.top = absTop + 'px'; b.style.height = sH + 'px';
+        b.style.borderColor = styleSettings.lineColor || '#c8956c';
+        const p = document.getElementById('pPT');
+        p.style.display = 'block'; p.style.top = absTop + 'px'; p.style.height = sH + 'px';
+        p.style.background = styleSettings.lineColor || '#c8956c';
+        p.style.width = (styleSettings.lineWidth || 2) + 'px';
+        p.style.boxShadow = `0 0 6px ${styleSettings.lineColor || '#c8956c'}`;
+        const totalM = e.totalMeasures || e.measures;
+        const startFrac = (e.measFrom - 1) / totalM;
+        const endFrac = e.measTo / totalM;
+        const lineFrac = startFrac + prog * (endFrac - startFrac);
+        const padL = canvas.clientWidth * (styleSettings.padL || 7) / 100;
+        const padR = canvas.clientWidth * (styleSettings.padR || 3) / 100;
+        const usableW = canvas.clientWidth - padL - padR;
+        p.style.left = (padL + lineFrac * usableW) + 'px';
+
+        const area = document.getElementById('canvasArea');
+        const areaH = area.clientHeight;
+        const sysMidAbs = absTop + sH / 2;
+        const targetOffset = -(sysMidAbs - areaH * 0.3);
+        const inner = document.getElementById('ptInner');
+        inner.style.transform = `translateY(${Math.min(0, targetOffset)}px)`;
+
+        document.getElementById('pgInd').textContent = e.page + '/' + totalPages;
+        return;
+      }
+
+      // ── single / dual 모드 ──
+      if (viewMode === 'dual') {
+        // 2페이지씩 쌍으로 표시: 1-2, 3-4, 5-6 ...
+        const pairStart = e.page % 2 === 1 ? e.page : e.page - 1; // 쌍의 시작 (홀수 페이지)
+        const isLeft = (e.page === pairStart); // 활성 시스템이 왼쪽인지 오른쪽인지
+
+        if (pairStart !== curDispPage) {
+          curDispPage = pairStart;
+          showView();
+        }
+
+        const activeCid = isLeft ? 'cDL' : 'cDR';
+        const canvas = document.getElementById(activeCid);
+        const cH = canvas.clientHeight;
+        const stp = styleSettings.sysTopPad || 0, sbp = styleSettings.sysBotPad || 0;
+        const topPx = Math.max(0, (e.topPct / 100) * cH - stp);
+        const botPx = Math.min(cH, (e.bottomPct / 100) * cH + sbp);
+        const sH = botPx - topPx;
+        const dimBg = `rgba(0,0,0,${(styleSettings.dimOpacity || 35) / 100})`;
+
+        // 활성 쪽 음영
+        const activeOv = document.getElementById(isLeft ? 'oDL' : 'oDR');
+        activeOv.innerHTML = '';
+        if (topPx > 0) { const d = document.createElement('div'); d.className = 'system-dim'; d.style.top = '0'; d.style.height = topPx + 'px'; d.style.background = dimBg; activeOv.appendChild(d) }
+        if (botPx < cH) { const d = document.createElement('div'); d.className = 'system-dim'; d.style.top = botPx + 'px'; d.style.height = (cH - botPx) + 'px'; d.style.background = dimBg; activeOv.appendChild(d) }
+
+        // 비활성 쪽 전체 음영
+        const inactiveOv = document.getElementById(isLeft ? 'oDR' : 'oDL');
+        inactiveOv.innerHTML = '';
+        const dim = document.createElement('div');
+        dim.className = 'system-dim';
+        dim.style.top = '0'; dim.style.height = '100%';
+        dim.style.background = dimBg;
+        inactiveOv.appendChild(dim);
+
+        // 보더 & 진행선 (활성 쪽 wrapper 기준)
+        const bid = isLeft ? 'bDL' : 'bDR';
+        let bEl = document.getElementById(bid);
+        if (!bEl) { // bDR이 없을 수 있으므로 기존 bDL 사용
+          bEl = document.getElementById('bDL');
+        }
+        bEl.style.display = 'block'; bEl.style.top = topPx + 'px'; bEl.style.height = sH + 'px';
+        bEl.style.borderColor = styleSettings.lineColor || '#c8956c';
+        // 비활성쪽 보더 숨기기
+        const inactiveBid = isLeft ? 'bDR' : 'bDL';
+        const inactiveB = document.getElementById(inactiveBid);
+        if (inactiveB) inactiveB.style.display = 'none';
+
+        const pid = isLeft ? 'pDL' : 'pDR';
+        let pEl = document.getElementById(pid);
+        if (!pEl) pEl = document.getElementById('pDL');
+        pEl.style.display = 'block'; pEl.style.top = topPx + 'px'; pEl.style.height = sH + 'px';
+        pEl.style.background = styleSettings.lineColor || '#c8956c';
+        pEl.style.width = (styleSettings.lineWidth || 2) + 'px';
+        pEl.style.boxShadow = `0 0 6px ${styleSettings.lineColor || '#c8956c'}`;
+        const inactivePid = isLeft ? 'pDR' : 'pDL';
+        const inactiveP = document.getElementById(inactivePid);
+        if (inactiveP) inactiveP.style.display = 'none';
+
+        const totalM = e.totalMeasures || e.measures;
+        const startFrac = (e.measFrom - 1) / totalM;
+        const endFrac = e.measTo / totalM;
+        const lineFrac = startFrac + prog * (endFrac - startFrac);
+        const padL = canvas.clientWidth * (styleSettings.padL || 7) / 100;
+        const padR = canvas.clientWidth * (styleSettings.padR || 3) / 100;
+        const usableW = canvas.clientWidth - padL - padR;
+        pEl.style.left = (padL + lineFrac * usableW) + 'px';
+
+        document.getElementById('pgInd').textContent = pairStart + '-' + Math.min(pairStart + 1, totalPages) + '/' + totalPages;
+        return;
+      }
+
+      // ── single 모드 ──
+      if (e.page !== curDispPage) {
+        curDispPage = e.page;
+        showView();
+      }
+      const canvas = document.getElementById('cS');
+      const cH = canvas.clientHeight;
+      const stp = styleSettings.sysTopPad || 0, sbp = styleSettings.sysBotPad || 0;
+      const topPx = Math.max(0, (e.topPct / 100) * cH - stp);
+      const botPx = Math.min(cH, (e.bottomPct / 100) * cH + sbp);
+      const sH = botPx - topPx;
+      const ov = document.getElementById('oS'); ov.innerHTML = '';
+      const dimBg = `rgba(0,0,0,${(styleSettings.dimOpacity || 35) / 100})`;
+      if (topPx > 0) { const d = document.createElement('div'); d.className = 'system-dim'; d.style.top = '0'; d.style.height = topPx + 'px'; d.style.background = dimBg; ov.appendChild(d) }
+      if (botPx < cH) { const d = document.createElement('div'); d.className = 'system-dim'; d.style.top = botPx + 'px'; d.style.height = (cH - botPx) + 'px'; d.style.background = dimBg; ov.appendChild(d) }
+      const b = document.getElementById('bS'); b.style.display = 'block'; b.style.top = topPx + 'px'; b.style.height = sH + 'px';
+      b.style.borderColor = styleSettings.lineColor || '#c8956c';
+      const p = document.getElementById('pS'); p.style.display = 'block'; p.style.top = topPx + 'px'; p.style.height = sH + 'px';
+      p.style.background = styleSettings.lineColor || '#c8956c';
+      p.style.width = (styleSettings.lineWidth || 2) + 'px';
+      p.style.boxShadow = `0 0 6px ${styleSettings.lineColor || '#c8956c'}`;
+      const totalM = e.totalMeasures || e.measures;
+      const startFrac = (e.measFrom - 1) / totalM;
+      const endFrac = e.measTo / totalM;
+      const lineFrac = startFrac + prog * (endFrac - startFrac);
+      const padL = canvas.clientWidth * (styleSettings.padL || 7) / 100;
+      const padR = canvas.clientWidth * (styleSettings.padR || 3) / 100;
+      const usableW = canvas.clientWidth - padL - padR;
+      p.style.left = (padL + lineFrac * usableW) + 'px';
+    }
+
+    function clearHL() {
+      ['oS', 'oDL', 'oDR'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
+      ['bS', 'bDL', 'bDR'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+      ['pS', 'pDL', 'pDR'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+      // portrait 동적 요소
+      for (let pg = 1; pg <= totalPages; pg++) {
+        const ov = document.getElementById('oPT' + pg);
+        if (ov) ov.innerHTML = '';
+      }
+      const bPT = document.getElementById('bPT'); if (bPT) bPT.style.display = 'none';
+      const pPT = document.getElementById('pPT'); if (pPT) pPT.style.display = 'none';
+    }
+
+    function startAnim() {
+      if (animFrame) cancelAnimationFrame(animFrame);
+      function tick() {
+        if (state !== 'playing') return;
+        const sec = (elapsedBefore + (Date.now() - playStartTime)) / 1000;
+        if (sec >= totalDur()) { doStop(); return }
+        let idx = 0; for (let i = 0; i < timeline.length; i++) { if (sec >= timeline[i].start) idx = i; else break }
+        const e = timeline[idx], prog = Math.min(1, (sec - e.start) / e.dur);
+        highlightSys(idx, prog);
+        updateSeekbar(sec);
+        animFrame = requestAnimationFrame(tick);
+      }
+      animFrame = requestAnimationFrame(tick);
+    }
+
+    function playClick(t, f = 800) { const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.frequency.value = f; o.type = 'square'; g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.05); o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.06) }
+
+    function doCountIn(cb) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      state = 'counting'; updateUI();
+      const bpb = parseInt(song.time_signature.split('/')[0]) || 4;
+      const beats = song.count_in_bars * bpb, iv = 60 / bpm;
+      const ov = document.getElementById('countOv'), num = document.getElementById('countNum');
+      ov.classList.add('active');
+      const now = audioCtx.currentTime;
+      for (let i = 0; i < beats; i++)playClick(now + i * iv, (i % bpb) === 0 ? 1200 : 800);
+      let beat = 0;
+      function show() {
+        if (beat >= beats) { ov.classList.remove('active'); cb(); return }
+        const fl = document.getElementById('beatFlash'); fl.classList.add('flash'); setTimeout(() => fl.classList.remove('flash'), 80);
+        num.textContent = (beat % bpb) + 1; num.style.animation = 'none'; void num.offsetWidth; num.style.animation = 'countPop 0.4s ease';
+        beat++; setTimeout(show, iv * 1000);
+      }
+      show();
+    }
+
+    function doStart() { socket.emit('start', { bpm, countInBeats: song.count_in_bars * (parseInt(song.time_signature.split('/')[0]) || 4) }) }
+    function doPause() { socket.emit('pause') }
+    function doResume() { socket.emit('resume') }
+    function doStop() { socket.emit('stop') }
+    function changeBpm(d) { bpm = Math.max(30, Math.min(300, bpm + d)); document.getElementById('bpmVal').textContent = bpm; buildTimeline(); socket.emit('tempo-change', { bpm }) }
+    function editBpm() {
+      const v = prompt('BPM을 입력하세요 (30~300):', bpm);
+      if (v === null) return;
+      const n = parseInt(v);
+      if (!isNaN(n) && n >= 30 && n <= 300) { bpm = n; document.getElementById('bpmVal').textContent = bpm; buildTimeline(); socket.emit('tempo-change', { bpm }) }
+    }
+    function tapTempo() {
+      const n = Date.now(); tapTimes.push(n); if (tapTimes.length > 8) tapTimes.shift();
+      if (tapTimes.length >= 2 && n - tapTimes[tapTimes.length - 2] < 3000) {
+        let s = 0; for (let i = 1; i < tapTimes.length; i++)s += tapTimes[i] - tapTimes[i - 1];
+        bpm = Math.max(30, Math.min(300, Math.round(60000 / (s / (tapTimes.length - 1)))));
+        document.getElementById('bpmVal').textContent = bpm; buildTimeline(); socket.emit('tempo-change', { bpm });
+      } else if (tapTimes.length >= 2) tapTimes = [n];
+    }
+    function toggleFullscreen() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => { }) }
+    let hideTimer = null;
+    function toggleUI() {
+      uiVisible = !uiVisible;
+      document.getElementById('topBar').classList.toggle('hidden', !uiVisible);
+      document.getElementById('ctrlBar').classList.toggle('hidden', !uiVisible);
+      showView();
+    }
+    function toggleSettings() {
+      const panel = document.getElementById('settingsPanel');
+      const isOpen = panel.classList.toggle('open');
+      if (isOpen) startPreview(); else stopPreview();
+    }
+    function setLineColor(c) {
+      document.getElementById('colorPicker').value = c;
+      updateStyle('lineColor', c);
+    }
+    let _styleSaveTimer = null;
+    function saveStyleToServer() {
+      clearTimeout(_styleSaveTimer);
+      _styleSaveTimer = setTimeout(() => {
+        fetch(`/api/parts/${partId}/style`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(styleSettings)
+        });
+      }, 500);
+    }
+    function updateStyle(key, val) {
+      if (key === 'lineColor') {
+        styleSettings[key] = val;
+        document.getElementById('lineColorVal').textContent = val;
+      } else {
+        styleSettings[key] = parseFloat(val);
+        const units = { padL: '%', padR: '%', sysTopPad: 'px', sysBotPad: 'px', lineWidth: 'px', dimOpacity: '%' };
+        document.getElementById(key + 'Val').textContent = val + (units[key] || '');
+      }
+      if (key === 'padL') showPreviewAt(0);
+      else if (key === 'padR') showPreviewAt(1);
+      else showPreviewAt(0.5);
+      if (previewAnim) { cancelAnimationFrame(previewAnim); previewAnim = null }
+      clearTimeout(previewResumeTimer);
+      previewResumeTimer = setTimeout(() => {
+        if (document.getElementById('settingsPanel').classList.contains('open')) startPreview();
+      }, 1500);
+      saveStyleToServer();
+    }
+    let previewResumeTimer = null;
+    function resetStyleDefaults() {
+      Object.assign(styleSettings, STYLE_DEFAULTS);
+      const map = { padL: ['range', 7, '%'], padR: ['range', 3, '%'], sysTopPad: ['range', 0, 'px'], sysBotPad: ['range', 0, 'px'], lineWidth: ['range', 2, 'px'], dimOpacity: ['range', 35, '%'] };
+      Object.entries(map).forEach(([k, [t, v, u]]) => {
+        const el = document.querySelector(`[oninput*="'${k}'"]`); if (el) el.value = v;
+        document.getElementById(k + 'Val').textContent = v + u;
+      });
+      const colorEl = document.querySelector('[oninput*="lineColor"]'); if (colorEl) colorEl.value = STYLE_DEFAULTS.lineColor;
+      document.getElementById('lineColorVal').textContent = STYLE_DEFAULTS.lineColor;
+      showPreviewAt(0.5);
+      saveStyleToServer();
+    }
+    function startPreview() {
+      if (state === 'playing') return;
+      let prog = 0, dir = 1;
+      function tick() {
+        prog += dir * 0.008;
+        if (prog >= 1) { prog = 1; dir = -1 }
+        if (prog <= 0) { prog = 0; dir = 1 }
+        if (timeline.length > 0) highlightSys(0, prog);
+        previewAnim = requestAnimationFrame(tick);
+      }
+      previewAnim = requestAnimationFrame(tick);
+    }
+    function stopPreview() {
+      if (previewAnim) { cancelAnimationFrame(previewAnim); previewAnim = null }
+      clearTimeout(previewResumeTimer);
+      if (state !== 'playing') clearHL();
+    }
+    function showPreviewAt(pos) {
+      if (state === 'playing') return;
+      if (timeline.length > 0) highlightSys(0, pos);
+    }
+    function hideUI() {
+      if (!uiVisible) return;
+      uiVisible = false;
+      document.getElementById('topBar').classList.add('hidden');
+      document.getElementById('ctrlBar').classList.add('hidden');
+      showView();
+    }
+    function showUITemporarily() {
+      if (uiVisible) return;
+      uiVisible = true;
+      document.getElementById('topBar').classList.remove('hidden');
+      document.getElementById('ctrlBar').classList.remove('hidden');
+      showView();
+      clearTimeout(hideTimer);
+      if (state === 'playing') hideTimer = setTimeout(hideUI, 3000);
+    }
+    function onCanvasTap() {
+      if (state === 'playing' || state === 'paused') showUITemporarily();
+      else toggleUI();
+    }
+    function updateUI() {
+      document.getElementById('btnStart').style.display = state === 'idle' ? 'inline-flex' : 'none';
+      document.getElementById('btnPause').style.display = state === 'playing' ? 'inline-flex' : 'none';
+      document.getElementById('btnResume').style.display = state === 'paused' ? 'inline-flex' : 'none';
+      const b = document.getElementById('statusBadge');
+      const m = { idle: ['대기', 'st-idle'], counting: ['카운트', 'st-pause'], playing: ['연주중', 'st-play'], paused: ['일시정지', 'st-pause'] };
+      const [t, c] = m[state] || m.idle; b.textContent = t; b.className = 'status-badge ' + c;
+    }
+
+    socket.on('room-state', r => {
+      if (r.bpm) { bpm = r.bpm; document.getElementById('bpmVal').textContent = bpm; buildTimeline() }
+      // 새로 입장 시 항상 idle 상태로 (이전 세션 playing 방지)
+      state = r.state || 'idle';
+      if (state === 'playing' || state === 'counting') { state = 'idle' }
+      if (state === 'paused') { elapsedBefore = r.elapsedMs || 0 }
+      updateUI();
+    });
+    socket.on('member-count', c => document.getElementById('memberCount').textContent = c + '명');
+    socket.on('count-in', ({ bpm: b }) => {
+      bpm = b; document.getElementById('bpmVal').textContent = bpm; buildTimeline();
+      curDispPage = playbackOrder[0] || 1; clearHL(); showView();
+      countingIn = true;
+      doCountIn(() => {
+        countingIn = false;
+        socket.emit('count-in-done');
+        // 카운트인 끝나면 직접 play 시작
+        state = 'playing'; playStartTime = Date.now(); elapsedBefore = 0; updateUI(); startAnim(); clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
+      });
+    });
+    socket.on('play', () => {
+      if (countingIn) return; // 카운트인 중이면 무시 (자기 자신에게 온 play)
+      state = 'playing'; playStartTime = Date.now(); elapsedBefore = 0; updateUI(); startAnim(); clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
+    });
+    socket.on('stopped', () => {
+      state = 'idle'; clearTimeout(hideTimer);
+      if (animFrame) cancelAnimationFrame(animFrame);
+      curDispPage = playbackOrder[0] || 1; elapsedBefore = 0;
+      clearHL(); showView(); updateUI(); updateSeekbar(0);
+      if (!uiVisible) { uiVisible = true; document.getElementById('topBar').classList.remove('hidden'); document.getElementById('ctrlBar').classList.remove('hidden'); showView() }
+    });
+    socket.on('paused', ({ elapsedMs }) => {
+      state = 'paused'; clearTimeout(hideTimer); elapsedBefore = elapsedMs;
+      if (animFrame) cancelAnimationFrame(animFrame); updateUI();
+      updateSeekbar(elapsedMs / 1000);
+      if (!uiVisible) { uiVisible = true; document.getElementById('topBar').classList.remove('hidden'); document.getElementById('ctrlBar').classList.remove('hidden'); showView() }
+    });
+    socket.on('resumed', ({ elapsedMs }) => { state = 'playing'; elapsedBefore = elapsedMs; playStartTime = Date.now(); updateUI(); startAnim(); clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500) });
+    socket.on('seeked', ({ elapsedMs }) => {
+      elapsedBefore = elapsedMs;
+      playStartTime = Date.now();
+      state = 'playing';
+      updateUI(); startAnim();
+      updateSeekbar(elapsedMs / 1000);
+      clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
+    });
+    socket.on('tempo-changed', ({ bpm: b }) => {
+      if (state === 'playing') { elapsedBefore += Date.now() - playStartTime; playStartTime = Date.now() }
+      bpm = b; document.getElementById('bpmVal').textContent = bpm; buildTimeline();
+    });
+    window.addEventListener('resize', () => showView());
+
+    // ── 시크바 ──
+    function fmtTime(sec) {
+      const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+      return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function updateSeekbar(sec) {
+      const td = totalDur();
+      if (td <= 0) return;
+      const pct = Math.min(100, (sec / td) * 100);
+      document.getElementById('seekFill').style.width = pct + '%';
+      document.getElementById('seekThumb').style.left = pct + '%';
+      document.getElementById('seekCur').textContent = fmtTime(sec);
+    }
+
+    function updateSeekbarTotal() {
+      document.getElementById('seekTotal').textContent = fmtTime(totalDur());
+    }
+
+    function seekTo(pct) {
+      const td = totalDur();
+      const targetSec = Math.max(0, Math.min(td, pct * td));
+      let idx = 0;
+      for (let i = 0; i < timeline.length; i++) {
+        if (targetSec >= timeline[i].start) idx = i; else break;
+      }
+      elapsedBefore = targetSec * 1000;
+      playStartTime = Date.now();
+      if (state === 'idle' || state === 'paused') {
+        state = 'playing';
+        updateUI();
+        startAnim();
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(toggleUI, 3000);
+      }
+      // 다른 세션에 sync
+      socket.emit('seek', { elapsedMs: targetSec * 1000 });
+      const e = timeline[idx], prog = Math.min(1, (targetSec - e.start) / e.dur);
+      highlightSys(idx, prog);
+      updateSeekbar(targetSec);
+    }
+
+    // 시크바 클릭/드래그 이벤트
+    (function() {
+      const track = document.getElementById('seekTrack');
+      const wrap = document.getElementById('seekBarWrap');
+      let dragging = false;
+
+      function getPct(e) {
+        const rect = track.getBoundingClientRect();
+        return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      }
+
+      wrap.addEventListener('mousedown', (e) => {
+        dragging = true;
+        seekTo(getPct(e));
+      });
+      wrap.addEventListener('touchstart', (e) => {
+        dragging = true;
+        seekTo(getPct(e.touches[0]));
+      }, { passive: true });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        seekTo(getPct(e));
+      });
+      document.addEventListener('touchmove', (e) => {
+        if (!dragging) return;
+        seekTo(getPct(e.touches[0]));
+      }, { passive: true });
+
+      document.addEventListener('mouseup', () => { dragging = false; });
+      document.addEventListener('touchend', () => { dragging = false; });
+    })();
+
+    // buildTimeline 후 총 시간 업데이트
+    const _origBuildTimeline = buildTimeline;
+    buildTimeline = function() {
+      _origBuildTimeline();
+      updateSeekbarTotal();
+    };
+
+    init();
+  </script>
+</body>
+
+</html>
