@@ -449,6 +449,120 @@
       font-size: 1.2rem;
       cursor: pointer
     }
+
+    /* ── Start Button Split (드롭업) ── */
+    .start-group {
+      position: relative;
+      display: inline-flex;
+      align-items: stretch;
+    }
+    .start-group .btn-main {
+      border-radius: 50% 0 0 50%;
+      padding: 0 12px 0 14px;
+    }
+    .start-group .btn-drop {
+      border-radius: 0 50% 50% 0;
+      padding: 0 8px;
+      border-left: 1px solid rgba(0,0,0,0.2);
+      font-size: 0.7rem;
+      min-width: 28px;
+    }
+    .start-menu {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(17,24,39,0.96);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 6px;
+      min-width: 170px;
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
+      z-index: 100;
+      display: none;
+    }
+    .start-menu.open { display: block; }
+    .start-menu button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px 14px;
+      background: none;
+      border: none;
+      color: #eee;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .start-menu button:hover { background: rgba(255,255,255,0.08); }
+    .start-menu button .icon { font-size: 1.1rem; }
+    .start-menu .divider {
+      height: 1px;
+      background: rgba(255,255,255,0.08);
+      margin: 4px 0;
+    }
+
+    /* ── Member Popover ── */
+    .member-badge-wrap {
+      position: relative;
+      cursor: pointer;
+    }
+    .member-popover {
+      position: absolute;
+      bottom: calc(100% + 12px);
+      right: -8px;
+      background: rgba(17,24,39,0.96);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 12px 14px;
+      min-width: 180px;
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
+      z-index: 100;
+      display: none;
+    }
+    .member-popover.open { display: block; }
+    .member-popover .pop-title {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.4);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+    .member-popover .member-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 0.85rem;
+      color: #ddd;
+    }
+    .member-popover .member-item + .member-item {
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .member-popover .member-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+      flex-shrink: 0;
+    }
+    .member-popover .member-name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .member-popover .member-me {
+      font-size: 0.65rem;
+      color: var(--primary);
+      font-weight: 700;
+    }
   </style>
 </head>
 
@@ -465,7 +579,13 @@
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="status-badge st-idle" id="statusBadge">대기</span>
-        <span style="color:var(--primary);font-weight:700;font-size:0.75rem" id="memberCount">0</span>
+        <div class="member-badge-wrap" onclick="toggleMemberPopover(event)">
+          <span style="color:var(--primary);font-weight:700;font-size:0.75rem;cursor:pointer" id="memberCount">0</span>
+          <div class="member-popover" id="memberPopover">
+            <div class="pop-title">접속 중인 멤버</div>
+            <div id="memberListInner"><!-- 동적 생성 --></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -516,7 +636,15 @@
           <span id="seekTotal">0:00</span>
         </div>
       </div>
-      <button class="btn btn-success btn-icon" id="btnStart" onclick="doStart()">▶</button>
+      <div class="start-group" id="btnStartGroup">
+        <button class="btn btn-success btn-main" id="btnStart" onclick="doStart()">▶</button>
+        <button class="btn btn-success btn-drop" onclick="toggleStartMenu(event)">▲</button>
+        <div class="start-menu" id="startMenu">
+          <button onclick="doStart(); closeStartMenu()"><span class="icon">👥</span> 같이 시작하기</button>
+          <div class="divider"></div>
+          <button onclick="doSoloStart(); closeStartMenu()"><span class="icon">🎧</span> 나만 시작하기</button>
+        </div>
+      </div>
       <button class="btn btn-ghost btn-icon" id="btnPause" onclick="doPause()" style="display:none">⏸</button>
       <button class="btn btn-ghost btn-icon" id="btnResume" onclick="doResume()" style="display:none">▶</button>
       <button class="btn btn-danger btn-icon" id="btnStop" onclick="doStop()">⏹</button>
@@ -643,6 +771,8 @@
     let playbackOrder = [];     // 페이지 재생 순서
     let timeline = [];          // 빌드된 타임라인 [{start, dur, page, topPct, bottomPct, ...}]
     let curDispPage = 1;        // 현재 표시 중인 페이지 번호
+    let soloMode = false;        // 나만 시작하기 모드
+    let memberList = [];         // 현재 접속 멤버 목록
 
     // ── 스타일 기본값 (파트별 DB 저장) ──
     const STYLE_DEFAULTS = { padL: 7, padR: 3, sysTopPad: 0, sysBotPad: 0, lineColor: '#c8956c', lineWidth: 2, dimOpacity: 35 };
@@ -672,7 +802,7 @@
         }
       }
       buildTimeline(); showView();
-      socket.emit('join-room', { songId, partId });
+      socket.emit('join-room', { songId, partId, partName: part.name });
       // 저장된 스타일 설정 로드
       try {
         const savedStyle = await (await fetch(`/api/parts/${partId}/style`)).json();
@@ -1156,10 +1286,44 @@
       show();
     }
 
-    function doStart() { socket.emit('start', { bpm, countInBeats: song.count_in_bars * (parseInt(song.time_signature.split('/')[0]) || 4) }) }
-    function doPause() { socket.emit('pause') }
-    function doResume() { socket.emit('resume') }
-    function doStop() { socket.emit('stop') }
+    function doStart() { soloMode = false; socket.emit('start', { bpm, countInBeats: song.count_in_bars * (parseInt(song.time_signature.split('/')[0]) || 4) }) }
+    function doSoloStart() {
+      soloMode = true;
+      bpm = parseInt(document.getElementById('bpmVal').textContent) || bpm;
+      buildTimeline();
+      curDispPage = playbackOrder[0] || 1; clearHL(); showView();
+      doCountIn(() => {
+        state = 'playing'; playStartTime = Date.now(); elapsedBefore = 0;
+        updateUI(); startAnim();
+        clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
+      });
+    }
+    function doPause() {
+      if (soloMode) {
+        state = 'paused'; clearTimeout(hideTimer);
+        elapsedBefore += Date.now() - playStartTime;
+        if (animFrame) cancelAnimationFrame(animFrame); updateUI();
+        updateSeekbar(elapsedBefore / 1000);
+        if (!uiVisible) { uiVisible = true; document.getElementById('topBar').classList.remove('hidden'); document.getElementById('ctrlBar').classList.remove('hidden'); showView() }
+      } else { socket.emit('pause') }
+    }
+    function doResume() {
+      if (soloMode) {
+        state = 'playing'; playStartTime = Date.now();
+        updateUI(); startAnim();
+        clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
+      } else { socket.emit('resume') }
+    }
+    function doStop() {
+      if (soloMode) {
+        soloMode = false;
+        state = 'idle'; clearTimeout(hideTimer);
+        if (animFrame) cancelAnimationFrame(animFrame);
+        curDispPage = playbackOrder[0] || 1; elapsedBefore = 0;
+        clearHL(); showView(); updateUI(); updateSeekbar(0);
+        if (!uiVisible) { uiVisible = true; document.getElementById('topBar').classList.remove('hidden'); document.getElementById('ctrlBar').classList.remove('hidden'); showView() }
+      } else { socket.emit('stop') }
+    }
     function changeBpm(d) { bpm = Math.max(30, Math.min(300, bpm + d)); document.getElementById('bpmVal').textContent = bpm; buildTimeline(); socket.emit('tempo-change', { bpm }) }
     function editBpm() {
       const v = prompt('BPM을 입력하세요 (30~300):', bpm);
@@ -1277,13 +1441,54 @@
       else toggleUI();
     }
     function updateUI() {
-      document.getElementById('btnStart').style.display = state === 'idle' ? 'inline-flex' : 'none';
+      document.getElementById('btnStartGroup').style.display = state === 'idle' ? 'inline-flex' : 'none';
       document.getElementById('btnPause').style.display = state === 'playing' ? 'inline-flex' : 'none';
       document.getElementById('btnResume').style.display = state === 'paused' ? 'inline-flex' : 'none';
       const b = document.getElementById('statusBadge');
-      const m = { idle: ['대기', 'st-idle'], counting: ['카운트', 'st-pause'], playing: ['연주중', 'st-play'], paused: ['일시정지', 'st-pause'] };
-      const [t, c] = m[state] || m.idle; b.textContent = t; b.className = 'status-badge ' + c;
+      const labels = {
+        idle: ['대기', 'st-idle'],
+        counting: ['카운트', 'st-pause'],
+        playing: [soloMode ? '🎧 솔로' : '연주중', 'st-play'],
+        paused: ['일시정지', 'st-pause']
+      };
+      const [t, c] = labels[state] || labels.idle; b.textContent = t; b.className = 'status-badge ' + c;
     }
+
+    // ── 드롭업 메뉴 ──
+    function toggleStartMenu(e) {
+      e.stopPropagation();
+      document.getElementById('startMenu').classList.toggle('open');
+    }
+    function closeStartMenu() {
+      document.getElementById('startMenu').classList.remove('open');
+    }
+
+    // ── 멤버 팝오버 ──
+    function toggleMemberPopover(e) {
+      e.stopPropagation();
+      document.getElementById('memberPopover').classList.toggle('open');
+    }
+    function renderMemberList() {
+      const inner = document.getElementById('memberListInner');
+      if (!inner) return;
+      if (memberList.length === 0) {
+        inner.innerHTML = '<div style="color:#888;font-size:0.8rem;padding:4px 0">접속자 없음</div>';
+        return;
+      }
+      inner.innerHTML = memberList.map(m => {
+        const isMe = m.id === socket.id;
+        return `<div class="member-item">
+          <span class="member-dot"></span>
+          <span class="member-name">${m.partName}${isMe ? ' <span class="member-me">(나)</span>' : ''}</span>
+        </div>`;
+      }).join('');
+    }
+
+    // 외부 클릭 시 메뉴/팝오버 닫기
+    document.addEventListener('click', () => {
+      closeStartMenu();
+      document.getElementById('memberPopover')?.classList.remove('open');
+    });
 
     socket.on('room-state', r => {
       if (r.bpm) { bpm = r.bpm; document.getElementById('bpmVal').textContent = bpm; buildTimeline() }
@@ -1294,7 +1499,17 @@
       updateUI();
     });
     socket.on('member-count', c => document.getElementById('memberCount').textContent = c + '명');
+    socket.on('member-list', list => {
+      memberList = list;
+      renderMemberList();
+    });
     socket.on('count-in', ({ bpm: b }) => {
+      // 나만 시작 중이었다면 → 초기화 후 같이 시작
+      if (soloMode) {
+        soloMode = false;
+        if (animFrame) cancelAnimationFrame(animFrame);
+        state = 'idle'; clearHL();
+      }
       bpm = b; document.getElementById('bpmVal').textContent = bpm; buildTimeline();
       curDispPage = playbackOrder[0] || 1; clearHL(); showView();
       countingIn = true;
@@ -1302,6 +1517,7 @@
         countingIn = false;
         socket.emit('count-in-done');
         // 카운트인 끝나면 직접 play 시작
+        soloMode = false;
         state = 'playing'; playStartTime = Date.now(); elapsedBefore = 0; updateUI(); startAnim(); clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
       });
     });
@@ -1372,8 +1588,8 @@
         clearTimeout(hideTimer);
         hideTimer = setTimeout(toggleUI, 3000);
       }
-      // 다른 세션에 sync
-      socket.emit('seek', { elapsedMs: targetSec * 1000 });
+      // 다른 세션에 sync (솔로 모드에서는 로컬만)
+      if (!soloMode) socket.emit('seek', { elapsedMs: targetSec * 1000 });
       const e = timeline[idx], prog = Math.min(1, (targetSec - e.start) / e.dur);
       highlightSys(idx, prog);
       updateSeekbar(targetSec);

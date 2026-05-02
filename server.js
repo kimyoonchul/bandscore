@@ -332,13 +332,31 @@ app.put('/api/songs/:songId/flow', (req, res) => {
 // ── Socket.IO ──
 const rooms = {};
 
+function getMemberList(songId) {
+  const room = io.sockets.adapter.rooms.get(songId);
+  if (!room) return [];
+  const members = [];
+  for (const sid of room) {
+    const s = io.sockets.sockets.get(sid);
+    if (s) members.push({ id: sid, partName: s.partName || '?', partId: s.partId });
+  }
+  return members;
+}
+
+function broadcastMembers(songId) {
+  const members = getMemberList(songId);
+  io.to(songId).emit('member-list', members);
+  io.to(songId).emit('member-count', members.length);
+}
+
 io.on('connection', (socket) => {
   console.log('🔌 Connected:', socket.id);
 
-  socket.on('join-room', ({ songId, partId }) => {
+  socket.on('join-room', ({ songId, partId, partName }) => {
     socket.join(songId);
     socket.songId = songId;
     socket.partId = partId;
+    socket.partName = partName || '알 수 없음';
     if (!rooms[songId]) {
       rooms[songId] = { state: 'idle', bpm: null, currentPage: 1, elapsedMs: 0, startTime: null };
     }
@@ -351,8 +369,7 @@ io.on('connection', (socket) => {
       }
     }
     socket.emit('room-state', rooms[songId]);
-    const count = io.sockets.adapter.rooms.get(songId)?.size || 0;
-    io.to(songId).emit('member-count', count);
+    broadcastMembers(songId);
   });
 
   socket.on('start', ({ bpm, countInBeats }) => {
@@ -416,8 +433,7 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     if (socket.songId) {
-      const count = io.sockets.adapter.rooms.get(socket.songId)?.size || 0;
-      io.to(socket.songId).emit('member-count', count);
+      broadcastMembers(socket.songId);
     }
   });
 });
