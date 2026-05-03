@@ -30,8 +30,8 @@ const io = new Server(server);
 const PORT = process.env.PORT || 3001;
 
 // Directories
-const uploadsDir = path.join(__dirname, 'uploads');
 const dataDir = path.join(__dirname, 'data');
+const uploadsDir = path.join(dataDir, 'uploads');
 [uploadsDir, dataDir].forEach(d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); });
 
 // Middleware
