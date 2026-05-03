@@ -128,6 +128,17 @@
       box-shadow: 0 0 12px rgba(212, 165, 116, 0.2);
     }
 
+    .sys-line-region.preview {
+      background: rgba(59, 130, 246, 0.15);
+      border: 2px dashed rgba(59, 130, 246, 0.6);
+      pointer-events: none;
+      animation: previewPulse 1s ease-in-out;
+    }
+    @keyframes previewPulse {
+      0% { opacity: 0; transform: scaleY(0.9); }
+      100% { opacity: 1; transform: scaleY(1); }
+    }
+
     .sys-line-label {
       background: rgba(0, 0, 0, 0.6);
       color: #fff;
@@ -1909,20 +1920,134 @@
     }
 
     // ── 전체화면 줄 설정 에디터 ──
-    let sysEditorState = { partId: null, systems: [], pdf: null, currentPage: 1, totalPages: 1, activeLineIdx: -1, manualPatterns: {} };
+    let sysEditorState = { partId: null, systems: [], pdf: null, currentPage: 1, totalPages: 1, activeLineIdx: -1, manualPatterns: {}, staveCache: {} };
 
     // 수동 입력 모드 토글
     function onStaveModeChange() {
       const val = document.getElementById('sysEditorStaves').value;
       document.getElementById('manualPatternWrap').style.display = val === 'manual' ? 'flex' : 'none';
+      if (val === 'manual' && Object.keys(sysEditorState.staveCache).length === 0) {
+        preAnalyzeStaves();
+      }
     }
+
+    // 모든 페이지 오선 위치 사전 분석 (캐시)
+    async function preAnalyzeStaves() {
+      const pdf = sysEditorState.pdf;
+      if (!pdf) return;
+      const indicator = document.getElementById('manualPatternInput');
+      const origPlaceholder = indicator?.placeholder;
+      for (let pn = 1; pn <= pdf.numPages; pn++) {
+        if (indicator) indicator.placeholder = `스캔 ${pn}/${pdf.numPages}...`;
+        const page = await pdf.getPage(pn);
+        const scale = 2;
+        const vp = page.getViewport({ scale });
+        const canvas = document.createElement('canvas');
+        canvas.width = vp.width; canvas.height = vp.height;
+        const ctx = canvas.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport: vp }).promise;
+        const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const d = img.data, w = canvas.width, h = canvas.height;
+        const rowDark = new Array(h).fill(0);
+        for (let y = 0; y < h; y++)
+          for (let x = 0; x < w; x++)
+            if ((d[(y * w + x) * 4] + d[(y * w + x) * 4 + 1] + d[(y * w + x) * 4 + 2]) / 3 < 100) rowDark[y]++;
+        const threshold = w * 0.3;
+        const staffLines = [];
+        let gs = -1;
+        for (let y = 0; y < h; y++) {
+          if (rowDark[y] > threshold) { if (gs === -1) gs = y; }
+          else if (gs !== -1) { staffLines.push({ y: Math.round((gs + y - 1) / 2) }); gs = -1; }
+        }
+        if (gs !== -1) staffLines.push({ y: Math.round((gs + h - 1) / 2) });
+        const staves = [];
+        let cur = [];
+        for (let i = 0; i < staffLines.length; i++) {
+          if (cur.length === 0) { cur.push(staffLines[i]); continue; }
+          if (staffLines[i].y - cur[cur.length - 1].y < 25) cur.push(staffLines[i]);
+          else {
+            if (cur.length >= 3) staves.push({ top: cur[0].y, bottom: cur[cur.length - 1].y });
+            cur = [staffLines[i]];
+          }
+        }
+        if (cur.length >= 3) staves.push({ top: cur[0].y, bottom: cur[cur.length - 1].y });
+        sysEditorState.staveCache[pn] = { staves, height: h };
+      }
+      if (indicator) indicator.placeholder = '2,2,2,2,3';
+      loadManualPattern();
+      updateStaveCountDisplay();
+    }
+
+    function updateStaveCountDisplay() {
+      const cache = sysEditorState.staveCache[sysEditorState.currentPage];
+      const countEl = document.getElementById('manualStaveCount');
+      if (countEl && cache) countEl.textContent = `(감지: ${cache.staves.length}개 오선)`;
+      else if (countEl) countEl.textContent = '';
+    }
+
     function saveManualPattern() {
       const input = document.getElementById('manualPatternInput');
-      sysEditorState.manualPatterns[sysEditorState.currentPage] = input.value.trim();
+      const val = input.value.trim();
+      sysEditorState.manualPatterns[sysEditorState.currentPage] = val;
+      previewManualPattern();
     }
+
+    // 실시간 미리보기: 캐시된 오선 기반으로 즉시 오버레이
+    function previewManualPattern() {
+      const cache = sysEditorState.staveCache[sysEditorState.currentPage];
+      if (!cache) return;
+      const { staves, height: h } = cache;
+      const patternStr = sysEditorState.manualPatterns[sysEditorState.currentPage] || '';
+      const pattern = patternStr.split(/[,\s]+/).map(Number).filter(n => n > 0);
+      const patternSum = pattern.reduce((a, b) => a + b, 0);
+
+      const overlayEl = document.getElementById('sysEditorLineOverlay');
+      if (!overlayEl || !pattern.length) { if (overlayEl) overlayEl.innerHTML = ''; return; }
+
+      // 패턴에 따라 시스템 미리보기
+      const paddingTop = 45, paddingBottom = 40;
+      const previewSystems = [];
+      let si = 0;
+      for (const count of pattern) {
+        if (si + count > staves.length) break;
+        const group = staves.slice(si, si + count);
+        previewSystems.push({ top: group[0].top, bottom: group[group.length - 1].bottom });
+        si += count;
+      }
+
+      overlayEl.innerHTML = previewSystems.map((sys, i) => {
+        let topBound, bottomBound;
+        if (i === 0) topBound = Math.max(0, sys.top - paddingTop);
+        else topBound = Math.round((previewSystems[i - 1].bottom + sys.top) / 2);
+        if (i === previewSystems.length - 1) bottomBound = Math.min(h, sys.bottom + paddingBottom);
+        else bottomBound = Math.round((sys.bottom + previewSystems[i + 1].top) / 2);
+        const topPct = (topBound / h * 100);
+        const heightPct = ((bottomBound - topBound) / h * 100);
+        return `<div class="sys-line-region preview" style="top:${topPct}%;height:${heightPct}%">
+          <span class="sys-line-label">줄${i + 1}</span>
+        </div>`;
+      }).join('');
+
+      // 패턴 합이 오선 수와 일치 → 자동 페이지 넘김
+      if (patternSum === staves.length && pattern.length > 0) {
+        setTimeout(() => {
+          if (sysEditorState.currentPage < sysEditorState.totalPages) {
+            sysEditorState.currentPage++;
+            sysEditorState.activeLineIdx = -1;
+            sysEditorRenderPage();
+            sysEditorRenderPanel();
+            loadManualPattern();
+            const input = document.getElementById('manualPatternInput');
+            if (input) input.focus();
+          }
+        }, 600);
+      }
+    }
+
     function loadManualPattern() {
       const input = document.getElementById('manualPatternInput');
       if (input) input.value = sysEditorState.manualPatterns[sysEditorState.currentPage] || '';
+      updateStaveCountDisplay();
     }
 
     async function showSystemEditModal(partId, systems) {
@@ -2246,7 +2371,7 @@
       <div id="manualPatternWrap" style="display:flex;align-items:center;gap:8px">
         <span style="font-size:0.8rem;color:var(--text-muted)">이 페이지:</span>
         <input type="text" id="manualPatternInput" class="form-control" placeholder="2,2,2,2,3" style="width:140px;padding:6px 10px;font-size:0.85rem;font-family:monospace" oninput="saveManualPattern()">
-        <span style="font-size:0.7rem;color:var(--text-muted)">(쉼표로 구분)</span>
+        <span id="manualStaveCount" style="font-size:0.75rem;color:var(--accent);font-weight:600"></span>
       </div>
       <button class="btn btn-success" onclick="runDetection()" style="font-size:0.85rem;padding:8px 16px">🔍 줄 감지
         실행</button>
