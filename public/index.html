@@ -318,11 +318,18 @@
     @media (max-width: 768px) {
       .sys-editor-body {
         flex-direction: column;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      .sys-editor-score {
+        min-height: 70vh;
+        flex-shrink: 0;
       }
 
       .sys-editor-panel {
         width: 100%;
-        max-height: 40vh;
+        flex-shrink: 0;
         border-left: none;
         border-top: 1px solid var(--glass-border);
       }
