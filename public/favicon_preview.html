@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>파비콘 시안 모음 (컬러 커스텀)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-dark: #1e293b;
+      --accent: #ea580c;
+      --accent-light: #fbbf24;
+    }
+    body { 
+      background: #111827; color: #fff; font-family: sans-serif; 
+      display: flex; flex-direction: column; align-items: center; 
+      min-height: 100vh; margin: 0; padding: 60px 20px; box-sizing: border-box; 
+    }
+    
+    .presets { 
+      display: flex; gap: 12px; margin-bottom: 50px; 
+      background: rgba(255,255,255,0.05); padding: 12px 24px; 
+      border-radius: 30px; align-items: center;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .preset-btn { 
+      width: 32px; height: 32px; border-radius: 50%; 
+      border: 2px solid transparent; cursor: pointer; transition: transform 0.2s; 
+    }
+    .preset-btn:hover { transform: scale(1.1); }
+    .preset-btn.active { border-color: #fff; transform: scale(1.1); box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+
+    .grid { 
+      display: grid; grid-template-columns: 1fr 1fr; gap: 40px; max-width: 900px; 
+    }
+    .card { 
+      background: rgba(255,255,255,0.05); padding: 40px; border-radius: 24px; 
+      text-align: center; border: 1px solid rgba(255,255,255,0.1);
+    }
+    .svg-container { 
+      display: inline-block; width: 140px; height: 140px; 
+      border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+      transition: transform 0.3s; overflow: hidden;
+    }
+    .svg-container:hover { transform: scale(1.05); }
+    .svg-container svg { width: 100%; height: 100%; display: block; }
+    
+    h2 { color: var(--accent-light); margin-top: 24px; font-size: 1.4rem; transition: color 0.3s; }
+    p { color: #9ca3af; font-size: 0.95rem; line-height: 1.5; margin-bottom: 0; }
+  </style>
+</head>
+<body>
+  
+  <div class="presets">
+    <span style="font-weight:bold; color:#aaa; margin-right: 10px;">🎨 컬러 테마:</span>
+    <!-- Preset 1: Original Orange/Gold -->
+    <div class="preset-btn active" style="background: linear-gradient(135deg, #ea580c, #fbbf24);" 
+         onclick="setTheme('#0f172a', '#1e293b', '#ea580c', '#fbbf24', this)"></div>
+    <!-- Preset 2: BandScore Brown -->
+    <div class="preset-btn" style="background: linear-gradient(135deg, #a66a41, #c8956c);" 
+         onclick="setTheme('#1e140d', '#332317', '#a66a41', '#c8956c', this)"></div>
+    <!-- Preset 3: Neon Purple/Pink -->
+    <div class="preset-btn" style="background: linear-gradient(135deg, #9333ea, #f472b6);" 
+         onclick="setTheme('#171026', '#2d1b4e', '#9333ea', '#f472b6', this)"></div>
+    <!-- Preset 4: Matrix Green -->
+    <div class="preset-btn" style="background: linear-gradient(135deg, #059669, #34d399);" 
+         onclick="setTheme('#062417', '#064e3b', '#059669', '#34d399', this)"></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="svg-container" data-src="/icons/favicon_blank_tape.svg"></div>
+      <h2>1. Blank Tape</h2>
+      <p>우리가 채워갈 공테이프<br>아날로그하고 빈티지한 시작의 기록</p>
+    </div>
+    <div class="card">
+      <div class="svg-container" data-src="/icons/favicon_track_0.svg"></div>
+      <h2>2. Track 0</h2>
+      <p>1번 트랙 이전의 우리 이야기<br>히든 트랙을 연주하는 턴테이블 바늘</p>
+    </div>
+    <div class="card">
+      <div class="svg-container" data-src="/icons/favicon_backstage.svg"></div>
+      <h2>3. Backstage</h2>
+      <p>어두운 무대 뒤 공간,<br>열린 문틈으로 새어나오는 합주의 빛</p>
+    </div>
+    <div class="card">
+      <div class="svg-container" data-src="/icons/favicon_tutti.svg"></div>
+      <h2>4. Tutti</h2>
+      <p>전원 합주를 상징하는 링과<br>T 문자를 활용한 리듬감 있는 로고</p>
+    </div>
+  </div>
+
+  <script>
+    // 인라인 SVG 렌더링 (CSS 변수가 내부까지 적용되도록)
+    document.querySelectorAll('.svg-container').forEach(async (el) => {
+      const src = el.getAttribute('data-src');
+      try {
+        const res = await fetch(src);
+        const text = await res.text();
+        el.innerHTML = text;
+      } catch(e) { console.error('Failed to load', src); }
+    });
+
+    // 테마 변경
+    function setTheme(bg, bgDark, accent, accentLight, btn) {
+      document.documentElement.style.setProperty('--bg', bg);
+      document.documentElement.style.setProperty('--bg-dark', bgDark);
+      document.documentElement.style.setProperty('--accent', accent);
+      document.documentElement.style.setProperty('--accent-light', accentLight);
+      
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <filter id="shadowBT" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <rect width="100" height="100" rx="24" fill="var(--bg, #0f172a)" />
+  
+  <!-- 카세트 테이프 외곽선 -->
+  <rect x="15" y="25" width="70" height="50" rx="6" fill="var(--bg-dark, #1e293b)" stroke="var(--accent-light, #fbbf24)" stroke-width="2" />
+  
+  <!-- 내부 창 -->
+  <rect x="30" y="40" width="40" height="20" rx="3" fill="var(--bg, #0f172a)" stroke="var(--accent, #ea580c)" stroke-width="2" />
+  
+  <!-- 릴 2개 -->
+  <circle cx="40" cy="50" r="5" fill="#ffffff" filter="url(#shadowBT)" />
+  <circle cx="60" cy="50" r="5" fill="#ffffff" filter="url(#shadowBT)" />
+  
+  <!-- 라벨 -->
+  <rect x="25" y="30" width="50" height="6" fill="var(--accent, #ea580c)" />
+  
+  <!-- 하단 음각 -->
+  <path d="M 25,75 L 30,68 L 70,68 L 75,75" fill="none" stroke="var(--accent-light, #fbbf24)" stroke-width="2" />
+</svg>

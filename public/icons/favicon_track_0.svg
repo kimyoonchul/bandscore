@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <filter id="glowT0" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="100" height="100" rx="24" fill="var(--bg, #0f172a)" />
+  
+  <!-- 바이닐 레코드 -->
+  <circle cx="50" cy="50" r="38" fill="#111827" stroke="var(--bg-dark, #1e293b)" stroke-width="2" />
+  <circle cx="50" cy="50" r="32" fill="none" stroke="#1f2937" stroke-width="1.5" />
+  <circle cx="50" cy="50" r="26" fill="none" stroke="#374151" stroke-width="1" />
+  
+  <!-- 중앙 라벨 -->
+  <circle cx="50" cy="50" r="15" fill="var(--accent, #ea580c)" />
+  <!-- 라벨 포인트 -->
+  <circle cx="50" cy="50" r="10" fill="none" stroke="var(--accent-light, #fbbf24)" stroke-width="1.5" stroke-dasharray="2 2" />
+  <circle cx="50" cy="50" r="3" fill="#000000" />
+  
+  <!-- 턴테이블 바늘 -->
+  <path d="M 85,15 L 75,25 L 60,45" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+  <circle cx="85" cy="15" r="5" fill="var(--accent-light, #fbbf24)" filter="url(#glowT0)" />
+  <rect x="58" y="45" width="4" height="8" transform="rotate(-35 60 45)" fill="var(--accent, #ea580c)" />
+</svg>
