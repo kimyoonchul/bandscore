@@ -58,7 +58,7 @@
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      z-index: 50;
+      z-index: 200;
       transition: transform 0.3s ease, opacity 0.3s ease;
     }
 
@@ -515,16 +515,16 @@
     }
     .member-popover {
       position: absolute;
-      bottom: calc(100% + 12px);
-      right: -8px;
+      top: calc(100% + 8px);
+      right: 0;
       background: rgba(17,24,39,0.96);
       backdrop-filter: blur(16px);
       border: 1px solid rgba(255,255,255,0.12);
       border-radius: 12px;
       padding: 12px 14px;
       min-width: 180px;
-      box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
-      z-index: 100;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      z-index: 2000;
       display: none;
     }
     .member-popover.open { display: block; }
@@ -579,32 +579,24 @@
       bottom: 100%;
       left: 50%;
       transform: translateX(-50%);
-      background: var(--glass);
+      background: rgba(17,24,39,0.95);
       backdrop-filter: blur(12px);
-      border: 1px solid var(--glass-border);
-      border-radius: 12px;
-      padding: 12px 8px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 14px 16px 24px;
       display: none;
-      flex-direction: column;
       align-items: center;
       z-index: 100;
-      margin-bottom: 6px;
     }
     .inst-vol-wrap:hover .inst-vol-slider,
     .inst-vol-slider:hover {
       display: flex;
     }
     .inst-vol-slider input[type="range"] {
-      writing-mode: vertical-lr;
-      direction: rtl;
-      width: 28px;
-      height: 80px;
+      width: 100px;
+      height: 4px;
       accent-color: var(--primary);
-    }
-    .inst-vol-slider .vol-label {
-      font-size: 0.65rem;
-      color: var(--text-muted);
-      margin-top: 4px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -707,7 +699,6 @@
       <div class="inst-vol-wrap" id="instVolWrap" style="display:none">
         <div class="inst-vol-slider">
           <input type="range" min="0" max="100" value="80" oninput="setInstVolume(this.value)">
-          <span class="vol-label" id="instVolLabel">80%</span>
         </div>
         <button class="btn btn-ghost" onclick="toggleInst()" id="btnInst" title="inst 음원">🔇</button>
       </div>
@@ -1400,15 +1391,30 @@
     function changeBpm(d) { bpm = Math.max(30, Math.min(300, bpm + d)); document.getElementById('bpmVal').textContent = bpm; buildTimeline(); socket.emit('tempo-change', { bpm }) }
 
     // ── inst 음원 제어 ──
+    let instPrevVolume = 0.8;
     function toggleInst() {
-      instEnabled = !instEnabled;
-      document.getElementById('btnInst').textContent = instEnabled ? '🔊' : '🔇';
-      if (!instEnabled && instAudio) { instAudio.pause(); }
+      if (!instAudio) return;
+      if (instAudio.volume > 0) {
+        instPrevVolume = instAudio.volume;
+        instAudio.volume = 0;
+        instEnabled = false;
+        document.getElementById('btnInst').textContent = '🔇';
+        const slider = document.querySelector('.inst-vol-slider input');
+        if (slider) slider.value = 0;
+      } else {
+        instAudio.volume = instPrevVolume;
+        instEnabled = true;
+        document.getElementById('btnInst').textContent = '🔊';
+        const slider = document.querySelector('.inst-vol-slider input');
+        if (slider) slider.value = Math.round(instPrevVolume * 100);
+      }
     }
     function setInstVolume(val) {
       const v = parseInt(val);
       if (instAudio) instAudio.volume = v / 100;
-      document.getElementById('instVolLabel').textContent = v + '%';
+      instEnabled = v > 0;
+      document.getElementById('btnInst').textContent = v > 0 ? '🔊' : '🔇';
+      if (v > 0) instPrevVolume = v / 100;
     }
     function instPlay() {
       if (!instAudio || !instEnabled) return;
