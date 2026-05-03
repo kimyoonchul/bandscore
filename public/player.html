@@ -756,14 +756,8 @@
           <span id="seekTotal">0:00</span>
         </div>
       </div>
-      <div class="start-group" id="btnStartGroup">
-        <button class="btn btn-success btn-main" id="btnStart" onclick="doStart()">▶</button>
-        <button class="btn btn-success btn-drop" onclick="toggleStartMenu(event)">▲</button>
-        <div class="start-menu" id="startMenu">
-          <button onclick="doStart(); closeStartMenu()"><span class="icon">👥</span> 같이 시작하기</button>
-          <div class="divider"></div>
-          <button onclick="doSoloStart(); closeStartMenu()"><span class="icon">🎧</span> 나만 시작하기</button>
-        </div>
+      <div id="btnStartGroup">
+        <button class="btn btn-success btn-icon" id="btnStart" onclick="soloMode ? doSoloStart() : doStart()">▶</button>
       </div>
       <button class="btn btn-ghost btn-icon" id="btnPause" onclick="doPause()" style="display:none">⏸</button>
       <button class="btn btn-ghost btn-icon" id="btnResume" onclick="doResume()" style="display:none">▶</button>
