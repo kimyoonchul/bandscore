@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>파비콘 시안 모음 (컬러 커스텀)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>서비스 로고 시안</title>
   <style>
     :root {
       --bg: #0f172a;
@@ -10,90 +11,119 @@
       --accent: #ea580c;
       --accent-light: #fbbf24;
     }
+    * { box-sizing: border-box; }
     body { 
-      background: #111827; color: #fff; font-family: sans-serif; 
+      background: #111827; color: #fff; font-family: 'Segoe UI', sans-serif; 
       display: flex; flex-direction: column; align-items: center; 
-      min-height: 100vh; margin: 0; padding: 40px 20px; box-sizing: border-box; 
+      min-height: 100vh; margin: 0; padding: 30px 16px; 
     }
+
+    h1.page-title {
+      font-size: 1.6rem; margin: 0 0 6px 0; text-align: center;
+    }
+    .page-sub { color: #9ca3af; font-size: 0.9rem; margin-bottom: 30px; text-align: center; }
     
+    /* 프리셋 영역 */
+    .preset-wrap { 
+      display: flex; flex-direction: column; gap: 10px; margin-bottom: 36px; width: 100%; max-width: 700px;
+    }
     .presets { 
-      display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 15px; justify-content: center;
-      background: rgba(255,255,255,0.05); padding: 12px 24px; 
-      border-radius: 30px; align-items: center;
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+      background: rgba(255,255,255,0.05); padding: 10px 16px; 
+      border-radius: 20px; align-items: center;
       border: 1px solid rgba(255,255,255,0.1);
     }
-    .preset-btn { 
-      width: 32px; height: 32px; border-radius: 50%; 
-      border: 2px solid transparent; cursor: pointer; transition: transform 0.2s; 
+    .preset-label { 
+      font-weight: bold; color: #aaa; font-size: 0.75rem; 
+      width: 100%; text-align: center; margin-bottom: -2px;
     }
-    .preset-btn:hover { transform: scale(1.1); }
-    .preset-btn.active { border-color: #fff; transform: scale(1.1); box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+    .preset-btn { 
+      width: 28px; height: 28px; border-radius: 50%; 
+      border: 2px solid transparent; cursor: pointer; transition: transform 0.2s; flex-shrink: 0;
+    }
+    .preset-btn:hover { transform: scale(1.15); }
+    .preset-btn.active { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 10px rgba(255,255,255,0.3); }
 
+    /* 카드 그리드 */
     .grid { 
-      display: grid; grid-template-columns: 1fr 1fr; gap: 40px; max-width: 900px; 
+      display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 700px; width: 100%;
     }
     .card { 
-      background: rgba(255,255,255,0.05); padding: 40px; border-radius: 24px; 
+      background: rgba(255,255,255,0.05); padding: 28px 20px; border-radius: 20px; 
       text-align: center; border: 1px solid rgba(255,255,255,0.1);
     }
     .svg-container { 
-      display: inline-block; width: 140px; height: 140px; 
-      border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+      display: inline-block; width: 110px; height: 110px; 
+      border-radius: 22px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); 
       transition: transform 0.3s; overflow: hidden;
     }
     .svg-container:hover { transform: scale(1.05); }
     .svg-container svg { width: 100%; height: 100%; display: block; }
     
-    h2 { color: var(--accent-light); margin-top: 24px; font-size: 1.4rem; transition: color 0.3s; }
-    p { color: #9ca3af; font-size: 0.95rem; line-height: 1.5; margin-bottom: 0; }
+    h2 { color: var(--accent-light); margin: 16px 0 6px 0; font-size: 1.2rem; transition: color 0.3s; }
+    .card p { color: #9ca3af; font-size: 0.82rem; line-height: 1.5; margin: 0; }
 
     .feedback {
-      margin-top: 50px; text-align: center; color: #9ca3af;
-      background: rgba(255,255,255,0.05); padding: 24px;
-      border-radius: 20px; max-width: 600px; width: 100%; border: 1px dashed rgba(255,255,255,0.2);
+      margin-top: 36px; text-align: center; color: #9ca3af;
+      background: rgba(255,255,255,0.05); padding: 20px;
+      border-radius: 16px; max-width: 500px; width: 100%; border: 1px dashed rgba(255,255,255,0.15);
+    }
+    .feedback h3 { margin: 0 0 8px 0; font-size: 1rem; color: #d1d5db; }
+    .feedback p { font-size: 0.82rem; margin: 0; }
+
+    /* 모바일 반응형 */
+    @media (max-width: 600px) {
+      body { padding: 20px 12px; }
+      h1.page-title { font-size: 1.3rem; }
+      .page-sub { font-size: 0.8rem; margin-bottom: 20px; }
+      .grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .card { padding: 20px 12px; border-radius: 16px; }
+      .svg-container { width: 80px; height: 80px; border-radius: 18px; }
+      h2 { font-size: 1rem; margin: 12px 0 4px 0; }
+      .card p { font-size: 0.72rem; }
+      .presets { padding: 8px 12px; gap: 8px; border-radius: 16px; }
+      .preset-btn { width: 24px; height: 24px; }
+      .preset-label { font-size: 0.68rem; }
+      .feedback { padding: 16px; margin-top: 24px; }
+      .feedback h3 { font-size: 0.9rem; }
+      .feedback p { font-size: 0.75rem; }
     }
 
-    @media (max-width: 768px) {
-      .grid { grid-template-columns: 1fr; gap: 20px; }
-      .card { padding: 30px 20px; }
-      .svg-container { width: 100px; height: 100px; }
-      h2 { font-size: 1.2rem; }
+    @media (max-width: 360px) {
+      .svg-container { width: 64px; height: 64px; }
+      .card { padding: 16px 10px; }
+      h2 { font-size: 0.9rem; }
     }
   </style>
 </head>
 <body>
   
-  <div style="display:flex; flex-direction:column; gap:0px; margin-bottom: 50px;">
+  <h1 class="page-title">🎵 서비스 로고 시안</h1>
+  <p class="page-sub">마음에 드는 이름과 색상 조합을 찾아보세요!</p>
+
+  <div class="preset-wrap">
     <div class="presets">
-      <span style="font-weight:bold; color:#aaa; margin-right: 10px;">🎨 파비콘 컬러:</span>
-      <!-- Preset 1: Original Orange/Gold -->
+      <span class="preset-label">🎨 파비콘 컬러</span>
       <div class="preset-btn active svg-color-btn" style="background: linear-gradient(135deg, #ea580c, #fbbf24);" title="오리지널 오렌지"
            onclick="setTheme('#0f172a', '#1e293b', '#ea580c', '#fbbf24', this)"></div>
-      <!-- Preset 2: BandScore Brown -->
       <div class="preset-btn svg-color-btn" style="background: linear-gradient(135deg, #a66a41, #c8956c);" title="밴드스코어 브라운"
            onclick="setTheme('#1e140d', '#332317', '#a66a41', '#c8956c', this)"></div>
-      <!-- Preset 3: Deep Ocean Blue -->
       <div class="preset-btn svg-color-btn" style="background: linear-gradient(135deg, #2563eb, #60a5fa);" title="오션 블루"
            onclick="setTheme('#0a1128', '#1c2541', '#2563eb', '#60a5fa', this)"></div>
-      <!-- Preset 4: Cherry Red -->
       <div class="preset-btn svg-color-btn" style="background: linear-gradient(135deg, #e11d48, #fb7185);" title="체리 레드"
            onclick="setTheme('#1a0505', '#2d0909', '#e11d48', '#fb7185', this)"></div>
-      <!-- Preset 5: Neon Purple/Pink -->
       <div class="preset-btn svg-color-btn" style="background: linear-gradient(135deg, #9333ea, #f472b6);" title="네온 핑크"
            onclick="setTheme('#171026', '#2d1b4e', '#9333ea', '#f472b6', this)"></div>
-      <!-- Preset 6: Matrix Green -->
       <div class="preset-btn svg-color-btn" style="background: linear-gradient(135deg, #059669, #34d399);" title="매트릭스 그린"
            onclick="setTheme('#022c22', '#064e3b', '#059669', '#34d399', this)"></div>
-      <!-- Preset 7: Retro Sunset -->
       <div class="preset-btn svg-color-btn" style="background: linear-gradient(135deg, #f43f5e, #fbbf24);" title="레트로 선셋"
            onclick="setTheme('#1e1b4b', '#312e81', '#f43f5e', '#fbbf24', this)"></div>
-      <!-- Preset 8: Monochrome Silver -->
       <div class="preset-btn svg-color-btn" style="background: linear-gradient(135deg, #6b7280, #e5e7eb);" title="모노크롬 메탈"
            onclick="setTheme('#111827', '#1f2937', '#6b7280', '#e5e7eb', this)"></div>
     </div>
 
     <div class="presets">
-      <span style="font-weight:bold; color:#aaa; margin-right: 10px;">🖼️ 전체 배경 테마:</span>
+      <span class="preset-label">🖼️ 배경 테마</span>
       <div class="preset-btn bg-preset active" style="background: #111827;" title="다크 네이비" onclick="setBodyBg('#111827', this)"></div>
       <div class="preset-btn bg-preset" style="background: #000000;" title="피치 블랙" onclick="setBodyBg('#000000', this)"></div>
       <div class="preset-btn bg-preset" style="background: #1e1e1e;" title="스튜디오 차콜" onclick="setBodyBg('#1e1e1e', this)"></div>
@@ -107,33 +137,32 @@
   <div class="grid">
     <div class="card">
       <div class="svg-container" data-src="/icons/favicon_blank_tape.svg"></div>
-      <h2>1. Blank Tape</h2>
-      <p>우리가 채워갈 공테이프<br>아날로그하고 빈티지한 시작의 기록</p>
+      <h2>Blank Tape</h2>
+      <p>우리가 채워갈 공테이프<br>아날로그한 시작의 기록</p>
     </div>
     <div class="card">
       <div class="svg-container" data-src="/icons/favicon_track_0.svg"></div>
-      <h2>2. Track 0</h2>
-      <p>1번 트랙 이전의 우리 이야기<br>히든 트랙을 연주하는 턴테이블 바늘</p>
+      <h2>Track 0</h2>
+      <p>1번 트랙 이전의 우리 이야기<br>히든 트랙의 턴테이블 바늘</p>
     </div>
     <div class="card">
       <div class="svg-container" data-src="/icons/favicon_backstage.svg"></div>
-      <h2>3. Backstage</h2>
-      <p>무대에 오르기 전,<br>묵묵히 합을 맞추며 땀 흘리는 우리들의 공간</p>
+      <h2>Backstage</h2>
+      <p>무대에 오르기 전,<br>묵묵히 합을 맞추며 땀 흘리는 공간</p>
     </div>
     <div class="card">
       <div class="svg-container" data-src="/icons/favicon_tutti.svg"></div>
-      <h2>4. Tutti</h2>
-      <p>전원 합주를 상징하는 링과<br>T 문자를 활용한 리듬감 있는 로고</p>
+      <h2>Tutti</h2>
+      <p>전원 합주를 상징하는 링과<br>리듬감 있는 T 로고</p>
     </div>
   </div>
 
   <div class="feedback">
     <h3>💬 의견을 남겨주세요</h3>
-    <p style="margin-bottom: 15px;">그 외 추가 의견이나 원하시는 로고 컨셉이 있다면 아래 대화창에 자유롭게 말씀해 주세요!</p>
+    <p>추가 의견이나 원하시는 로고 컨셉이 있다면<br>대화창에 자유롭게 말씀해 주세요!</p>
   </div>
 
   <script>
-    // 인라인 SVG 렌더링 (CSS 변수가 내부까지 적용되도록)
     document.querySelectorAll('.svg-container').forEach(async (el) => {
       const src = el.getAttribute('data-src');
       try {
@@ -143,20 +172,17 @@
       } catch(e) { console.error('Failed to load', src); }
     });
 
-    // 파비콘 테마 변경
     function setTheme(bg, bgDark, accent, accentLight, btn) {
       document.documentElement.style.setProperty('--bg', bg);
       document.documentElement.style.setProperty('--bg-dark', bgDark);
       document.documentElement.style.setProperty('--accent', accent);
       document.documentElement.style.setProperty('--accent-light', accentLight);
-      
       document.querySelectorAll('.svg-color-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
     }
 
-    // 배경 테마 변경
-    function setBodyBg(bgUrl, btn) {
-      document.body.style.background = bgUrl;
+    function setBodyBg(color, btn) {
+      document.body.style.background = color;
       document.querySelectorAll('.bg-preset').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
     }
