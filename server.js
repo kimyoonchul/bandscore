@@ -234,8 +234,9 @@ app.post('/api/songs/:songId/parts', upload.single('pdf'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'PDF 파일이 필요합니다' });
   const id = uuidv4();
   const totalPages = parseInt(req.body.totalPages) || 1;
+  const originalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
   run('INSERT INTO parts (id,song_id,name,pdf_filename,original_filename,total_pages) VALUES (?,?,?,?,?,?)',
-    [id, req.params.songId, req.body.name || '파트', req.file.filename, req.file.originalname, totalPages]);
+    [id, req.params.songId, req.body.name || '파트', req.file.filename, originalName, totalPages]);
   for (let i = 1; i <= totalPages; i++) {
     run('INSERT INTO page_info (part_id,page_number,measures) VALUES (?,?,?)', [id, i, 4]);
   }
