@@ -510,7 +510,7 @@ select.form-control { cursor: pointer; }
    ================================================================ */
 @media (max-width: 768px) {
   .container { padding: 16px; }
-  .song-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 16px; }
+  .song-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 24px 12px; margin-top: 12px; }
   .form-row { flex-direction: column; }
   .player-controls { padding: 8px; gap: 6px; }
   .album-cover .album-placeholder { font-size: 2.5rem; }
