@@ -375,6 +375,317 @@
     </div>
   </div>
 
+  <!-- ═══════════════ BAND FOOTER ═══════════════ -->
+  <footer class="band-footer" id="bandFooter">
+    <div class="footer-inner">
+
+      <!-- 밴드 타이틀 -->
+      <div class="footer-title-wrap">
+        <h2 class="footer-band-name" id="bandNameTitle">
+          <span class="band-char" style="--i:0">성</span>
+          <span class="band-char" style="--i:1">수</span>
+          <span class="band-char" style="--i:2">역</span>
+          <span class="band-char" style="--i:3"> </span>
+          <span class="band-char" style="--i:4">6</span>
+          <span class="band-char" style="--i:5">번</span>
+          <span class="band-char" style="--i:6">출</span>
+          <span class="band-char" style="--i:7">구</span>
+          <span class="band-char" style="--i:8">?</span>
+        </h2>
+        <p class="footer-subtitle">formed at <strong>Asome 성수점</strong> 🎵</p>
+      </div>
+
+      <!-- 팀명 변천사 타임라인 -->
+      <div class="name-timeline">
+        <div class="timeline-item" onmouseenter="this.classList.add('pop')" onmouseleave="this.classList.remove('pop')">
+          <div class="timeline-dot">1</div>
+          <div class="timeline-content">
+            <span class="timeline-name">슈링스타 ⭐</span>
+            <span class="timeline-desc">Ring Ring + Star 의 합작</span>
+          </div>
+        </div>
+        <div class="timeline-arrow">→</div>
+        <div class="timeline-item" onmouseenter="this.classList.add('pop')" onmouseleave="this.classList.remove('pop')">
+          <div class="timeline-dot">2</div>
+          <div class="timeline-content">
+            <span class="timeline-name">홀리워터 💧</span>
+            <span class="timeline-desc">성수(聖水)의 영어 번역... 반응 미지근</span>
+          </div>
+        </div>
+        <div class="timeline-arrow">→</div>
+        <div class="timeline-item" onmouseenter="this.classList.add('pop')" onmouseleave="this.classList.remove('pop')">
+          <div class="timeline-dot">3</div>
+          <div class="timeline-content">
+            <span class="timeline-name">크레이지 홀리워터 🤪💧</span>
+            <span class="timeline-desc">미지근한 반응에 화가 난 윤철의 반격</span>
+          </div>
+        </div>
+        <div class="timeline-arrow">→</div>
+        <div class="timeline-item active" onmouseenter="this.classList.add('pop')" onmouseleave="this.classList.remove('pop')">
+          <div class="timeline-dot">🔥</div>
+          <div class="timeline-content">
+            <span class="timeline-name">성수역 6번출구 🚇</span>
+            <span class="timeline-desc">재한이의 한 마디로 결정(예정)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 멤버 카드 -->
+      <div class="member-cards">
+        <div class="member-card" onclick="this.classList.toggle('flipped')">
+          <div class="card-inner">
+            <div class="card-front"><span class="card-emoji">🎤</span><span class="card-name">김윤철</span></div>
+            <div class="card-back"><span class="card-role">보컬</span><span class="card-note">밴드의 열정맨 🔥<br>팀명 독려 담당</span></div>
+          </div>
+        </div>
+        <div class="member-card" onclick="this.classList.toggle('flipped')">
+          <div class="card-inner">
+            <div class="card-front"><span class="card-emoji"><img src="/icons/base2.svg" style="width:2em;height:2em"></span><span class="card-name">김재한</span></div>
+            <div class="card-back"><span class="card-role">베이스</span><span class="card-note">성수역 6번출구의<br>네이밍 마스터 🧠</span></div>
+          </div>
+        </div>
+        <div class="member-card" onclick="this.classList.toggle('flipped')">
+          <div class="card-inner">
+            <div class="card-front"><span class="card-emoji">🎸</span><span class="card-name">김성용</span></div>
+            <div class="card-back"><span class="card-role">기타</span><span class="card-note">묵묵한 리프 장인 🎶</span></div>
+          </div>
+        </div>
+        <div class="member-card" onclick="this.classList.toggle('flipped')">
+          <div class="card-inner">
+            <div class="card-front"><span class="card-emoji">🥁</span><span class="card-name">김하정</span></div>
+            <div class="card-back"><span class="card-role">드럼</span><span class="card-note">비트의 심장 💓</span></div>
+          </div>
+        </div>
+        <div class="member-card resting" onclick="this.classList.toggle('flipped')">
+          <div class="card-inner">
+            <div class="card-front"><span class="card-emoji">🎸</span><span class="card-name">조민진</span></div>
+            <div class="card-back"><span class="card-role">기타</span><span class="card-note">잠시 충전 중... 🔋<br>곧 돌아옵니다</span></div>
+          </div>
+        </div>
+        <div class="member-card new-member" onclick="this.classList.toggle('flipped')">
+          <div class="card-inner">
+            <div class="card-front"><span class="card-emoji">🎹</span><span class="card-name">김민</span></div>
+            <div class="card-back"><span class="card-role">건반</span><span class="card-note">NEW! ✨<br>새로운 사운드</span></div>
+          </div>
+        </div>
+        <div class="member-card new-member" onclick="this.classList.toggle('flipped')">
+          <div class="card-inner">
+            <div class="card-front"><span class="card-emoji">🎸</span><span class="card-name">방한별</span></div>
+            <div class="card-back"><span class="card-role">기타</span><span class="card-note">NEW! ⭐<br>별처럼 합류</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 경연대회 카운트다운 -->
+      <div class="contest-banner" id="contestBanner">
+        <div class="contest-icon">🏆</div>
+        <div class="contest-info">
+          <div class="contest-title">밴드 경연대회</div>
+          <div class="contest-date">2025.05.31</div>
+        </div>
+        <div class="contest-countdown" id="contestCountdown">D-??</div>
+      </div>
+
+      <div class="footer-copy">
+        <span>© 2025 성수역 6번출구 · Powered by AsomeScorePlayer</span>
+      </div>
+    </div>
+  </footer>
+
+  <style>
+    /* ═══════ BAND FOOTER ═══════ */
+    .band-footer {
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a1035 40%, #0f1a2e 100%);
+      border-top: 1px solid rgba(139,92,246,0.2);
+      padding: 50px 20px 30px;
+      margin-top: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .band-footer::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at 20% 50%, rgba(139,92,246,0.08) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(59,130,246,0.06) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .footer-inner {
+      max-width: 900px; margin: 0 auto; position: relative; z-index: 1;
+    }
+
+    /* 밴드 타이틀 */
+    .footer-title-wrap { text-align: center; margin-bottom: 36px; }
+    .footer-band-name {
+      font-size: 2.2rem; font-weight: 800; margin: 0 0 6px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa, #a78bfa);
+      background-size: 200% auto;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: shimmer 3s ease-in-out infinite;
+    }
+    @keyframes shimmer { 0%,100% { background-position: 0% center; } 50% { background-position: 200% center; } }
+    .band-char {
+      display: inline-block; cursor: default;
+      transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+    }
+    .band-char:hover {
+      transform: translateY(-8px) scale(1.15) rotate(calc(var(--i) * 3deg - 12deg));
+      -webkit-text-fill-color: #f59e0b;
+    }
+    .footer-subtitle {
+      color: rgba(255,255,255,0.4); font-size: 0.85rem; margin: 0;
+    }
+
+    /* 타임라인 */
+    .name-timeline {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; margin-bottom: 36px; flex-wrap: wrap;
+    }
+    .timeline-item {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 10px 14px;
+      cursor: pointer; transition: all 0.3s ease;
+      text-align: center; min-width: 100px;
+    }
+    .timeline-item:hover, .timeline-item.pop {
+      transform: translateY(-4px) scale(1.05);
+      border-color: rgba(139,92,246,0.4);
+      background: rgba(139,92,246,0.08);
+      box-shadow: 0 8px 24px rgba(139,92,246,0.15);
+    }
+    .timeline-item.active {
+      border-color: rgba(245,158,11,0.5);
+      background: rgba(245,158,11,0.08);
+    }
+    .timeline-item.active:hover {
+      border-color: rgba(245,158,11,0.6);
+      background: rgba(245,158,11,0.15);
+      box-shadow: 0 8px 24px rgba(245,158,11,0.2);
+    }
+    .timeline-dot {
+      font-size: 0.7rem; font-weight: 700;
+      background: rgba(139,92,246,0.2); color: #a78bfa;
+      width: 24px; height: 24px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 6px;
+    }
+    .timeline-item.active .timeline-dot {
+      background: rgba(245,158,11,0.2); color: #f59e0b;
+    }
+    .timeline-name { display: block; font-weight: 700; font-size: 0.82rem; color: #e2e8f0; }
+    .timeline-desc { display: block; font-size: 0.68rem; color: rgba(255,255,255,0.35); margin-top: 3px; }
+    .timeline-arrow { color: rgba(255,255,255,0.15); font-size: 1.2rem; }
+
+    /* 멤버 카드 */
+    .member-cards {
+      display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 36px;
+    }
+    .member-card {
+      width: 105px; height: 125px; perspective: 600px; cursor: pointer;
+    }
+    .card-inner {
+      width: 100%; height: 100%; position: relative;
+      transition: transform 0.6s cubic-bezier(.34,1.56,.64,1);
+      transform-style: preserve-3d;
+    }
+    .member-card.flipped .card-inner { transform: rotateY(180deg); }
+    .member-card:hover .card-inner { transform: translateY(-4px); }
+    .member-card.flipped:hover .card-inner { transform: rotateY(180deg) translateY(-4px); }
+    .card-front, .card-back {
+      position: absolute; inset: 0; border-radius: 12px;
+      backface-visibility: hidden; -webkit-backface-visibility: hidden;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 6px; padding: 10px;
+    }
+    .card-front {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .card-back {
+      background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(59,130,246,0.1));
+      border: 1px solid rgba(139,92,246,0.3);
+      transform: rotateY(180deg);
+    }
+    .card-emoji { font-size: 1.8rem; }
+    .card-name { font-size: 0.82rem; font-weight: 700; color: #e2e8f0; }
+    .card-role { font-size: 0.9rem; font-weight: 800; color: #a78bfa; }
+    .card-note { font-size: 0.65rem; color: rgba(255,255,255,0.5); text-align: center; line-height: 1.4; }
+    .member-card.resting .card-front { opacity: 0.5; }
+    .member-card.resting .card-front::after {
+      content: '💤'; position: absolute; top: 6px; right: 6px; font-size: 0.7rem;
+    }
+    .member-card.new-member .card-front {
+      border-color: rgba(74,222,128,0.3);
+      box-shadow: 0 0 12px rgba(74,222,128,0.08);
+    }
+    .member-card.new-member .card-front::after {
+      content: 'NEW'; position: absolute; top: 5px; right: 5px;
+      font-size: 0.5rem; font-weight: 800; color: #4ade80;
+      background: rgba(74,222,128,0.15); padding: 1px 5px; border-radius: 4px;
+    }
+
+    /* 경연대회 배너 */
+    .contest-banner {
+      display: flex; align-items: center; gap: 16px;
+      background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(239,68,68,0.05));
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 16px; padding: 16px 24px;
+      margin-bottom: 24px; cursor: pointer;
+      transition: all 0.3s ease;
+      animation: pulse-border 2s ease-in-out infinite;
+    }
+    @keyframes pulse-border {
+      0%,100% { border-color: rgba(245,158,11,0.2); }
+      50% { border-color: rgba(245,158,11,0.5); }
+    }
+    .contest-banner:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 32px rgba(245,158,11,0.15);
+    }
+    .contest-icon { font-size: 2rem; animation: trophy-bounce 1.5s ease-in-out infinite; }
+    @keyframes trophy-bounce {
+      0%,100% { transform: rotate(0deg); }
+      25% { transform: rotate(-10deg); }
+      75% { transform: rotate(10deg); }
+    }
+    .contest-title { font-weight: 700; font-size: 0.95rem; color: #f59e0b; }
+    .contest-date { font-size: 0.8rem; color: rgba(255,255,255,0.4); }
+    .contest-countdown {
+      margin-left: auto; font-size: 1.5rem; font-weight: 900;
+      background: linear-gradient(90deg, #f59e0b, #ef4444);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    /* 카피라이트 */
+    .footer-copy {
+      text-align: center; color: rgba(255,255,255,0.2); font-size: 0.7rem;
+      padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.04);
+    }
+
+    @media (max-width: 600px) {
+      .footer-band-name { font-size: 1.5rem; }
+      .name-timeline { gap: 6px; }
+      .timeline-item { min-width: 80px; padding: 8px 10px; }
+      .timeline-name { font-size: 0.72rem; }
+      .member-card { width: 85px; height: 110px; }
+    }
+  </style>
+
+  <script>
+    // 경연대회 카운트다운
+    (function updateContestCountdown() {
+      const target = new Date('2025-05-31T00:00:00');
+      const now = new Date();
+      const diff = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+      const el = document.getElementById('contestCountdown');
+      if (el) {
+        if (diff > 0) el.textContent = 'D-' + diff;
+        else if (diff === 0) el.textContent = 'D-DAY! 🔥';
+        else el.textContent = '종료!';
+      }
+    })();
+  </script>
+
   <!-- New Song Modal -->
   <div class="modal-overlay" id="newSongModal">
     <div class="modal">

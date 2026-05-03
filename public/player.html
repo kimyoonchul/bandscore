@@ -756,6 +756,7 @@
         </div>
         <button class="btn btn-ghost" onclick="toggleInst()" id="btnInst" title="inst 음원">🔇</button>
       </div>
+      <button class="btn btn-ghost" onclick="downloadPdf()" title="악보 PDF 다운로드">📥</button>
       <button class="btn btn-ghost" onclick="toggleFullscreen()">⛶</button>
       <button class="btn btn-ghost" onclick="toggleSettings()">⚙</button>
       <span style="font-size:0.7rem;color:var(--text-muted)" id="pgInd">1/1</span>
@@ -850,6 +851,15 @@
     const P = new URLSearchParams(location.search), songId = P.get('songId'), partId = P.get('partId');
 
     function goBack(e) { e.preventDefault(); window.location.href = '/#song/' + songId; }
+    function downloadPdf() {
+      if (!pdfUrl || !part) return;
+      const a = document.createElement('a');
+      a.href = pdfUrl;
+      a.download = part.original_filename || part.pdf_filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
 
     // ── 핵심 상태 ──
     let song, part, pdfDoc;
@@ -878,6 +888,7 @@
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let instAudio = null; // inst 음원 Audio 객체
     let instEnabled = false;
+    let pdfUrl = '';
     const socket = io();
 
     /** 초기화: API에서 곡/파트 로드 → PDF 렌더 → 타임라인 빌드 → 소켓 연결 */
@@ -889,7 +900,8 @@
       document.getElementById('songName').textContent = song.name;
       document.getElementById('partName').textContent = part.name;
       bpm = song.bpm; document.getElementById('bpmVal').textContent = bpm;
-      pdfDoc = await pdfjsLib.getDocument(`/uploads/${part.pdf_filename}`).promise;
+      pdfUrl = `/uploads/${part.pdf_filename}`;
+      pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
       totalPages = pdfDoc.numPages;
       for (let i = 1; i <= totalPages; i++)await renderCache(i);
       allSystems = part.systems || [];
