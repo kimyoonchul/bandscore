@@ -280,8 +280,8 @@
       align-items: center;
       gap: 4px;
       padding: 4px 8px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 6px;
     }
 
@@ -319,7 +319,9 @@
       text-align: left;
     }
 
-    .mobile-br { display: none; }
+    .mobile-br {
+      display: none;
+    }
 
     /* 가이드 배너 */
     .sys-editor-guide {
@@ -458,7 +460,9 @@
         font-size: 0.58rem;
       }
 
-      .mobile-br { display: inline; }
+      .mobile-br {
+        display: inline;
+      }
     }
 
     /* 앨범 커버 배경 */
@@ -2675,11 +2679,11 @@
     <div class="sys-editor-header">
       <div style="display:flex;align-items:center;gap:8px">
         <button class="btn btn-ghost" onclick="closeSysEditor()" style="font-size:1rem;padding:4px 8px">←</button>
-        <div class="title" style="margin:0">📋 악보설정 <span class="part-label" id="sysEditorTitle"></span></div>
+        <div class="title" style="margin:0">⚙️ 악보설정 <span class="part-label" id="sysEditorTitle"></span></div>
       </div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" onclick="reDetectSystems()" style="font-size:0.8rem">🔍 줄 재감지</button>
-        <button class="btn btn-primary" onclick="sysEditorSave()">💾 저장</button>
+        <button class="btn btn-ghost" onclick="reDetectSystems()" style="font-size:0.8rem">🔍 <span class="btn-label">줄 재감지</span></button>
+        <button class="btn btn-primary" onclick="sysEditorSave()">💾 <span class="btn-label">저장</span></button>
       </div>
     </div>
     <div class="sys-editor-guide">
