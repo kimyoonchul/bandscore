@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <!--
   ================================================================
   AsomeScorePlayer — Player View
@@ -66,8 +66,33 @@
       justify-content: space-between;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       z-index: 200;
-      transition: transform 0.3s ease, opacity 0.3s ease;
+      transition: transform 0.3s ease, opacity 0.3s ease, background 0.4s ease;
     }
+
+    /* 솔로 모드 색상 */
+    .player-container.solo .player-top-bar {
+      background: rgba(30, 20, 10, 0.88);
+      border-bottom-color: rgba(200, 149, 108, 0.2);
+    }
+    .player-container.solo .player-controls {
+      background: rgba(30, 20, 10, 0.88);
+      border-top-color: rgba(200, 149, 108, 0.2);
+    }
+
+    .mode-toggle {
+      font-size: 0.7rem;
+      padding: 3px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.06);
+      color: #aaa;
+      cursor: pointer;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+    .mode-toggle:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .mode-toggle.solo { border-color: rgba(200,149,108,0.4); color: var(--primary, #c8956c); }
+    .mode-toggle.together { border-color: rgba(74,222,128,0.4); color: #4ade80; }
 
     .player-top-bar.hidden {
       transform: translateY(-100%);
@@ -225,7 +250,7 @@
       gap: 10px;
       z-index: 50;
       flex-wrap: wrap;
-      transition: transform 0.3s ease, opacity 0.3s ease;
+      transition: transform 0.3s ease, opacity 0.3s ease, background 0.4s ease;
     }
 
     .player-controls.hidden {
@@ -669,6 +694,7 @@
         <a href="#" onclick="goBack(event)" style="color:#888;text-decoration:none;font-size:1rem">←</a>
         <span class="song-title" id="songName">...</span>
         <span class="part-label" id="partName"></span>
+        <button class="mode-toggle solo" id="modeToggle" onclick="toggleMode()">👤 연습</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="status-badge st-idle" id="statusBadge" onclick="toggleMemberPopover(event)"
@@ -886,7 +912,7 @@
     let playbackOrder = [];     // 페이지 재생 순서
     let timeline = [];          // 빌드된 타임라인 [{start, dur, page, topPct, bottomPct, ...}]
     let curDispPage = 1;        // 현재 표시 중인 페이지 번호
-    let soloMode = false;        // 나만 시작하기 모드
+    let soloMode = new URLSearchParams(location.search).get('mode') !== 'together';
     let memberList = [];         // 현재 접속 멤버 목록
 
     // ── 스타일 기본값 (파트별 DB 저장) ──
@@ -951,7 +977,8 @@
         }
       }
       buildTimeline(); showView();
-      socket.emit('join-room', { songId, partId, partName: part.name });
+      if (!soloMode) socket.emit('join-room', { songId, partId, partName: part.name });
+      applyModeUI();
       // 저장된 스타일 설정 로드
       try {
         const savedStyle = await (await fetch(`/api/parts/${partId}/style`)).json();
@@ -1444,9 +1471,39 @@
       show();
     }
 
-    function doStart() { soloMode = false; socket.emit('start', { bpm, countInBeats: song.count_in_bars * (parseInt(song.time_signature.split('/')[0]) || 4) }) }
+    function applyModeUI() {
+      const container = document.querySelector('.player-container');
+      const btn = document.getElementById('modeToggle');
+      const memberWrap = document.querySelector('.member-badge-wrap');
+      if (soloMode) {
+        container.classList.add('solo');
+        btn.className = 'mode-toggle solo';
+        btn.textContent = '👤 연습';
+        if (memberWrap) memberWrap.style.display = 'none';
+      } else {
+        container.classList.remove('solo');
+        btn.className = 'mode-toggle together';
+        btn.textContent = '👥 합주';
+        if (memberWrap) memberWrap.style.display = '';
+      }
+    }
+
+    function toggleMode() {
+      if (state !== 'idle') return; // 재생 중엔 전환 불가
+      soloMode = !soloMode;
+      if (!soloMode) {
+        // 합주로 전환 → 소켓 방 입장
+        socket.emit('join-room', { songId, partId: new URLSearchParams(location.search).get('partId'), partName: document.getElementById('partName')?.textContent?.trim() });
+      } else {
+        // 연습으로 전환 → 방 나가기
+        socket.emit('leave-room');
+      }
+      applyModeUI();
+    }
+
+    function doStart() { soloMode = false; applyModeUI(); socket.emit('start', { bpm, countInBeats: song.count_in_bars * (parseInt(song.time_signature.split('/')[0]) || 4) }) }
     function doSoloStart() {
-      soloMode = true;
+      soloMode = true; applyModeUI();
       bpm = parseInt(document.getElementById('bpmVal').textContent) || bpm;
       buildTimeline();
       curDispPage = playbackOrder[0] || 1; clearHL(); showView();
@@ -1477,7 +1534,6 @@
     }
     function doStop() {
       if (soloMode) {
-        soloMode = false;
         state = 'idle'; clearTimeout(hideTimer);
         if (animFrame) cancelAnimationFrame(animFrame);
         curDispPage = playbackOrder[0] || 1; elapsedBefore = 0;
@@ -1492,7 +1548,7 @@
       buildTimeline();
       // inst 음원 재생 속도 동기화
       if (instAudio) instAudio.playbackRate = bpm / originalBpm;
-      socket.emit('tempo-change', { bpm });
+      if (!soloMode) socket.emit('tempo-change', { bpm });
     }
 
     // ── inst 음원 제어 ──
@@ -1520,7 +1576,7 @@
           instAudio.play().catch(() => { });
         }
       }
-      socket.emit('inst-state-changed', { muted: !instEnabled });
+      if (!soloMode) socket.emit('inst-state-changed', { muted: !instEnabled });
       renderMemberList();
     }
     function setInstVolume(val) {
@@ -1531,7 +1587,7 @@
       document.getElementById('btnInst').textContent = v > 0 ? '🔊' : '🔇';
       if (v > 0) instPrevVolume = v / 100;
       if (wasMuted !== !instEnabled) {
-        socket.emit('inst-state-changed', { muted: !instEnabled });
+        if (!soloMode) socket.emit('inst-state-changed', { muted: !instEnabled });
         renderMemberList();
         // 음소거 해제 + 재생 중이면 동기화
         if (instEnabled && state === 'playing' && playStartTime && instAudio) {
@@ -1566,14 +1622,14 @@
       const v = prompt('BPM을 입력하세요 (30~300):', bpm);
       if (v === null) return;
       const n = parseInt(v);
-      if (!isNaN(n) && n >= 30 && n <= 300) { bpm = n; document.getElementById('bpmVal').textContent = bpm; buildTimeline(); if (instAudio) instAudio.playbackRate = bpm / originalBpm; socket.emit('tempo-change', { bpm }) }
+      if (!isNaN(n) && n >= 30 && n <= 300) { bpm = n; document.getElementById('bpmVal').textContent = bpm; buildTimeline(); if (instAudio) instAudio.playbackRate = bpm / originalBpm; if (!soloMode) socket.emit('tempo-change', { bpm }) }
     }
     function tapTempo() {
       const n = Date.now(); tapTimes.push(n); if (tapTimes.length > 8) tapTimes.shift();
       if (tapTimes.length >= 2 && n - tapTimes[tapTimes.length - 2] < 3000) {
         let s = 0; for (let i = 1; i < tapTimes.length; i++)s += tapTimes[i] - tapTimes[i - 1];
         bpm = Math.max(30, Math.min(300, Math.round(60000 / (s / (tapTimes.length - 1)))));
-        document.getElementById('bpmVal').textContent = bpm; buildTimeline(); if (instAudio) instAudio.playbackRate = bpm / originalBpm; socket.emit('tempo-change', { bpm });
+        document.getElementById('bpmVal').textContent = bpm; buildTimeline(); if (instAudio) instAudio.playbackRate = bpm / originalBpm; if (!soloMode) socket.emit('tempo-change', { bpm });
       } else if (tapTimes.length >= 2) tapTimes = [n];
     }
     function toggleFullscreen() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => { }) }
@@ -1768,7 +1824,7 @@
       const slider = document.querySelector('.inst-vol-slider input');
       if (slider) slider.value = 0;
       // 상태 변경을 방 전체에 알림
-      socket.emit('inst-state-changed', { muted: true });
+      if (!soloMode) socket.emit('inst-state-changed', { muted: true });
       renderMemberList();
     });
     socket.on('remote-unmute-inst', () => {
@@ -1785,7 +1841,7 @@
         instAudio.play().catch(() => { });
       }
       // 상태 변경을 방 전체에 알림
-      socket.emit('inst-state-changed', { muted: false });
+      if (!soloMode) socket.emit('inst-state-changed', { muted: false });
       renderMemberList();
     });
     // 다른 멤버의 inst 상태 변경 수신 → 팝오버 업데이트
