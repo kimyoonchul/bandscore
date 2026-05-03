@@ -396,9 +396,8 @@
   <!-- ═══════════════ BAND FOOTER ═══════════════ -->
   <footer class="band-footer" id="bandFooter">
     <div class="footer-trigger" onclick="document.getElementById('footerAccordion').classList.toggle('open')">
-      <span>© 2026 성수역 6번출구 · Powered by AsomeScorePlayer</span>
-      <span class="footer-hint">👆 click!</span>
-      <span class="footer-ai-badge">🤖 AI Generated</span>
+      <span class="footer-copy-text">© 2026 성수역 6번출구</span>
+      <span class="footer-hint">👆</span>
     </div>
     <div class="footer-accordion" id="footerAccordion">
       <div class="footer-inner">
@@ -460,10 +459,10 @@
               <div class="card-back"><span class="card-role">기타</span><span class="card-note">묵묵한 리프 장인 🎶</span></div>
             </div>
           </div>
-          <div class="member-card" onclick="this.classList.toggle('flipped')">
+          <div class="member-card bpm-limit" onclick="this.classList.toggle('flipped')">
             <div class="card-inner">
-              <div class="card-front"><span class="card-emoji">🥁</span><span class="card-name">김하정</span></div>
-              <div class="card-back"><span class="card-role">드럼</span><span class="card-note">비트의 심장 💓</span></div>
+              <div class="card-front"><span class="card-emoji">🥁</span><span class="card-name">김하정</span><span class="bpm-badge">⚡ 140 BPM</span></div>
+              <div class="card-back"><span class="card-role">드럼</span><span class="card-note">BPM 140의 벽 🧱<br>언제 뚫리나..?<br>비트의 심장 💓</span></div>
             </div>
           </div>
           <div class="member-card resting" onclick="this.classList.toggle('flipped')">
@@ -498,6 +497,11 @@
             <span class="history-date">5.31</span><span class="history-event">🏆 밴드 경연대회</span>
             <span class="history-dday" id="contestCountdown">D-??</span>
           </div>
+        </div>
+
+        <div class="footer-bottom-info">
+          <span class="footer-ai-badge">🤖 AI Generated</span>
+          <span class="footer-powered">Powered by AsomeScorePlayer</span>
         </div>
 
       </div>
@@ -601,8 +605,18 @@
     .history-item.upcoming { border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.05); animation:pulse-border 2s ease-in-out infinite; }
     @keyframes pulse-border { 0%,100%{border-color:rgba(245,158,11,0.2)} 50%{border-color:rgba(245,158,11,0.5)} }
     .history-dday { font-weight:900; font-size:0.9rem; background:linear-gradient(90deg,#f59e0b,#ef4444); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    /* BPM 140 제한 드러머 */
+    .bpm-badge { font-size:0.45rem; font-weight:800; color:#ef4444; background:rgba(239,68,68,0.1); padding:1px 5px; border-radius:4px; animation: bpm-flash 1.5s ease-in-out infinite; }
+    @keyframes bpm-flash { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    .member-card.bpm-limit .card-front { border-color:rgba(239,68,68,0.25); }
+
+    /* footer 하단 정보 */
+    .footer-bottom-info { display:flex; align-items:center; justify-content:center; gap:10px; margin-top:20px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.04); }
+    .footer-powered { font-size:0.6rem; color:rgba(255,255,255,0.15); }
 
     @media(max-width:600px) {
+      .footer-copy-text { font-size:0.6rem; }
+      .footer-trigger { padding:10px 14px; gap:8px; }
       .footer-band-name{font-size:1.4rem} .timeline-item{min-width:70px;padding:6px 8px} .member-card{width:80px;height:100px}
       .member-card.enfp-master{width:90px;height:110px}
     }
