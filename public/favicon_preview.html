@@ -17,7 +17,7 @@
     }
     
     .presets { 
-      display: flex; gap: 12px; margin-bottom: 50px; 
+      display: flex; gap: 12px; margin-bottom: 15px; 
       background: rgba(255,255,255,0.05); padding: 12px 24px; 
       border-radius: 30px; align-items: center;
       border: 1px solid rgba(255,255,255,0.1);
@@ -50,32 +50,45 @@
 </head>
 <body>
   
-  <div class="presets">
-    <span style="font-weight:bold; color:#aaa; margin-right: 10px;">🎨 컬러 테마:</span>
-    <!-- Preset 1: Original Orange/Gold -->
-    <div class="preset-btn active" style="background: linear-gradient(135deg, #ea580c, #fbbf24);" title="오리지널 오렌지"
-         onclick="setTheme('#0f172a', '#1e293b', '#ea580c', '#fbbf24', this)"></div>
-    <!-- Preset 2: BandScore Brown -->
-    <div class="preset-btn" style="background: linear-gradient(135deg, #a66a41, #c8956c);" title="밴드스코어 브라운"
-         onclick="setTheme('#1e140d', '#332317', '#a66a41', '#c8956c', this)"></div>
-    <!-- Preset 3: Deep Ocean Blue -->
-    <div class="preset-btn" style="background: linear-gradient(135deg, #2563eb, #60a5fa);" title="오션 블루"
-         onclick="setTheme('#0a1128', '#1c2541', '#2563eb', '#60a5fa', this)"></div>
-    <!-- Preset 4: Cherry Red -->
-    <div class="preset-btn" style="background: linear-gradient(135deg, #e11d48, #fb7185);" title="체리 레드"
-         onclick="setTheme('#1a0505', '#2d0909', '#e11d48', '#fb7185', this)"></div>
-    <!-- Preset 5: Neon Purple/Pink -->
-    <div class="preset-btn" style="background: linear-gradient(135deg, #9333ea, #f472b6);" title="네온 핑크"
-         onclick="setTheme('#171026', '#2d1b4e', '#9333ea', '#f472b6', this)"></div>
-    <!-- Preset 6: Matrix Green -->
-    <div class="preset-btn" style="background: linear-gradient(135deg, #059669, #34d399);" title="매트릭스 그린"
-         onclick="setTheme('#022c22', '#064e3b', '#059669', '#34d399', this)"></div>
-    <!-- Preset 7: Retro Sunset -->
-    <div class="preset-btn" style="background: linear-gradient(135deg, #f43f5e, #fbbf24);" title="레트로 선셋"
-         onclick="setTheme('#1e1b4b', '#312e81', '#f43f5e', '#fbbf24', this)"></div>
-    <!-- Preset 8: Monochrome Silver -->
-    <div class="preset-btn" style="background: linear-gradient(135deg, #6b7280, #e5e7eb);" title="모노크롬 메탈"
-         onclick="setTheme('#111827', '#1f2937', '#6b7280', '#e5e7eb', this)"></div>
+  <div style="display:flex; flex-direction:column; gap:0px; margin-bottom: 50px;">
+    <div class="presets">
+      <span style="font-weight:bold; color:#aaa; margin-right: 10px;">🎨 파비콘 컬러:</span>
+      <!-- Preset 1: Original Orange/Gold -->
+      <div class="preset-btn active svg-color-btn" style="background: linear-gradient(135deg, #ea580c, #fbbf24);" title="오리지널 오렌지"
+           onclick="setTheme('#0f172a', '#1e293b', '#ea580c', '#fbbf24', this)"></div>
+      <!-- Preset 2: BandScore Brown -->
+      <div class="preset-btn svg-color-btn" style="background: linear-gradient(135deg, #a66a41, #c8956c);" title="밴드스코어 브라운"
+           onclick="setTheme('#1e140d', '#332317', '#a66a41', '#c8956c', this)"></div>
+      <!-- Preset 3: Deep Ocean Blue -->
+      <div class="preset-btn svg-color-btn" style="background: linear-gradient(135deg, #2563eb, #60a5fa);" title="오션 블루"
+           onclick="setTheme('#0a1128', '#1c2541', '#2563eb', '#60a5fa', this)"></div>
+      <!-- Preset 4: Cherry Red -->
+      <div class="preset-btn svg-color-btn" style="background: linear-gradient(135deg, #e11d48, #fb7185);" title="체리 레드"
+           onclick="setTheme('#1a0505', '#2d0909', '#e11d48', '#fb7185', this)"></div>
+      <!-- Preset 5: Neon Purple/Pink -->
+      <div class="preset-btn svg-color-btn" style="background: linear-gradient(135deg, #9333ea, #f472b6);" title="네온 핑크"
+           onclick="setTheme('#171026', '#2d1b4e', '#9333ea', '#f472b6', this)"></div>
+      <!-- Preset 6: Matrix Green -->
+      <div class="preset-btn svg-color-btn" style="background: linear-gradient(135deg, #059669, #34d399);" title="매트릭스 그린"
+           onclick="setTheme('#022c22', '#064e3b', '#059669', '#34d399', this)"></div>
+      <!-- Preset 7: Retro Sunset -->
+      <div class="preset-btn svg-color-btn" style="background: linear-gradient(135deg, #f43f5e, #fbbf24);" title="레트로 선셋"
+           onclick="setTheme('#1e1b4b', '#312e81', '#f43f5e', '#fbbf24', this)"></div>
+      <!-- Preset 8: Monochrome Silver -->
+      <div class="preset-btn svg-color-btn" style="background: linear-gradient(135deg, #6b7280, #e5e7eb);" title="모노크롬 메탈"
+           onclick="setTheme('#111827', '#1f2937', '#6b7280', '#e5e7eb', this)"></div>
+    </div>
+
+    <div class="presets">
+      <span style="font-weight:bold; color:#aaa; margin-right: 10px;">🖼️ 전체 배경 테마:</span>
+      <div class="preset-btn bg-preset active" style="background: #111827;" title="다크 네이비" onclick="setBodyBg('#111827', this)"></div>
+      <div class="preset-btn bg-preset" style="background: #000000;" title="피치 블랙" onclick="setBodyBg('#000000', this)"></div>
+      <div class="preset-btn bg-preset" style="background: #1e1e1e;" title="스튜디오 차콜" onclick="setBodyBg('#1e1e1e', this)"></div>
+      <div class="preset-btn bg-preset" style="background: #3f3f46;" title="징크 그레이" onclick="setBodyBg('#3f3f46', this)"></div>
+      <div class="preset-btn bg-preset" style="background: #1e1b4b;" title="미드나잇 퍼플" onclick="setBodyBg('#1e1b4b', this)"></div>
+      <div class="preset-btn bg-preset" style="background: #064e3b;" title="다크 포레스트" onclick="setBodyBg('#064e3b', this)"></div>
+      <div class="preset-btn bg-preset" style="background: #450a0a;" title="블러드 레드" onclick="setBodyBg('#450a0a', this)"></div>
+    </div>
   </div>
 
   <div class="grid">
@@ -112,14 +125,21 @@
       } catch(e) { console.error('Failed to load', src); }
     });
 
-    // 테마 변경
+    // 파비콘 테마 변경
     function setTheme(bg, bgDark, accent, accentLight, btn) {
       document.documentElement.style.setProperty('--bg', bg);
       document.documentElement.style.setProperty('--bg-dark', bgDark);
       document.documentElement.style.setProperty('--accent', accent);
       document.documentElement.style.setProperty('--accent-light', accentLight);
       
-      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.svg-color-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    // 배경 테마 변경
+    function setBodyBg(bgUrl, btn) {
+      document.body.style.background = bgUrl;
+      document.querySelectorAll('.bg-preset').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
     }
   </script>
