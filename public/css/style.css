@@ -584,14 +584,14 @@ select.form-control { cursor: pointer; }
   .song-detail-header { margin-bottom: 16px; gap: 8px; }
 
   /* 공 정보 카드 - 모바일도 1줄 */
-  .song-info-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; }
-  .song-info-card { padding: 10px; margin-bottom: 12px; }
-  .song-info-item { padding: 5px 4px; gap: 4px; flex-direction: column; text-align: center; }
-  .song-info-icon { font-size: 0.85rem; }
-  .song-info-label { font-size: 0.55rem; }
-  .song-info-val { font-size: 0.78rem; }
-  .song-info-bpm { font-size: 0.9rem; }
-  .song-info-hint { font-size: 0.55rem; margin-top: 4px; }
+  .song-info-grid { display: flex; gap: 2px; }
+  .song-info-card { padding: 8px; margin-bottom: 12px; }
+  .song-info-item { flex: 1; padding: 6px 2px; gap: 2px; flex-direction: column; text-align: center; min-width: 0; }
+  .song-info-icon { font-size: 0.8rem; }
+  .song-info-label { font-size: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .song-info-val { font-size: 0.75rem; white-space: nowrap; }
+  .song-info-bpm { font-size: 0.85rem; }
+  .song-info-hint { display: none; }
 
   /* 탭바 */
   .tab-btn { padding: 8px 10px; font-size: 0.78rem; }
