@@ -60,7 +60,7 @@
       right: 0;
       background: rgba(17, 24, 39, 0.85);
       backdrop-filter: blur(16px);
-      padding: 14px 20px;
+      padding: 20px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -238,7 +238,8 @@
       width: 100%;
       cursor: pointer;
       order: -1;
-      padding: 0 2px 6px;
+      padding: 0 2px 0px;
+      margin-bottom: -5px;
     }
 
     .seekbar-track {
@@ -872,6 +873,7 @@
     let pgCache = {};           // 페이지별 캔버스 캐시 { pageNum: canvas }
     let totalPages = 1;
     let bpm = 120;
+    let originalBpm = 120;
     let viewMode = 'single';    // 'single' | 'dual' | 'portrait'
     let state = 'idle';         // 'idle' | 'counting' | 'playing' | 'paused'
     let animFrame = null;       // requestAnimationFrame ID
@@ -929,7 +931,7 @@
       }
       document.getElementById('songName').textContent = song.name;
       document.getElementById('partName').innerHTML = partEmoji(part.name) + ' ' + part.name;
-      bpm = song.bpm; document.getElementById('bpmVal').textContent = bpm;
+      bpm = song.bpm; originalBpm = song.bpm; document.getElementById('bpmVal').textContent = bpm;
       pdfUrl = `/uploads/${part.pdf_filename}`;
       pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
       totalPages = pdfDoc.numPages;
@@ -1484,7 +1486,14 @@
         if (!uiVisible) { uiVisible = true; document.getElementById('topBar').classList.remove('hidden'); document.getElementById('ctrlBar').classList.remove('hidden'); showView() }
       } else { socket.emit('stop') }
     }
-    function changeBpm(d) { bpm = Math.max(30, Math.min(300, bpm + d)); document.getElementById('bpmVal').textContent = bpm; buildTimeline(); socket.emit('tempo-change', { bpm }) }
+    function changeBpm(d) {
+      bpm = Math.max(30, Math.min(300, bpm + d));
+      document.getElementById('bpmVal').textContent = bpm;
+      buildTimeline();
+      // inst 음원 재생 속도 동기화
+      if (instAudio) instAudio.playbackRate = bpm / originalBpm;
+      socket.emit('tempo-change', { bpm });
+    }
 
     // ── inst 음원 제어 ──
     let instPrevVolume = 0.8;
@@ -1554,14 +1563,14 @@
       const v = prompt('BPM을 입력하세요 (30~300):', bpm);
       if (v === null) return;
       const n = parseInt(v);
-      if (!isNaN(n) && n >= 30 && n <= 300) { bpm = n; document.getElementById('bpmVal').textContent = bpm; buildTimeline(); socket.emit('tempo-change', { bpm }) }
+      if (!isNaN(n) && n >= 30 && n <= 300) { bpm = n; document.getElementById('bpmVal').textContent = bpm; buildTimeline(); if (instAudio) instAudio.playbackRate = bpm / originalBpm; socket.emit('tempo-change', { bpm }) }
     }
     function tapTempo() {
       const n = Date.now(); tapTimes.push(n); if (tapTimes.length > 8) tapTimes.shift();
       if (tapTimes.length >= 2 && n - tapTimes[tapTimes.length - 2] < 3000) {
         let s = 0; for (let i = 1; i < tapTimes.length; i++)s += tapTimes[i] - tapTimes[i - 1];
         bpm = Math.max(30, Math.min(300, Math.round(60000 / (s / (tapTimes.length - 1)))));
-        document.getElementById('bpmVal').textContent = bpm; buildTimeline(); socket.emit('tempo-change', { bpm });
+        document.getElementById('bpmVal').textContent = bpm; buildTimeline(); if (instAudio) instAudio.playbackRate = bpm / originalBpm; socket.emit('tempo-change', { bpm });
       } else if (tapTimes.length >= 2) tapTimes = [n];
     }
     function toggleFullscreen() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => { }) }
@@ -1857,6 +1866,7 @@
     socket.on('tempo-changed', ({ bpm: b }) => {
       if (state === 'playing') { elapsedBefore += Date.now() - playStartTime; playStartTime = Date.now() }
       bpm = b; document.getElementById('bpmVal').textContent = bpm; buildTimeline();
+      if (instAudio) instAudio.playbackRate = bpm / originalBpm;
     });
     window.addEventListener('resize', () => showView());
 
