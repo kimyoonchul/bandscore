@@ -496,6 +496,15 @@ select.form-control { cursor: pointer; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
 
+/* Drag & Drop */
+.album-card[draggable] { cursor: grab; }
+.album-card[draggable]:active { cursor: grabbing; }
+.album-card.drag-over {
+  outline: 2px dashed var(--primary);
+  outline-offset: 4px;
+  transform: scale(1.03);
+}
+
 /* ================================================================
    RESPONSIVE
    ================================================================ */
@@ -506,6 +515,10 @@ select.form-control { cursor: pointer; }
   .player-controls { padding: 8px; gap: 6px; }
   .album-cover .album-placeholder { font-size: 2.5rem; }
   .modal { padding: 24px; }
+  .app-header { padding: 10px 14px; }
+  .app-logo { font-size: 1rem; gap: 6px; }
+  .app-logo .icon { font-size: 1.2rem; }
+  #btnNewSong { font-size: 0.75rem; padding: 6px 12px; min-height: 34px; }
 }
 
 /* iPad optimization */

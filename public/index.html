@@ -768,8 +768,8 @@
         return;
       }
       empty.style.display = 'none';
-      grid.innerHTML = songs.map(s => `
-    <div class="album-card" onclick="openSong('${s.id}')">
+      grid.innerHTML = songs.map((s, i) => `
+    <div class="album-card" draggable="true" data-song-id="${s.id}" data-idx="${i}" onclick="openSong('${s.id}')">
       <div class="album-cover">
         ${s.cover_filename
           ? `<img src="/uploads/${s.cover_filename}" alt="${esc(s.name)}">`
@@ -785,6 +785,42 @@
       </div>
     </div>
   `).join('');
+      // 드래그앤드롭 이벤트
+      let dragSrc = null;
+      grid.querySelectorAll('.album-card').forEach(card => {
+        card.addEventListener('dragstart', e => {
+          dragSrc = card;
+          card.style.opacity = '0.4';
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        card.addEventListener('dragend', () => { card.style.opacity = '1'; });
+        card.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+        card.addEventListener('dragenter', e => { e.preventDefault(); card.classList.add('drag-over'); });
+        card.addEventListener('dragleave', () => { card.classList.remove('drag-over'); });
+        card.addEventListener('drop', async e => {
+          e.preventDefault(); e.stopPropagation();
+          card.classList.remove('drag-over');
+          if (dragSrc === card) return;
+          // DOM 순서 교환
+          const allCards = [...grid.querySelectorAll('.album-card')];
+          const fromIdx = allCards.indexOf(dragSrc);
+          const toIdx = allCards.indexOf(card);
+          if (fromIdx < toIdx) card.after(dragSrc);
+          else card.before(dragSrc);
+          // 서버에 순서 저장
+          const newOrder = [...grid.querySelectorAll('.album-card')].map((c, i) => ({
+            id: c.dataset.songId, sort_order: i
+          }));
+          await fetch('/api/songs/reorder', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order: newOrder })
+          });
+          // songs 배열도 동기화
+          const idOrder = newOrder.map(o => o.id);
+          songs.sort((a, b) => idOrder.indexOf(a.id) - idOrder.indexOf(b.id));
+        });
+      });
     }
 
     function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }

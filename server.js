@@ -90,8 +90,11 @@ async function initDb() {
     id TEXT PRIMARY KEY, name TEXT NOT NULL, bpm INTEGER DEFAULT 120,
     time_signature TEXT DEFAULT '4/4', count_in_bars INTEGER DEFAULT 2,
     cover_filename TEXT, inst_filename TEXT,
+    sort_order INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now'))
   )`);
+  // sort_order 컬럼 마이그레이션
+  try { db.run(`ALTER TABLE songs ADD COLUMN sort_order INTEGER DEFAULT 0`); } catch(e) {}
   db.run(`CREATE TABLE IF NOT EXISTS parts (
     id TEXT PRIMARY KEY, song_id TEXT NOT NULL, name TEXT NOT NULL,
     pdf_filename TEXT NOT NULL, original_filename TEXT, total_pages INTEGER DEFAULT 1,
@@ -147,12 +150,19 @@ async function initDb() {
 // ── API Routes ──
 
 app.get('/api/songs', (req, res) => {
-  const songs = query('SELECT * FROM songs ORDER BY created_at DESC');
+  const songs = query('SELECT * FROM songs ORDER BY sort_order ASC, created_at DESC');
   songs.forEach(s => {
     const r = get('SELECT COUNT(*) as c FROM parts WHERE song_id = ?', [s.id]);
     s.partCount = r ? r.c : 0;
   });
   res.json(songs);
+});
+
+app.put('/api/songs/reorder', (req, res) => {
+  const { order } = req.body; // [{id, sort_order}]
+  if (!Array.isArray(order)) return res.status(400).json({ error: 'order required' });
+  order.forEach(o => run('UPDATE songs SET sort_order = ? WHERE id = ?', [o.sort_order, o.id]));
+  res.json({ ok: true });
 });
 
 app.post('/api/songs', (req, res) => {
