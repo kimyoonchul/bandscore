@@ -1,6 +1,7 @@
 node_modules/
 data/*.db
 data/uploads/
+uploads/
 *.exe
 test_score.pdf
 .env
