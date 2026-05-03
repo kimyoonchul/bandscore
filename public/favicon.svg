@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Guitar body -->
+  <ellipse cx="12" cy="22" rx="10" ry="9" fill="#2d7a5a"/>
+  <ellipse cx="12" cy="18" rx="7" ry="6" fill="#246b4d"/>
+  <!-- Sound hole -->
+  <circle cx="12" cy="21" r="3" fill="#1a5c3f"/>
+  <!-- Neck -->
+  <rect x="19" y="3" width="4" height="20" rx="1.5" fill="#d4a574"/>
+  <!-- Headstock -->
+  <rect x="18.5" y="1" width="5" height="5" rx="2" fill="#c49464"/>
+  <!-- Tuning pegs -->
+  <circle cx="18" cy="2.5" r="1" fill="#888"/>
+  <circle cx="18" cy="4.5" r="1" fill="#888"/>
+  <circle cx="24" cy="2.5" r="1" fill="#888"/>
+  <circle cx="24" cy="4.5" r="1" fill="#888"/>
+  <!-- Strings -->
+  <line x1="20" y1="6" x2="20" y2="22" stroke="#ddd" stroke-width="0.3"/>
+  <line x1="21" y1="6" x2="21" y2="22" stroke="#ddd" stroke-width="0.3"/>
+  <line x1="22" y1="6" x2="22" y2="22" stroke="#ddd" stroke-width="0.3"/>
+  <!-- Bridge -->
+  <rect x="10" y="25" width="6" height="1.2" rx="0.5" fill="#c49464"/>
+</svg>
