@@ -134,9 +134,17 @@
       pointer-events: none;
       animation: previewPulse 1s ease-in-out;
     }
+
     @keyframes previewPulse {
-      0% { opacity: 0; transform: scaleY(0.9); }
-      100% { opacity: 1; transform: scaleY(1); }
+      0% {
+        opacity: 0;
+        transform: scaleY(0.9);
+      }
+
+      100% {
+        opacity: 1;
+        transform: scaleY(1);
+      }
     }
 
     .sys-line-label {
@@ -492,7 +500,7 @@
             <div class="card-inner">
               <div class="card-front"><span class="master-badge">👑 밴드마스터</span><span class="card-emoji">🎤</span><span
                   class="card-name">서마리</span><span class="enfp-tag">ENFP</span></div>
-              <div class="card-back"><span class="card-role">학원 실장님</span><span class="card-note">노래 잘하는 ENFP 🌟<br>화려한
+              <div class="card-back"><span class="card-role">밴드마스터</span><span class="card-note">레전드 쀼엥프피 🌟<br>화려한
                   게 좋아! 🎉<br>밴드를 이끄는 에너지!</span></div>
             </div>
           </div>
@@ -547,13 +555,13 @@
         <!-- 밴드 히스토리 -->
         <div class="band-history">
           <div class="history-item">
-            <span class="history-date">3.13</span><span class="history-event">🎵 첫 합주</span>
+            <span class="history-date">2025.3.13</span><span class="history-event">🎵 첫 합주</span>
           </div>
           <div class="history-item">
-            <span class="history-date">4.18</span><span class="history-event">🎤 첫 공연 <small>(성수파티)</small></span>
+            <span class="history-date">2025.4.18</span><span class="history-event">🎤 첫 공연 <small>(성수파티)</small></span>
           </div>
           <div class="history-item upcoming">
-            <span class="history-date">5.31</span><span class="history-event">🏆 밴드 경연대회</span>
+            <span class="history-date">2025.5.31</span><span class="history-event">🏆 밴드 경연대회</span>
             <span class="history-dday" id="contestCountdown">D-??</span>
           </div>
         </div>
@@ -938,38 +946,67 @@
       border: 2px solid rgba(245, 158, 11, 0.4);
     }
 
-    /* 밴드 히스토리 */
+    /* 밴드 히스토리 - 세로 타임라인 */
     .band-history {
       display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+      padding-left: 24px;
+      margin: 0 auto;
+      max-width: 360px;
+    }
+
+    .band-history::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: linear-gradient(to bottom, rgba(167, 139, 250, 0.5), rgba(245, 158, 11, 0.5));
+      border-radius: 1px;
     }
 
     .history-item {
       display: flex;
       align-items: center;
-      gap: 8px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 10px;
-      padding: 10px 16px;
+      gap: 12px;
+      padding: 8px 14px;
+      position: relative;
       transition: all 0.3s;
     }
 
+    .history-item::before {
+      content: '';
+      position: absolute;
+      left: -21px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #a78bfa;
+      border: 2px solid var(--bg-primary);
+      box-shadow: 0 0 6px rgba(167, 139, 250, 0.4);
+      z-index: 1;
+    }
+
     .history-item:hover {
-      transform: translateY(-2px);
-      border-color: rgba(139, 92, 246, 0.3);
+      background: rgba(167, 139, 250, 0.06);
+      border-radius: 8px;
     }
 
     .history-date {
       font-weight: 800;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: #a78bfa;
+      min-width: 72px;
+      font-family: 'Outfit', monospace;
     }
 
     .history-event {
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       color: #e2e8f0;
     }
 
@@ -978,9 +1015,26 @@
     }
 
     .history-item.upcoming {
-      border-color: rgba(245, 158, 11, 0.3);
       background: rgba(245, 158, 11, 0.05);
-      animation: pulse-border 2s ease-in-out infinite;
+      border-radius: 8px;
+    }
+
+    .history-item.upcoming::before {
+      background: #f59e0b;
+      box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+
+      0%,
+      100% {
+        box-shadow: 0 0 6px rgba(245, 158, 11, 0.3);
+      }
+
+      50% {
+        box-shadow: 0 0 14px rgba(245, 158, 11, 0.7);
+      }
     }
 
     @keyframes pulse-border {
@@ -997,10 +1051,11 @@
 
     .history-dday {
       font-weight: 900;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       background: linear-gradient(90deg, #f59e0b, #ef4444);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      margin-left: auto;
     }
 
     /* BPM 140 제한 드러머 */
@@ -2017,8 +2072,8 @@
       markersEl.innerHTML = staves.map((s, i) => {
         const midPct = ((s.top + s.bottom) / 2 / h * 100);
         const hPct = ((s.bottom - s.top) / h * 100);
-        return `<div style="position:absolute;left:0;width:100%;top:${(s.top/h*100).toFixed(1)}%;height:${hPct.toFixed(1)}%;border:1px dashed rgba(255,80,80,0.4);background:rgba(255,80,80,0.05);pointer-events:none">
-          <span style="position:absolute;right:4px;top:0;font-size:0.6rem;color:rgba(255,80,80,0.7);font-weight:600">${i+1}</span>
+        return `<div style="position:absolute;left:0;width:100%;top:${(s.top / h * 100).toFixed(1)}%;height:${hPct.toFixed(1)}%;border:1px dashed rgba(255,80,80,0.4);background:rgba(255,80,80,0.05);pointer-events:none">
+          <span style="position:absolute;right:4px;top:0;font-size:0.6rem;color:rgba(255,80,80,0.7);font-weight:600">${i + 1}</span>
         </div>`;
       }).join('');
     }
@@ -2444,7 +2499,8 @@
     <div id="sysEditorDetectBar"
       style="display:none;align-items:center;gap:12px;padding:10px 20px;background:rgba(74,222,128,0.08);border-bottom:1px solid rgba(74,222,128,0.15);flex-shrink:0;flex-wrap:wrap">
       <span style="font-size:0.85rem;font-weight:600;color:var(--success)">🎼 오선 수</span>
-      <select id="sysEditorStaves" class="form-control" style="width:auto;padding:6px 12px;font-size:0.85rem" onchange="onStaveModeChange()">
+      <select id="sysEditorStaves" class="form-control" style="width:auto;padding:6px 12px;font-size:0.85rem"
+        onchange="onStaveModeChange()">
         <option value="manual">📝 수동 입력</option>
         <option value="0">🔮 자동감지 (간격 기반)</option>
         <option value="1">단선 악보 (드럼/보컬) — 1</option>
@@ -2455,10 +2511,12 @@
       </select>
       <div id="manualPatternWrap" style="display:flex;align-items:center;gap:8px">
         <span style="font-size:0.8rem;color:var(--text-muted)">이 페이지:</span>
-        <input type="text" id="manualPatternInput" class="form-control" placeholder="22223" style="width:140px;padding:6px 10px;font-size:0.85rem;font-family:monospace" oninput="saveManualPattern()">
+        <input type="text" id="manualPatternInput" class="form-control" placeholder="22223"
+          style="width:140px;padding:6px 10px;font-size:0.85rem;font-family:monospace" oninput="saveManualPattern()">
         <span id="manualStaveCount" style="font-size:0.75rem;color:var(--accent);font-weight:600"></span>
         <span style="font-size:0.75rem;color:var(--text-muted);margin-left:8px">감도:</span>
-        <input type="range" id="staveThreshold" min="15" max="50" value="30" style="width:80px;accent-color:var(--accent)" oninput="onThresholdChange(this.value)">
+        <input type="range" id="staveThreshold" min="15" max="50" value="30"
+          style="width:80px;accent-color:var(--accent)" oninput="onThresholdChange(this.value)">
         <span id="thresholdVal" style="font-size:0.7rem;color:var(--text-muted);min-width:28px">30%</span>
       </div>
       <button class="btn btn-success" onclick="runDetection()" style="font-size:0.85rem;padding:8px 16px">🔍 줄 감지
