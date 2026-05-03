@@ -568,6 +568,7 @@
               <span class="song-info-label">Inst 음원</span>
               <div class="song-info-val" id="detailInstStatus">미등록</div>
             </div>
+            <button class="btn btn-ghost" id="instDownloadBtn" style="display:none;font-size:0.75rem;padding:0.2rem 0.5rem;margin-left:auto" title="inst 다운로드">📥</button>
           </div>
         </div>
       </div>
@@ -1629,12 +1630,15 @@
       document.getElementById('detailCountIn').textContent = s.count_in_bars + '마디';
       // inst 상태
       const instEl = document.getElementById('detailInstStatus');
+      const instDlBtn = document.getElementById('instDownloadBtn');
       if (s.inst_filename) {
         instEl.textContent = '등록됨';
         instEl.className = 'song-info-val inst-status-on';
+        if (instDlBtn) { instDlBtn.style.display = 'inline-block'; instDlBtn.onclick = () => { const a = document.createElement('a'); a.href = '/uploads/' + s.inst_filename; a.download = s.name + '_inst' + s.inst_filename.substring(s.inst_filename.lastIndexOf('.')); a.click(); }; }
       } else {
         instEl.textContent = '미등록';
         instEl.className = 'song-info-val inst-status-off';
+        if (instDlBtn) instDlBtn.style.display = 'none';
       }
       // 앨범 커버 배경
       const bg = document.getElementById('detailCoverBg');
@@ -1679,6 +1683,7 @@
         </div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap" onclick="event.stopPropagation()">
+        <button class="btn btn-ghost btn-sm" onclick="downloadPartPdf('${p.id}')" title="악보 다운로드">📥</button>
         <button class="btn btn-accent btn-sm" onclick="openScoreEditor('${p.id}')">⚙️ <span class="btn-label">악보설정</span></button>
         <button class="btn btn-danger btn-sm" onclick="deletePart('${p.id}')">🗑️</button>
       </div>
@@ -1688,6 +1693,15 @@
 
     function openPlayer(partId) {
       window.open(`/player.html?songId=${currentSong.id}&partId=${partId}`, '_blank');
+    }
+
+    function downloadPartPdf(partId) {
+      const part = currentSong.parts.find(p => p.id === partId);
+      if (!part) return;
+      const a = document.createElement('a');
+      a.href = '/uploads/' + part.pdf_filename;
+      a.download = currentSong.name + '_' + part.name + '.pdf';
+      a.click();
     }
 
     // ── Upload ──
