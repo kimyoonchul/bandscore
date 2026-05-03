@@ -372,7 +372,7 @@ select.form-control { cursor: pointer; }
 .song-info-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 10px;
 }
 .song-info-item {
   display: flex;
@@ -384,10 +384,10 @@ select.form-control { cursor: pointer; }
   transition: background 0.2s;
 }
 .song-info-item:hover { background: rgba(255,255,255,0.05); }
-.song-info-icon { font-size: 1.2rem; flex-shrink: 0; }
-.song-info-label { color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
-.song-info-val { font-size: 0.95rem; font-weight: 700; margin-top: 1px; }
-.song-info-bpm { font-size: 1.2rem; font-weight: 800; color: var(--primary); }
+.song-info-icon { font-size: 1.1rem; flex-shrink: 0; }
+.song-info-label { color: var(--text-muted); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.song-info-val { font-size: 0.92rem; font-weight: 700; margin-top: 1px; }
+.song-info-bpm { font-size: 1.15rem; font-weight: 800; color: var(--primary); }
 .song-info-hint {
   text-align: right;
   font-size: 0.68rem;
@@ -583,15 +583,15 @@ select.form-control { cursor: pointer; }
   /* 곡 상세 헤더 */
   .song-detail-header { margin-bottom: 16px; gap: 8px; }
 
-  /* 곡 정보 카드 */
-  .song-info-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .song-info-card { padding: 12px; margin-bottom: 14px; }
-  .song-info-item { padding: 6px 8px; gap: 6px; }
-  .song-info-icon { font-size: 1rem; }
-  .song-info-label { font-size: 0.65rem; }
-  .song-info-val { font-size: 0.82rem; }
-  .song-info-bpm { font-size: 1rem; }
-  .song-info-hint { font-size: 0.6rem; margin-top: 6px; }
+  /* 공 정보 카드 - 모바일도 1줄 */
+  .song-info-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .song-info-card { padding: 10px; margin-bottom: 12px; }
+  .song-info-item { padding: 5px 4px; gap: 4px; flex-direction: column; text-align: center; }
+  .song-info-icon { font-size: 0.85rem; }
+  .song-info-label { font-size: 0.55rem; }
+  .song-info-val { font-size: 0.78rem; }
+  .song-info-bpm { font-size: 0.9rem; }
+  .song-info-hint { font-size: 0.55rem; margin-top: 4px; }
 
   /* 탭바 */
   .tab-btn { padding: 8px 10px; font-size: 0.78rem; }
@@ -614,14 +614,20 @@ select.form-control { cursor: pointer; }
   .empty-state p { font-size: 0.9rem; }
 }
 
-/* iPad optimization */
+/* iPad / Tablet optimization */
 @media (min-width: 768px) and (max-width: 1024px) {
-  .btn { min-height: 48px; }
-  .btn-lg { min-height: 56px; font-size: 1.1rem; }
+  .container { max-width: 720px; margin: 0 auto; padding: 20px; }
+  .btn { min-height: 44px; }
+  .btn-lg { min-height: 52px; font-size: 1.05rem; }
   .song-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  .song-info-grid { gap: 10px; }
+  .song-info-item { padding: 10px 12px; }
+  .part-item { padding: 14px 16px; }
+  .modal { max-width: 520px; }
+  .form-control { padding: 10px 14px; }
 }
 
-/* Landscape iPad */
+/* Landscape iPad / 가로 태블릿 */
 @media (orientation: landscape) and (max-height: 500px) {
   .player-top-bar { padding: 4px 12px; }
   .player-controls { padding: 6px 12px; }
