@@ -681,6 +681,40 @@
       accent-color: var(--primary);
       cursor: pointer;
     }
+
+    /* ── 모바일 축소 ── */
+    @media (max-width: 768px) {
+      .player-top-bar { padding: 10px 12px; }
+      .player-top-bar .song-title { font-size: 0.9rem; }
+      .player-top-bar .part-label { font-size: 0.72rem; margin-left: 6px; }
+      .mode-toggle { font-size: 0.6rem; padding: 2px 7px; }
+      .status-badge { font-size: 0.65rem; padding: 2px 7px; }
+
+      .player-controls { padding: 8px 10px; gap: 6px; }
+      .btn-icon { width: 32px; height: 32px; font-size: 0.9rem; }
+      .btn { padding: 5px 10px; font-size: 0.75rem; min-height: 32px; min-width: 32px; }
+
+      .bpm-display .val { font-size: 1rem; }
+      .bpm-display .lbl { font-size: 0.55rem; }
+      .bpm-display { padding: 2px 5px; }
+
+      .seekbar-time { font-size: 0.58rem; }
+      .seekbar-thumb { width: 10px; height: 10px; }
+
+      .nav-arrow { font-size: 1rem; padding: 8px 5px; }
+      .count-number { font-size: 5rem; }
+
+      .settings-panel { width: 260px; right: -270px; font-size: 0.78rem; padding: 12px; }
+      .settings-panel h3 { font-size: 0.9rem; margin-bottom: 12px; }
+      .setting-group label { font-size: 0.68rem; }
+      .setting-row .val { font-size: 0.72rem; min-width: 32px; }
+
+      .member-popover { padding: 8px 10px; min-width: 150px; }
+      .member-popover .member-item { font-size: 0.75rem; }
+      .member-popover .pop-title { font-size: 0.65rem; }
+
+      .view-toggle button { padding: 5px 8px; font-size: 0.68rem; }
+    }
   </style>
 </head>
 

@@ -520,7 +520,41 @@ select.form-control { cursor: pointer; }
   .app-logo .icon { font-size: 1.2rem; }
   #btnNewSong { font-size: 0.75rem; padding: 6px 12px; min-height: 34px; }
   .btn-label { display: none; }
-  .btn-sm { padding: 6px 10px; min-height: 32px; }
+
+  /* 버튼 전반 축소 */
+  .btn { padding: 7px 14px; font-size: 0.8rem; min-height: 36px; min-width: 36px; gap: 5px; }
+  .btn-sm { padding: 5px 10px; font-size: 0.72rem; min-height: 28px; }
+  .btn-lg { padding: 10px 22px; font-size: 0.9rem; min-height: 42px; }
+  .btn-icon { width: 36px; height: 36px; font-size: 1rem; }
+
+  /* 카드/파트 축소 */
+  .card { padding: 14px; }
+  .part-item { padding: 12px 14px; }
+  .part-item .part-name { font-size: 0.9rem; }
+  .part-item .part-info { font-size: 0.75rem; }
+
+  /* 곡 상세 헤더 */
+  .song-detail-header { margin-bottom: 16px; gap: 8px; }
+
+  /* 탭바 */
+  .tab-btn { padding: 8px 10px; font-size: 0.78rem; }
+
+  /* 섹션 편집 */
+  .section-item { padding: 10px; }
+  .flow-tag { padding: 5px 10px; font-size: 0.75rem; }
+  .flow-editor { padding: 10px; gap: 6px; }
+
+  /* 폼 */
+  .form-control { padding: 9px 12px; font-size: 0.85rem; }
+  .form-group label { font-size: 0.72rem; }
+
+  /* 모달 */
+  .modal-title { font-size: 1.1rem; margin-bottom: 16px; }
+
+  /* 빈 상태 */
+  .empty-state { padding: 40px 16px; }
+  .empty-state .icon { font-size: 3rem; }
+  .empty-state p { font-size: 0.9rem; }
 }
 
 /* iPad optimization */
