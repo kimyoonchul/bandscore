@@ -1877,6 +1877,9 @@
           else mutedMembers.delete(m.id);
         }
       });
+      // 멤버 이모지 표시
+      const emojis = list.map(m => partEmoji(m.partName)).join('');
+      document.getElementById('memberCount').innerHTML = emojis || '0';
       renderMemberList();
     });
     socket.on('count-in', ({ bpm: b }) => {
