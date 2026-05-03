@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <g transform="rotate(-35,12,12)">
+    <!-- 넥 -->
+    <rect x="11" y="1" width="2.5" height="12" rx="1" fill="#d4a574"/>
+    <!-- 헤드 -->
+    <rect x="10.5" y="0" width="3.5" height="3" rx="1.2" fill="#c49464"/>
+    <circle cx="10.2" cy="1.2" r="0.8" fill="#888"/>
+    <circle cx="10.2" cy="2.8" r="0.8" fill="#888"/>
+    <circle cx="14.3" cy="1.2" r="0.8" fill="#888"/>
+    <circle cx="14.3" cy="2.8" r="0.8" fill="#888"/>
+    <!-- 바디 -->
+    <ellipse cx="12.2" cy="18" rx="6" ry="5.5" fill="#e8913a"/>
+    <ellipse cx="12.2" cy="14.5" rx="4.2" ry="3.5" fill="#f0a050"/>
+    <!-- 사운드홀/픽업 -->
+    <rect x="9.5" y="16.5" width="5.5" height="1.2" rx="0.5" fill="#c07028"/>
+    <rect x="9.5" y="18.5" width="5.5" height="1.2" rx="0.5" fill="#c07028"/>
+    <!-- 줄 -->
+    <line x1="11.8" y1="3" x2="11.8" y2="20" stroke="rgba(255,255,255,0.5)" stroke-width="0.25"/>
+    <line x1="12.5" y1="3" x2="12.5" y2="20" stroke="rgba(255,255,255,0.5)" stroke-width="0.25"/>
+  </g>
+</svg>

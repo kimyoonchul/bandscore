@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <g transform="rotate(-35,12,12)">
+    <!-- 긴 넥 (베이스 특유의 긴 넥) -->
+    <rect x="11.2" y="0" width="2.2" height="14" rx="1" fill="#c49464"/>
+    <!-- 헤드 (넓고 큰 헤드) -->
+    <rect x="10.5" y="-1" width="3.5" height="3.5" rx="1.2" fill="#b0845a"/>
+    <circle cx="10.2" cy="0" r="0.8" fill="#888"/>
+    <circle cx="10.2" cy="1.6" r="0.8" fill="#888"/>
+    <circle cx="14.3" cy="0" r="0.8" fill="#888"/>
+    <circle cx="14.3" cy="1.6" r="0.8" fill="#888"/>
+    <!-- 바디 (기타보다 작고 좁음) -->
+    <ellipse cx="12.2" cy="19" rx="5" ry="4.5" fill="#5b8dd9"/>
+    <ellipse cx="12.2" cy="16" rx="3.5" ry="2.8" fill="#6b9de9"/>
+    <!-- 픽업 -->
+    <rect x="9.8" y="17.8" width="4.8" height="1" rx="0.4" fill="#3a6ab5"/>
+    <rect x="9.8" y="19.5" width="4.8" height="1" rx="0.4" fill="#3a6ab5"/>
+    <!-- 줄 (4줄 - 베이스) -->
+    <line x1="11.6" y1="2.5" x2="11.6" y2="21" stroke="rgba(255,255,255,0.5)" stroke-width="0.3"/>
+    <line x1="12.1" y1="2.5" x2="12.1" y2="21" stroke="rgba(255,255,255,0.5)" stroke-width="0.3"/>
+    <line x1="12.6" y1="2.5" x2="12.6" y2="21" stroke="rgba(255,255,255,0.4)" stroke-width="0.3"/>
+    <line x1="13.1" y1="2.5" x2="13.1" y2="21" stroke="rgba(255,255,255,0.4)" stroke-width="0.3"/>
+  </g>
+</svg>
