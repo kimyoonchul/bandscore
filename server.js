@@ -349,7 +349,7 @@ function getMemberList(songId) {
   const members = [];
   for (const sid of room) {
     const s = io.sockets.sockets.get(sid);
-    if (s) members.push({ id: sid, partName: s.partName || '?', partId: s.partId });
+  if (s) members.push({ id: sid, partName: s.partName || '?', partId: s.partId, instMuted: !!s.instMuted });
   }
   return members;
 }
@@ -368,6 +368,7 @@ io.on('connection', (socket) => {
     socket.songId = songId;
     socket.partId = partId;
     socket.partName = partName || '알 수 없음';
+    socket.instMuted = true; // 초기 접속 시 inst는 음소거 상태
     if (!rooms[songId]) {
       rooms[songId] = { state: 'idle', bpm: null, currentPage: 1, elapsedMs: 0, startTime: null };
     }
@@ -452,8 +453,10 @@ io.on('connection', (socket) => {
 
   // inst 상태 변경을 방 전체에 브로드캐스트
   socket.on('inst-state-changed', ({ muted }) => {
+    socket.instMuted = !!muted;
     if (socket.songId) {
       socket.to(socket.songId).emit('inst-state-update', { memberId: socket.id, muted });
+      broadcastMembers(socket.songId);
     }
   });
 

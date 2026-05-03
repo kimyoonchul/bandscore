@@ -899,10 +899,29 @@
 
     /** 초기화: API에서 곡/파트 로드 → PDF 렌더 → 타임라인 빌드 → 소켓 연결 */
     async function init() {
-      if (!songId || !partId) return alert('잘못된 접근');
-      song = await (await fetch(`/api/songs/${songId}`)).json();
+      if (!songId || !partId) {
+        alert('잘못된 접근입니다.');
+        window.location.href = '/';
+        return;
+      }
+      try {
+        song = await (await fetch(`/api/songs/${songId}`)).json();
+      } catch(e) {
+        alert('곡 정보를 불러올 수 없습니다.\n메인 페이지로 이동합니다.');
+        window.location.href = '/';
+        return;
+      }
+      if (!song || song.error) {
+        alert('존재하지 않는 곡입니다.\n메인 페이지로 이동합니다.');
+        window.location.href = '/';
+        return;
+      }
       part = song.parts.find(p => p.id === partId);
-      if (!part) return alert('파트 없음');
+      if (!part) {
+        alert('해당 파트가 존재하지 않습니다.\n악보가 재업로드되었을 수 있습니다.\n곡 상세 페이지로 이동합니다.');
+        window.location.href = '/#song/' + songId;
+        return;
+      }
       document.getElementById('songName').textContent = song.name;
       document.getElementById('partName').textContent = part.name;
       bpm = song.bpm; document.getElementById('bpmVal').textContent = bpm;
@@ -1757,6 +1776,13 @@
     socket.on('member-count', c => document.getElementById('memberCount').textContent = c + '명');
     socket.on('member-list', list => {
       memberList = list;
+      // 서버에서 전달된 instMuted 상태 동기화 (자기 자신은 로컬 instEnabled 기준)
+      list.forEach(m => {
+        if (m.id !== socket.id) {
+          if (m.instMuted) mutedMembers.add(m.id);
+          else mutedMembers.delete(m.id);
+        }
+      });
       renderMemberList();
     });
     socket.on('count-in', ({ bpm: b }) => {
