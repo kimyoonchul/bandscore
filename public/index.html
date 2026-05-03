@@ -40,7 +40,7 @@
       background: var(--glass);
       backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--glass-border);
-      padding: 12px 20px;
+      padding: 0.75rem 1.25rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -52,7 +52,7 @@
       font-size: 1.1rem;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 0.5rem;
     }
 
     .sys-editor-header .title .part-label {
@@ -83,7 +83,7 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      padding: 12px;
+      padding: 0.75rem;
     }
 
     .sys-editor-canvas-inner {
@@ -152,8 +152,8 @@
       color: #fff;
       font-size: 0.65rem;
       font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 0 0 4px 0;
+      padding: 0.125rem 0.375rem;
+      border-radius: 0 0 0.25rem 0;
     }
 
     /* 페이지 네비게이션 */
@@ -161,8 +161,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      padding: 8px 16px;
+      gap: 0.75rem;
+      padding: 0.5rem 1rem;
       background: rgba(0, 0, 0, 0.4);
       border-top: 1px solid rgba(255, 255, 255, 0.06);
       flex-shrink: 0;
@@ -172,8 +172,8 @@
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.12);
       color: #ddd;
-      padding: 8px 16px;
-      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
       cursor: pointer;
       font-family: inherit;
       font-weight: 600;
@@ -198,7 +198,7 @@
 
     /* 우측: 설정 패널 */
     .sys-editor-panel {
-      width: 360px;
+      width: 22.5rem;
       flex-shrink: 0;
       background: var(--bg-surface);
       border-left: 1px solid var(--glass-border);
@@ -208,7 +208,7 @@
     }
 
     .sys-editor-panel-header {
-      padding: 14px 16px;
+      padding: 0.875rem 1rem;
       border-bottom: 1px solid var(--border);
       font-weight: 700;
       font-size: 0.9rem;
@@ -219,23 +219,23 @@
     .sys-editor-panel-body {
       flex: 1;
       overflow-y: auto;
-      padding: 12px;
+      padding: 0.75rem;
     }
 
     .sys-editor-panel-footer {
-      padding: 12px 16px;
+      padding: 0.75rem 1rem;
       border-top: 1px solid var(--border);
       display: flex;
-      gap: 8px;
+      gap: 0.5rem;
       justify-content: flex-end;
       flex-shrink: 0;
     }
 
     /* 줄 설정 행 */
     .sys-row {
-      padding: 10px 12px;
-      border-radius: 8px;
-      margin-bottom: 6px;
+      padding: 0.625rem 0.75rem;
+      border-radius: 0.5rem;
+      margin-bottom: 0.375rem;
       background: var(--bg-card);
       border: 1px solid var(--border);
       cursor: pointer;
@@ -255,7 +255,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 6px;
+      margin-bottom: 0.375rem;
     }
 
     .sys-row-header .label {
@@ -271,18 +271,18 @@
     .sys-row-fields {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 0.375rem;
       align-items: stretch;
     }
 
     .sys-field-group {
       display: flex;
       align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
+      gap: 0.25rem;
+      padding: 0.25rem 0.5rem;
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 6px;
+      border-radius: 0.375rem;
     }
 
     .sys-field-label {
@@ -290,24 +290,24 @@
       color: var(--primary);
       font-weight: 700;
       white-space: nowrap;
-      margin-right: 2px;
+      margin-right: 0.125rem;
     }
 
     .sys-field {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 0.25rem;
       font-size: 0.75rem;
       color: var(--text-muted);
     }
 
     .sys-field input,
     .sys-field select {
-      width: 52px;
-      padding: 4px 6px;
+      width: 3.25rem;
+      padding: 0.25rem 0.375rem;
       background: var(--bg-elevated);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 0.375rem;
       color: var(--text);
       font-size: 0.8rem;
       text-align: center;
@@ -315,7 +315,7 @@
     }
 
     .sys-field select {
-      width: 60px;
+      width: 3.75rem;
       text-align: left;
     }
 
@@ -325,7 +325,7 @@
 
     /* 가이드 배너 */
     .sys-editor-guide {
-      padding: 10px 16px;
+      padding: 0.625rem 1rem;
       background: rgba(212, 165, 116, 0.08);
       border-bottom: 1px solid rgba(212, 165, 116, 0.15);
       font-size: 0.78rem;
@@ -358,9 +358,9 @@
       }
 
       .sys-editor-header {
-        padding: 8px 12px;
+        padding: 0.5rem 0.75rem;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 0.5rem;
       }
 
       .sys-editor-header .title {
@@ -369,23 +369,23 @@
 
       .sys-editor-header .btn {
         font-size: 0.75rem !important;
-        padding: 4px 10px !important;
+        padding: 0.25rem 0.625rem !important;
       }
 
       .sys-editor-guide {
         font-size: 0.7rem;
-        padding: 8px 12px;
+        padding: 0.5rem 0.75rem;
         line-height: 1.4;
       }
 
       #sysEditorDetectBar {
-        padding: 8px 12px !important;
-        gap: 8px !important;
+        padding: 0.5rem 0.75rem !important;
+        gap: 0.5rem !important;
       }
 
       #sysEditorDetectBar select {
         font-size: 0.75rem;
-        padding: 4px 8px;
+        padding: 0.25rem 0.5rem;
       }
 
       #manualPatternWrap {
@@ -393,40 +393,40 @@
       }
 
       #manualPatternWrap input[type="text"] {
-        width: 100px !important;
+        width: 6.25rem !important;
         font-size: 0.75rem !important;
       }
 
       #manualPatternWrap input[type="range"] {
-        width: 60px !important;
+        width: 3.75rem !important;
       }
 
       .sys-editor-canvas-wrap {
-        padding: 6px;
+        padding: 0.375rem;
       }
 
       .sys-editor-page-nav {
-        padding: 6px 10px;
-        gap: 8px;
+        padding: 0.375rem 0.625rem;
+        gap: 0.5rem;
       }
 
       .sys-editor-page-nav button {
-        padding: 6px 10px;
+        padding: 0.375rem 0.625rem;
         font-size: 0.75rem;
       }
 
       .sys-editor-panel-header {
-        padding: 10px 12px;
+        padding: 0.625rem 0.75rem;
         font-size: 0.8rem;
       }
 
       .sys-editor-panel-body {
-        padding: 8px;
+        padding: 0.5rem;
       }
 
       .sys-row {
-        padding: 8px 10px;
-        margin-bottom: 4px;
+        padding: 0.5rem 0.625rem;
+        margin-bottom: 0.25rem;
       }
 
       .sys-row-header .label {
@@ -434,7 +434,7 @@
       }
 
       .sys-row-fields {
-        gap: 4px;
+        gap: 0.25rem;
       }
 
       .sys-field {
@@ -443,17 +443,17 @@
 
       .sys-field input,
       .sys-field select {
-        width: 44px;
-        padding: 3px 4px;
+        width: 2.75rem;
+        padding: 0.1875rem 0.25rem;
         font-size: 0.72rem;
       }
 
       .sys-field select {
-        width: 52px;
+        width: 3.25rem;
       }
 
       .sys-field-group {
-        padding: 3px 6px;
+        padding: 0.1875rem 0.375rem;
       }
 
       .sys-field-label {
@@ -1739,6 +1739,8 @@
 
     async function deletePart(id) {
       if (!confirm('이 악보를 삭제하시겠습니까?')) return;
+      const pw = prompt('삭제 비밀번호를 입력하세요:');
+      if (pw !== '0313') { alert('비밀번호가 틀립니다.'); return; }
       await api(`/api/parts/${id}`, { method: 'DELETE' });
       await openSong(currentSong.id);
     }
@@ -1851,6 +1853,8 @@
 
     async function deleteSong() {
       if (!confirm(`"${currentSong.name}" 을(를) 삭제하시겠습니까?`)) return;
+      const pw = prompt('삭제 비밀번호를 입력하세요:');
+      if (pw !== '0313') { alert('비밀번호가 틀립니다.'); return; }
       await api(`/api/songs/${currentSong.id}`, { method: 'DELETE' });
       showSongList();
     }
@@ -2063,8 +2067,9 @@
             for (let x = 0; x < w; x++)
               if ((d[(y * w + x) * 4] + d[(y * w + x) * 4 + 1] + d[(y * w + x) * 4 + 2]) / 3 < 100) rowDark[y]++;
 
-          // Find staff lines (rows with >30% dark pixels)
-          const threshold = w * 0.3;
+          // Find staff lines (rows with threshold% dark pixels)
+          const thresholdPct = parseInt(document.getElementById('staveThreshold')?.value || 30);
+          const threshold = w * (thresholdPct / 100);
           const staffLines = [];
           let gs = -1;
           for (let y = 0; y < h; y++) {
@@ -2157,8 +2162,8 @@
           }
 
           // Add padding: 코드(위) + 가사(아래) 포함하도록 여유있게
-          const paddingTop = 45;    // 코드 기호 포함
-          const paddingBottom = 40; // 가사 포함
+          const paddingTop = 55;    // 코드 기호 + 여유
+          const paddingBottom = 55; // 가사 + 여유
 
           // 시스템 간 중간점 계산으로 자연스러운 영역 분할
           for (let idx = 0; idx < systems.length; idx++) {
@@ -2214,6 +2219,11 @@
     function onStaveModeChange() {
       const val = document.getElementById('sysEditorStaves').value;
       document.getElementById('manualPatternWrap').style.display = val === 'manual' ? 'flex' : 'none';
+      // 버튼 텍스트 동적 변경
+      const detectBtn = document.querySelector('#sysEditorDetectBar .btn-success');
+      if (detectBtn) {
+        detectBtn.innerHTML = val === 'manual' ? '✅ 완료' : '🔍 줄 감지 실행';
+      }
       if (val === 'manual' && Object.keys(sysEditorState.staveCache).length === 0) {
         preAnalyzeStaves();
       }
@@ -2240,7 +2250,8 @@
         for (let y = 0; y < h; y++)
           for (let x = 0; x < w; x++)
             if ((d[(y * w + x) * 4] + d[(y * w + x) * 4 + 1] + d[(y * w + x) * 4 + 2]) / 3 < 100) rowDark[y]++;
-        const threshold = w * 0.3;
+        const thresholdPct = parseInt(document.getElementById('staveThreshold')?.value || 30);
+        const threshold = w * (thresholdPct / 100);
         const staffLines = [];
         let gs = -1;
         for (let y = 0; y < h; y++) {
@@ -2787,24 +2798,26 @@
   <style>
     .brand-banner {
       position: fixed;
-      bottom: 70px;
+      bottom: 4.375rem;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(30, 20, 13, 0.92);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(200, 149, 108, 0.3);
-      border-radius: 14px;
-      padding: 10px 20px;
+      border-radius: 0.875rem;
+      padding: 0.625rem 1.25rem;
       display: inline-flex;
       align-items: center;
-      gap: 10px;
+      gap: 0.625rem;
       text-decoration: none;
       color: #fff;
       z-index: 9999;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
       transition: all 0.3s;
-      white-space: nowrap;
       animation: bannerSlideUp 0.6s ease-out;
+      max-width: calc(100vw - 2rem);
+      width: auto;
+      box-sizing: border-box;
     }
 
     .brand-banner:hover {
@@ -2820,18 +2833,26 @@
     .brand-banner-text {
       font-size: 0.8rem;
       line-height: 1.6;
-      white-space: normal;
       text-align: left;
+      min-width: 0;
+      overflow: hidden;
     }
 
     .brand-banner-text strong {
       color: #c8956c;
       display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .brand-banner-sub {
       color: #aaa;
       font-size: 0.72rem;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .brand-banner-close {
@@ -2840,7 +2861,7 @@
       color: #666;
       cursor: pointer;
       font-size: 0.9rem;
-      padding: 0 0 0 6px;
+      padding: 0 0 0 0.375rem;
       line-height: 1;
       flex-shrink: 0;
     }
@@ -2859,10 +2880,11 @@
 
     @media (max-width: 480px) {
       .brand-banner {
-        bottom: 60px;
-        padding: 8px 16px;
-        gap: 8px;
-        border-radius: 12px;
+        bottom: 3.75rem;
+        padding: 0.5rem 0.875rem;
+        gap: 0.5rem;
+        border-radius: 0.75rem;
+        max-width: calc(100vw - 1.5rem);
       }
 
       .brand-banner-text {
