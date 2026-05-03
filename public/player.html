@@ -940,6 +940,7 @@
         </div>
         <button class="btn btn-ghost" onclick="toggleMetronome()" id="btnMetro" title="메트로놈 (N)" style="opacity:0.5">🥁</button>
       </div>
+      <button class="btn btn-ghost" onclick="toggleBorderFlash()" id="btnBorderFlash" title="테두리 깜빡임 (B)" style="opacity:0.5">💡</button>
       <div class="inst-vol-wrap" id="instVolWrap" style="display:none">
         <div class="inst-vol-slider">
           <input type="range" min="0" max="100" value="0" oninput="setInstVolume(this.value)">
@@ -1068,6 +1069,7 @@
         <kbd>F</kbd><span>전체화면 토글</span>
         <kbd>M</kbd><span>inst 음소거 토글</span>
         <kbd>N</kbd><span>메트로놈 토글</span>
+        <kbd>B</kbd><span>테두리 깜빡임 토글</span>
         <kbd>H</kbd><span>UI 표시/숨김</span>
         <kbd>S</kbd><span>설정 패널</span>
         <kbd>1</kbd><span>1벌 보기</span>
@@ -1149,6 +1151,7 @@
     let metronomeOn = false;      // 메트로놈 활성 여부
     let metroVolume = 0.6;        // 메트로놈 볼륨 (0~1)
     let lastBeatIndex = -1;       // 마지막 재생한 비트 인덱스 (중복 방지)
+    let borderFlashOn = false;    // 테두리 깜빡임 활성 여부
     const socket = io();
 
     /** 초기화: API에서 곡/파트 로드 → PDF 렌더 → 타임라인 빌드 → 소켓 연결 */
@@ -1675,19 +1678,31 @@
         const e = timeline[idx], prog = Math.min(1, (sec - e.start) / e.dur);
         highlightSys(idx, prog);
         updateSeekbar(sec);
-        // ── 메트로놈 비트 체크 ──
-        if (metronomeOn) {
+        // ── 비트 감지 (메트로놈 + 테두리 깜빡임 공용) ──
+        if (metronomeOn || borderFlashOn) {
           const bpb = parseInt(song.time_signature?.split('/')[0]) || 4;
-          const beatDur = 60 / bpm; // 1비트 길이(초)
+          const beatDur = 60 / bpm;
           const globalBeatIdx = Math.floor(sec / beatDur);
           if (globalBeatIdx !== lastBeatIndex) {
             lastBeatIndex = globalBeatIdx;
             const isDownbeat = (globalBeatIdx % bpb) === 0;
-            playClick(audioCtx.currentTime, isDownbeat ? 1200 : 800, metroVolume);
-            // 비트 플래시
-            const fl = document.getElementById('beatFlash');
-            fl.classList.add('flash');
-            setTimeout(() => fl.classList.remove('flash'), 80);
+            // 메트로놈 클릭음
+            if (metronomeOn) {
+              playClick(audioCtx.currentTime, isDownbeat ? 1200 : 800, metroVolume);
+              const fl = document.getElementById('beatFlash');
+              fl.classList.add('flash');
+              setTimeout(() => fl.classList.remove('flash'), 80);
+            }
+            // 테두리 깜빡임
+            if (borderFlashOn) {
+              document.querySelectorAll('.sys-active-border').forEach(el => {
+                el.style.transition = 'box-shadow 0.08s';
+                el.style.boxShadow = isDownbeat
+                  ? `0 0 18px 4px ${styleSettings.lineColor || '#c8956c'}`
+                  : `0 0 10px 2px ${styleSettings.lineColor || '#c8956c'}`;
+                setTimeout(() => { el.style.boxShadow = 'none'; }, 120);
+              });
+            }
           }
         }
         animFrame = requestAnimationFrame(tick);
@@ -1755,6 +1770,12 @@
         socket.emit('leave-room');
       }
       applyModeUI();
+      // UI 숨겨져 있으면 보여주기
+      if (!uiVisible) {
+        uiVisible = true;
+        document.getElementById('topBar').classList.remove('hidden');
+        document.getElementById('ctrlBar').classList.remove('hidden');
+      }
     }
 
     function doStart() { soloMode = false; applyModeUI(); socket.emit('start', { bpm, countInBeats: song.count_in_bars * (parseInt(song.time_signature.split('/')[0]) || 4) }) }
@@ -1883,6 +1904,11 @@
     }
     function setMetroVolume(val) {
       metroVolume = parseInt(val) / 100;
+    }
+    function toggleBorderFlash() {
+      borderFlashOn = !borderFlashOn;
+      document.getElementById('btnBorderFlash').style.opacity = borderFlashOn ? '1' : '0.5';
+      lastBeatIndex = -1;
     }
 
     function editBpm() {
@@ -2375,6 +2401,9 @@
           break;
         case 'n': case 'N':
           toggleMetronome();
+          break;
+        case 'b': case 'B':
+          toggleBorderFlash();
           break;
         case '1':
           setView('single', document.querySelector('.view-toggle button:nth-child(1)'));
