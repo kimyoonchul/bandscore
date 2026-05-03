@@ -1776,12 +1776,46 @@
           }
           if (cur.length >= 3) staves.push({ top: cur[0].y, bottom: cur[cur.length - 1].y });
 
-          // N개의 오선을 1 시스템으로 묶기
+          // 오선을 시스템으로 그룹핑
           const systems = [];
-          for (let si = 0; si < staves.length; si += stavesPerSystem) {
-            const group = staves.slice(si, Math.min(si + stavesPerSystem, staves.length));
-            if (group.length > 0) {
-              systems.push({ top: group[0].top, bottom: group[group.length - 1].bottom });
+          if (stavesPerSystem === 0) {
+            // ── 자동감지 모드: 간격 기반 ──
+            if (staves.length <= 1) {
+              // 오선이 0~1개면 그대로
+              staves.forEach(s => systems.push({ top: s.top, bottom: s.bottom }));
+            } else {
+              // 오선 간 간격 계산
+              const gaps = [];
+              for (let i = 1; i < staves.length; i++) {
+                gaps.push(staves[i].top - staves[i - 1].bottom);
+              }
+              // 간격의 중앙값 계산
+              const sorted = [...gaps].sort((a, b) => a - b);
+              const median = sorted[Math.floor(sorted.length / 2)];
+              // 중앙값의 1.8배 이상이면 시스템 경계
+              const gapThreshold = median * 1.8;
+              let group = [staves[0]];
+              for (let i = 1; i < staves.length; i++) {
+                const gap = staves[i].top - staves[i - 1].bottom;
+                if (gap > gapThreshold) {
+                  // 시스템 경계 → 현재 그룹 저장
+                  systems.push({ top: group[0].top, bottom: group[group.length - 1].bottom });
+                  group = [staves[i]];
+                } else {
+                  group.push(staves[i]);
+                }
+              }
+              if (group.length > 0) {
+                systems.push({ top: group[0].top, bottom: group[group.length - 1].bottom });
+              }
+            }
+          } else {
+            // ── 고정 N개 묶기 모드 ──
+            for (let si = 0; si < staves.length; si += stavesPerSystem) {
+              const group = staves.slice(si, Math.min(si + stavesPerSystem, staves.length));
+              if (group.length > 0) {
+                systems.push({ top: group[0].top, bottom: group[group.length - 1].bottom });
+              }
             }
           }
 
@@ -2145,6 +2179,7 @@
       style="display:none;align-items:center;gap:12px;padding:10px 20px;background:rgba(74,222,128,0.08);border-bottom:1px solid rgba(74,222,128,0.15);flex-shrink:0">
       <span style="font-size:0.85rem;font-weight:600;color:var(--success)">🎼 오선 수</span>
       <select id="sysEditorStaves" class="form-control" style="width:auto;padding:6px 12px;font-size:0.85rem">
+        <option value="0">🔮 자동감지 (간격 기반)</option>
         <option value="1">단선 악보 (드럼/보컬) — 1</option>
         <option value="2">기타/베이스 (표준보+TAB보) — 2</option>
         <option value="3">밴드스코어 3단 — 3</option>
