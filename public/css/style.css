@@ -361,6 +361,9 @@ select.form-control { cursor: pointer; }
   padding: 16px;
   cursor: pointer;
   transition: var(--transition);
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(12px);
 }
 .song-info-card:hover {
   border-color: var(--border-hover);
