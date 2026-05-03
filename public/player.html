@@ -578,7 +578,7 @@
         <span class="part-label" id="partName"></span>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span class="status-badge st-idle" id="statusBadge">대기</span>
+        <span class="status-badge st-idle" id="statusBadge" onclick="toggleMemberPopover(event)" style="cursor:pointer">대기</span>
         <div class="member-badge-wrap" onclick="toggleMemberPopover(event)">
           <span style="color:var(--primary);font-weight:700;font-size:0.75rem;cursor:pointer" id="memberCount">0</span>
           <div class="member-popover" id="memberPopover">
