@@ -329,7 +329,7 @@
   <header class="app-header">
     <div class="app-logo" onclick="showSongList()" style="cursor:pointer"><span class="icon">🎸</span> AsomeScorePlayer
     </div>
-    <button class="btn btn-primary" id="btnNewSong" onclick="showNewSongModal()">＋ 새 곡</button>
+    <button class="btn btn-primary" id="btnNewSong" onclick="showNewSongModal()">＋ <span class="btn-label">새 곡</span></button>
   </header>
 
   <div class="container" id="mainContainer" style="flex:1">
@@ -349,12 +349,12 @@
       <div class="detail-cover-bg" id="detailCoverBg"></div>
       <div class="song-detail-header" style="position:relative;z-index:1">
         <div>
-          <button class="btn btn-ghost btn-sm" onclick="showSongList()">← 목록</button>
+          <button class="btn btn-ghost btn-sm" onclick="showSongList()">← <span class="btn-label">목록</span></button>
           <h1 id="detailSongName" style="display:inline;margin-left:12px;font-size:1.5rem"></h1>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost btn-sm" onclick="showEditSongModal()">⚙️ 설정</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteSong()">🗑️ 삭제</button>
+          <button class="btn btn-ghost btn-sm" onclick="showEditSongModal()">⚙️ <span class="btn-label">설정</span></button>
+          <button class="btn btn-danger btn-sm" onclick="deleteSong()">🗑️ <span class="btn-label">삭제</span></button>
         </div>
       </div>
 
@@ -376,7 +376,7 @@
       <!-- Parts (탭 없이 바로 표시) -->
       <div id="tabParts">
         <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-          <button class="btn btn-accent" onclick="showUploadModal()">📄 악보 업로드</button>
+          <button class="btn btn-accent" onclick="showUploadModal()">📄 <span class="btn-label">악보 업로드</span></button>
         </div>
         <div id="partsList" class="parts-list"></div>
       </div>
