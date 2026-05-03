@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 
 <head>
@@ -299,7 +299,7 @@
   </style>
 </head>
 
-<body>
+<body style="display:flex;flex-direction:column;min-height:100vh">
 
   <header class="app-header">
     <div class="app-logo" onclick="showSongList()" style="cursor:pointer"><span class="icon">🎸</span> AsomeScorePlayer
@@ -307,7 +307,7 @@
     <button class="btn btn-primary" id="btnNewSong" onclick="showNewSongModal()">＋ 새 곡</button>
   </header>
 
-  <div class="container" id="mainContainer">
+  <div class="container" id="mainContainer" style="flex:1">
     <!-- Song List View -->
     <div id="songListView">
       <div id="songGrid" class="song-grid"></div>
@@ -488,7 +488,7 @@
   </footer>
 
   <style>
-    .band-footer { margin-top: 40px; position: relative; }
+    .band-footer { margin-top: auto; position: relative; }
     .footer-trigger {
       display: flex; align-items: center; justify-content: center; gap: 12px;
       padding: 14px 20px; cursor: pointer;
