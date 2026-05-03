@@ -302,7 +302,8 @@
 <body>
 
   <header class="app-header">
-    <div class="app-logo" onclick="showSongList()" style="cursor:pointer"><span class="icon">🎸</span> AsomeScorePlayer</div>
+    <div class="app-logo" onclick="showSongList()" style="cursor:pointer"><span class="icon">🎸</span> AsomeScorePlayer
+    </div>
     <button class="btn btn-primary" id="btnNewSong" onclick="showNewSongModal()">＋ 새 곡</button>
   </header>
 
@@ -416,7 +417,7 @@
         <label>파트 이름</label>
         <select class="form-control" id="uploadPartName">
           <option value="드럼">🥁 드럼</option>
-          <option value="베이스">🎵 베이스</option>
+          <option value="베이스">🎸 베이스</option>
           <option value="일렉기타">🎸 일렉기타</option>
           <option value="일렉기타2">🎸 일렉기타2</option>
           <option value="어쿠스틱기타">🎸 어쿠스틱기타</option>
@@ -602,11 +603,10 @@
 
     function partEmoji(name) {
       const n = (name || '').toLowerCase();
-      const icon = (src) => `<img src="${src}" style="width:1.1em;height:1.1em;vertical-align:-0.15em;display:inline-block">`;
       if (n.includes('드럼') || n.includes('drum')) return '🥁';
       if (n.includes('보컬') || n.includes('vocal') || n.includes('노래')) return '🎤';
-      if (n.includes('베이스') || n.includes('bass')) return icon('/icons/bass.svg');
-      if (n.includes('기타') || n.includes('guitar') || n.includes('gt')) return icon('/icons/guitar.svg');
+      if (n.includes('베이스') || n.includes('bass')) return '🎻';
+      if (n.includes('기타') || n.includes('guitar') || n.includes('gt')) return '🎸';
       if (n.includes('키보드') || n.includes('keyboard') || n.includes('key') || n.includes('피아노')) return '🎹';
       return '🎵';
     }
@@ -1353,7 +1353,7 @@
       const hash = window.location.hash;
       const m = hash.match(/^#song\/(.+)$/);
       if (m) {
-        try { await openSong(m[1]); } catch(e) { console.warn('Song not found:', m[1]); }
+        try { await openSong(m[1]); } catch (e) { console.warn('Song not found:', m[1]); }
       }
     }
     initApp();

@@ -23,6 +23,7 @@
   ================================================================
 -->
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport"
@@ -233,19 +234,22 @@
       order: -1;
       padding: 0 2px 6px;
     }
+
     .seekbar-track {
       position: relative;
       height: 6px;
-      background: rgba(255,255,255,0.12);
+      background: rgba(255, 255, 255, 0.12);
       border-radius: 3px;
       overflow: visible;
     }
+
     .seekbar-fill {
       height: 100%;
       background: var(--primary, #c8956c);
       border-radius: 3px;
       width: 0%;
     }
+
     .seekbar-thumb {
       position: absolute;
       top: 50%;
@@ -255,14 +259,15 @@
       height: 14px;
       border-radius: 50%;
       background: var(--primary, #c8956c);
-      box-shadow: 0 0 6px rgba(200,149,108,0.5);
+      box-shadow: 0 0 6px rgba(200, 149, 108, 0.5);
       pointer-events: none;
     }
+
     .seekbar-time {
       display: flex;
       justify-content: space-between;
       font-size: 0.65rem;
-      color: rgba(255,255,255,0.5);
+      color: rgba(255, 255, 255, 0.5);
       margin-top: 2px;
       user-select: none;
     }
@@ -457,33 +462,40 @@
       display: inline-flex;
       align-items: stretch;
     }
+
     .start-group .btn-main {
       border-radius: 50% 0 0 50%;
       padding: 0 12px 0 14px;
     }
+
     .start-group .btn-drop {
       border-radius: 0 50% 50% 0;
       padding: 0 8px;
-      border-left: 1px solid rgba(0,0,0,0.2);
+      border-left: 1px solid rgba(0, 0, 0, 0.2);
       font-size: 0.7rem;
       min-width: 28px;
     }
+
     .start-menu {
       position: absolute;
       bottom: calc(100% + 8px);
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(17,24,39,0.96);
+      background: rgba(17, 24, 39, 0.96);
       backdrop-filter: blur(16px);
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 12px;
       padding: 6px;
       min-width: 170px;
-      box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
+      box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
       z-index: 100;
       display: none;
     }
-    .start-menu.open { display: block; }
+
+    .start-menu.open {
+      display: block;
+    }
+
     .start-menu button {
       display: flex;
       align-items: center;
@@ -500,11 +512,18 @@
       cursor: pointer;
       transition: background 0.15s;
     }
-    .start-menu button:hover { background: rgba(255,255,255,0.08); }
-    .start-menu button .icon { font-size: 1.1rem; }
+
+    .start-menu button:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .start-menu button .icon {
+      font-size: 1.1rem;
+    }
+
     .start-menu .divider {
       height: 1px;
-      background: rgba(255,255,255,0.08);
+      background: rgba(255, 255, 255, 0.08);
       margin: 4px 0;
     }
 
@@ -513,29 +532,35 @@
       position: relative;
       cursor: pointer;
     }
+
     .member-popover {
       position: absolute;
       top: calc(100% + 8px);
       right: 0;
-      background: rgba(17,24,39,0.96);
+      background: rgba(17, 24, 39, 0.96);
       backdrop-filter: blur(16px);
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 12px;
       padding: 12px 14px;
       min-width: 180px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
       z-index: 2000;
       display: none;
     }
-    .member-popover.open { display: block; }
+
+    .member-popover.open {
+      display: block;
+    }
+
     .member-popover .pop-title {
       font-size: 0.72rem;
-      color: rgba(255,255,255,0.4);
+      color: rgba(255, 255, 255, 0.4);
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       margin-bottom: 8px;
     }
+
     .member-popover .member-item {
       display: flex;
       align-items: center;
@@ -544,50 +569,66 @@
       font-size: 0.85rem;
       color: #ddd;
     }
-    .member-popover .member-item + .member-item {
-      border-top: 1px solid rgba(255,255,255,0.06);
+
+    .member-popover .member-item+.member-item {
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
+
     .member-popover .member-dot {
-      width: 8px; height: 8px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: #4ade80;
       flex-shrink: 0;
     }
+
     .member-popover .member-name {
       flex: 1;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
     .member-popover .member-me {
       font-size: 0.65rem;
       color: var(--primary);
       font-weight: 700;
     }
+
     .member-popover .member-inst-btn {
-      background: none; border: none; cursor: pointer; font-size: 0.85rem; padding: 2px 4px; border-radius: 4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 2px 4px;
+      border-radius: 4px;
     }
-    .member-popover .member-inst-btn:hover { background: rgba(255,255,255,0.1); }
+
+    .member-popover .member-inst-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
 
     /* inst 볼륨 슬라이더 */
     .inst-vol-wrap {
       position: relative;
       display: inline-flex;
     }
+
     .inst-vol-slider {
       position: absolute;
       bottom: 100%;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(17,24,39,0.95);
+      background: rgba(17, 24, 39, 0.95);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 10px;
       padding: 12px 16px;
       display: none;
       align-items: center;
       z-index: 100;
     }
+
     .inst-vol-slider::after {
       content: '';
       position: absolute;
@@ -596,10 +637,12 @@
       right: 0;
       height: 16px;
     }
+
     .inst-vol-wrap:hover .inst-vol-slider,
     .inst-vol-slider:hover {
       display: flex;
     }
+
     .inst-vol-slider input[type="range"] {
       width: 100px;
       height: 4px;
@@ -621,7 +664,8 @@
         <span class="part-label" id="partName"></span>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span class="status-badge st-idle" id="statusBadge" onclick="toggleMemberPopover(event)" style="cursor:pointer">대기</span>
+        <span class="status-badge st-idle" id="statusBadge" onclick="toggleMemberPopover(event)"
+          style="cursor:pointer">대기</span>
         <div class="member-badge-wrap" onclick="toggleMemberPopover(event)">
           <span style="color:var(--primary);font-weight:700;font-size:0.75rem;cursor:pointer" id="memberCount">0</span>
           <div class="member-popover" id="memberPopover">
@@ -692,12 +736,14 @@
       <button class="btn btn-ghost btn-icon" id="btnResume" onclick="doResume()" style="display:none">▶</button>
       <button class="btn btn-danger btn-icon" id="btnStop" onclick="doStop()">⏹</button>
       <div style="width:1px;height:20px;background:rgba(255,255,255,0.15)"></div>
-      <button class="btn btn-ghost" onclick="changeBpm(-1)" style="font-size:1.2rem;padding:8px 14px;min-height:44px">−</button>
+      <button class="btn btn-ghost" onclick="changeBpm(-1)"
+        style="font-size:1.2rem;padding:8px 14px;min-height:44px">−</button>
       <div class="bpm-display" onclick="editBpm()">
         <div class="val" id="bpmVal">120</div>
         <div class="lbl">BPM</div>
       </div>
-      <button class="btn btn-ghost" onclick="changeBpm(1)" style="font-size:1.2rem;padding:8px 14px;min-height:44px">+</button>
+      <button class="btn btn-ghost" onclick="changeBpm(1)"
+        style="font-size:1.2rem;padding:8px 14px;min-height:44px">+</button>
       <div style="width:1px;height:20px;background:rgba(255,255,255,0.15)"></div>
       <div class="view-toggle">
         <button class="active" onclick="setView('single',this)">1벌</button>
@@ -869,7 +915,7 @@
           Object.assign(styleSettings, savedStyle);
           applyStyleToUI();
         }
-      } catch(e) {}
+      } catch (e) { }
 
       // inst 음원 로드
       if (song.inst_filename) {
@@ -1427,7 +1473,7 @@
     function instPlay() {
       if (!instAudio || !instEnabled) return;
       instAudio.currentTime = 0;
-      instAudio.play().catch(() => {});
+      instAudio.play().catch(() => { });
     }
     function instPause() {
       if (!instAudio || !instEnabled) return;
@@ -1435,7 +1481,7 @@
     }
     function instResume() {
       if (!instAudio || !instEnabled) return;
-      instAudio.play().catch(() => {});
+      instAudio.play().catch(() => { });
     }
     function instStop() {
       if (!instAudio) return;
@@ -1584,11 +1630,10 @@
     // ── 파트명 이모지 ──
     function partEmoji(name) {
       const n = (name || '').toLowerCase();
-      const icon = (src) => `<img src="${src}" style="width:1.1em;height:1.1em;vertical-align:-0.15em;display:inline-block">`;
       if (n.includes('드럼') || n.includes('drum')) return '🥁';
       if (n.includes('보컬') || n.includes('vocal') || n.includes('노래')) return '🎤';
-      if (n.includes('베이스') || n.includes('bass')) return icon('/icons/bass.svg');
-      if (n.includes('기타') || n.includes('guitar') || n.includes('gt')) return icon('/icons/guitar.svg');
+      if (n.includes('베이스') || n.includes('bass')) return '🎻';
+      if (n.includes('기타') || n.includes('guitar') || n.includes('gt')) return '🎸';
       if (n.includes('키보드') || n.includes('keyboard') || n.includes('key') || n.includes('피아노')) return '🎹';
       return '🎵';
     }
@@ -1767,7 +1812,7 @@
     }
 
     // 시크바 클릭/드래그 이벤트
-    (function() {
+    (function () {
       const track = document.getElementById('seekTrack');
       const wrap = document.getElementById('seekBarWrap');
       let dragging = false;
@@ -1801,7 +1846,7 @@
 
     // buildTimeline 후 총 시간 업데이트
     const _origBuildTimeline = buildTimeline;
-    buildTimeline = function() {
+    buildTimeline = function () {
       _origBuildTimeline();
       updateSeekbarTotal();
     };
