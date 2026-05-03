@@ -564,6 +564,48 @@
       color: var(--primary);
       font-weight: 700;
     }
+    .member-popover .member-inst-btn {
+      background: none; border: none; cursor: pointer; font-size: 0.85rem; padding: 2px 4px; border-radius: 4px;
+    }
+    .member-popover .member-inst-btn:hover { background: rgba(255,255,255,0.1); }
+
+    /* inst 볼륨 슬라이더 */
+    .inst-vol-wrap {
+      position: relative;
+      display: inline-flex;
+    }
+    .inst-vol-slider {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 12px 8px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      z-index: 100;
+      margin-bottom: 6px;
+    }
+    .inst-vol-wrap:hover .inst-vol-slider,
+    .inst-vol-slider:hover {
+      display: flex;
+    }
+    .inst-vol-slider input[type="range"] {
+      writing-mode: vertical-lr;
+      direction: rtl;
+      width: 28px;
+      height: 80px;
+      accent-color: var(--primary);
+    }
+    .inst-vol-slider .vol-label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
   </style>
 </head>
 
@@ -662,7 +704,13 @@
         <button onclick="setView('dual',this)">2벌</button>
         <button onclick="setView('portrait',this)">세로</button>
       </div>
-      <button class="btn btn-ghost" onclick="toggleInst()" id="btnInst" style="display:none" title="inst 음원">🔇</button>
+      <div class="inst-vol-wrap" id="instVolWrap" style="display:none">
+        <div class="inst-vol-slider">
+          <input type="range" min="0" max="100" value="80" oninput="setInstVolume(this.value)">
+          <span class="vol-label" id="instVolLabel">80%</span>
+        </div>
+        <button class="btn btn-ghost" onclick="toggleInst()" id="btnInst" title="inst 음원">🔇</button>
+      </div>
       <button class="btn btn-ghost" onclick="toggleFullscreen()">⛶</button>
       <button class="btn btn-ghost" onclick="toggleSettings()">⚙</button>
       <span style="font-size:0.7rem;color:var(--text-muted)" id="pgInd">1/1</span>
@@ -829,7 +877,8 @@
         instAudio = new Audio(`/uploads/${song.inst_filename}`);
         instAudio.preload = 'auto';
         instAudio.loop = false;
-        document.getElementById('btnInst').style.display = 'inline-flex';
+        instAudio.volume = 0.8;
+        document.getElementById('instVolWrap').style.display = 'inline-flex';
       }
     }
 
@@ -1356,6 +1405,11 @@
       document.getElementById('btnInst').textContent = instEnabled ? '🔊' : '🔇';
       if (!instEnabled && instAudio) { instAudio.pause(); }
     }
+    function setInstVolume(val) {
+      const v = parseInt(val);
+      if (instAudio) instAudio.volume = v / 100;
+      document.getElementById('instVolLabel').textContent = v + '%';
+    }
     function instPlay() {
       if (!instAudio || !instEnabled) return;
       instAudio.currentTime = 0;
@@ -1527,12 +1581,44 @@
       }
       inner.innerHTML = memberList.map(m => {
         const isMe = m.id === socket.id;
+        const hasInst = !!song?.inst_filename;
+        const instBtn = (hasInst && !isMe)
+          ? `<button class="member-inst-btn" onclick="event.stopPropagation();toggleRemoteInst('${m.id}')" title="inst 음소거" id="mInst_${m.id}">🔊</button>`
+          : '';
         return `<div class="member-item">
           <span class="member-dot"></span>
           <span class="member-name">${m.partName}${isMe ? ' <span class="member-me">(나)</span>' : ''}</span>
+          ${instBtn}
         </div>`;
       }).join('');
     }
+
+    let mutedMembers = new Set();
+    function toggleRemoteInst(memberId) {
+      if (mutedMembers.has(memberId)) {
+        mutedMembers.delete(memberId);
+        socket.emit('unmute-inst', { targetId: memberId });
+        const btn = document.getElementById('mInst_' + memberId);
+        if (btn) btn.textContent = '🔊';
+      } else {
+        mutedMembers.add(memberId);
+        socket.emit('mute-inst', { targetId: memberId });
+        const btn = document.getElementById('mInst_' + memberId);
+        if (btn) btn.textContent = '🔇';
+      }
+    }
+
+
+    // 원격 inst 음소거 처리
+    socket.on('remote-mute-inst', () => {
+      instEnabled = false;
+      document.getElementById('btnInst').textContent = '🔇';
+      if (instAudio) instAudio.pause();
+    });
+    socket.on('remote-unmute-inst', () => {
+      instEnabled = true;
+      document.getElementById('btnInst').textContent = '🔊';
+    });
 
     // 외부 클릭 시 메뉴/팝오버 닫기
     document.addEventListener('click', () => {

@@ -431,6 +431,14 @@ io.on('connection', (socket) => {
     io.to(socket.songId).emit('seeked', { elapsedMs });
   });
 
+  socket.on('mute-inst', ({ targetId }) => {
+    io.to(targetId).emit('remote-mute-inst');
+  });
+
+  socket.on('unmute-inst', ({ targetId }) => {
+    io.to(targetId).emit('remote-unmute-inst');
+  });
+
   socket.on('disconnect', () => {
     if (socket.songId) {
       broadcastMembers(socket.songId);
