@@ -1726,8 +1726,16 @@
       if (state === 'playing') hideTimer = setTimeout(hideUI, 3000);
     }
     function onCanvasTap() {
-      if (state === 'playing' || state === 'paused') showUITemporarily();
-      else toggleUI();
+      if (state === 'playing' || state === 'paused') {
+        if (uiVisible) {
+          clearTimeout(hideTimer);
+          hideUI();
+        } else {
+          showUITemporarily();
+        }
+      } else {
+        toggleUI();
+      }
     }
     function updateUI() {
       document.getElementById('btnStartGroup').style.display = state === 'idle' ? 'inline-flex' : 'none';
