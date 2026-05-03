@@ -301,7 +301,7 @@
 <body>
 
   <header class="app-header">
-    <div class="app-logo"><span class="icon">🎸</span> AsomeScorePlayer</div>
+    <div class="app-logo" onclick="showSongList()" style="cursor:pointer"><span class="icon">🎸</span> AsomeScorePlayer</div>
     <button class="btn btn-primary" id="btnNewSong" onclick="showNewSongModal()">＋ 새 곡</button>
   </header>
 
@@ -579,12 +579,14 @@
       currentSong = await api(`/api/songs/${id}`);
       document.getElementById('songListView').style.display = 'none';
       document.getElementById('songDetailView').style.display = 'block';
+      window.location.hash = 'song/' + id;
       renderSongDetail();
     }
 
     function showSongList() {
       document.getElementById('songListView').style.display = 'block';
       document.getElementById('songDetailView').style.display = 'none';
+      window.location.hash = '';
       loadSongs();
     }
 
@@ -1335,7 +1337,24 @@
     }
 
     // ── Init ──
-    loadSongs();
+    async function initApp() {
+      await loadSongs();
+      // 해시 라우팅: #song/{id} → 곡 상세로 직접 이동
+      const hash = window.location.hash;
+      const m = hash.match(/^#song\/(.+)$/);
+      if (m) {
+        try { await openSong(m[1]); } catch(e) { console.warn('Song not found:', m[1]); }
+      }
+    }
+    initApp();
+
+    // 브라우저 뒤로가기/앞으로가기 처리
+    window.addEventListener('hashchange', () => {
+      const hash = window.location.hash;
+      const m = hash.match(/^#song\/(.+)$/);
+      if (m) { openSong(m[1]); }
+      else { showSongList(); }
+    });
   </script>
 
   <!-- 전체화면 줄 설정 에디터 -->

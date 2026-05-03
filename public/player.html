@@ -573,7 +573,7 @@
 
     <div class="player-top-bar" id="topBar">
       <div style="display:flex;align-items:center;gap:6px">
-        <a href="/" style="color:#888;text-decoration:none;font-size:1rem">←</a>
+        <a href="#" onclick="goBack(event)" style="color:#888;text-decoration:none;font-size:1rem">←</a>
         <span class="song-title" id="songName">...</span>
         <span class="part-label" id="partName"></span>
       </div>
@@ -753,6 +753,8 @@
 
     // ── URL 파라미터 ──
     const P = new URLSearchParams(location.search), songId = P.get('songId'), partId = P.get('partId');
+
+    function goBack(e) { e.preventDefault(); window.location.href = '/#song/' + songId; }
 
     // ── 핵심 상태 ──
     let song, part, pdfDoc;
