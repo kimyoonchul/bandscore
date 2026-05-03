@@ -802,6 +802,12 @@
       allSystems = part.systems || [];
       playbackOrder = (part.playbackOrder && part.playbackOrder.length) ? part.playbackOrder.map(o => o.page_number) : Array.from({ length: totalPages }, (_, i) => i + 1);
       if (!allSystems.length) {
+        // 악보 설정이 안 되어있으면 안내
+        if (confirm('악보 설정이 되어있지 않습니다.\n곡 상세 페이지에서 악보설정을 먼저 진행하시겠습니까?')) {
+          window.location.href = '/#song/' + songId;
+          return;
+        }
+        // 그냥 진행 — 페이지 전체를 1줄로 처리
         for (let p = 1; p <= totalPages; p++) {
           const pi = part.pages.find(pg => pg.page_number === p);
           allSystems.push({ page_number: p, system_index: 0, top_pct: 0, bottom_pct: 100, measures: pi ? pi.measures : 4, has_repeat_start: 0, has_repeat_end: 0 });

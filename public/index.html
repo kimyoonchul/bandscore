@@ -614,7 +614,7 @@
       <div style="flex:1;min-width:200px">
         <div class="part-name">${esc(p.name)}</div>
         <div class="part-info">${esc(p.original_filename)} · ${p.total_pages}페이지
-          ${hasSystems ? ' · <span style="color:var(--success)">✓ ' + sysCount + '줄 감지됨</span>' : ''}
+          ${hasSystems ? ' · <span style="color:var(--success)">✅ 설정완료</span>' : ' · <span style="color:var(--warning)">⚠️ 악보설정 필요</span>'}
         </div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap" onclick="event.stopPropagation()">
