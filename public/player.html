@@ -2019,6 +2019,17 @@
       updateSeekbarTotal();
     };
 
+    // 헤더/푸터 조작 중 자동 숨김 방지
+    ['topBar', 'ctrlBar'].forEach(id => {
+      const el = document.getElementById(id);
+      function pauseHide() { clearTimeout(hideTimer); }
+      function resumeHide() { if (state === 'playing') hideTimer = setTimeout(hideUI, 3000); }
+      el.addEventListener('mouseenter', pauseHide);
+      el.addEventListener('mouseleave', resumeHide);
+      el.addEventListener('touchstart', pauseHide, { passive: true });
+      el.addEventListener('touchend', () => setTimeout(resumeHide, 500), { passive: true });
+    });
+
     init();
   </script>
 </body>
