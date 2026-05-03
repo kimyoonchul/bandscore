@@ -1568,27 +1568,29 @@
         socket.emit('count-in-done');
         // 카운트인 끝나면 직접 play 시작
         soloMode = false;
-        state = 'playing'; playStartTime = Date.now(); elapsedBefore = 0; updateUI(); startAnim(); clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
+        state = 'playing'; playStartTime = Date.now(); elapsedBefore = 0; updateUI(); startAnim(); instPlay(); clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
       });
     });
     socket.on('play', () => {
-      if (countingIn) return; // 카운트인 중이면 무시 (자기 자신에게 온 play)
-      state = 'playing'; playStartTime = Date.now(); elapsedBefore = 0; updateUI(); startAnim(); clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
+      if (countingIn) return;
+      state = 'playing'; playStartTime = Date.now(); elapsedBefore = 0; updateUI(); startAnim(); instPlay(); clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
     });
     socket.on('stopped', () => {
       state = 'idle'; clearTimeout(hideTimer);
       if (animFrame) cancelAnimationFrame(animFrame);
       curDispPage = playbackOrder[0] || 1; elapsedBefore = 0;
       clearHL(); showView(); updateUI(); updateSeekbar(0);
+      instStop();
       if (!uiVisible) { uiVisible = true; document.getElementById('topBar').classList.remove('hidden'); document.getElementById('ctrlBar').classList.remove('hidden'); showView() }
     });
     socket.on('paused', ({ elapsedMs }) => {
       state = 'paused'; clearTimeout(hideTimer); elapsedBefore = elapsedMs;
       if (animFrame) cancelAnimationFrame(animFrame); updateUI();
       updateSeekbar(elapsedMs / 1000);
+      instPause();
       if (!uiVisible) { uiVisible = true; document.getElementById('topBar').classList.remove('hidden'); document.getElementById('ctrlBar').classList.remove('hidden'); showView() }
     });
-    socket.on('resumed', ({ elapsedMs }) => { state = 'playing'; elapsedBefore = elapsedMs; playStartTime = Date.now(); updateUI(); startAnim(); clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500) });
+    socket.on('resumed', ({ elapsedMs }) => { state = 'playing'; elapsedBefore = elapsedMs; playStartTime = Date.now(); updateUI(); startAnim(); instResume(); clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500) });
     socket.on('seeked', ({ elapsedMs }) => {
       elapsedBefore = elapsedMs;
       playStartTime = Date.now();
