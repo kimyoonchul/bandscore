@@ -300,13 +300,13 @@
     /* 앨범 커버 배경 */
     #songDetailView { position: relative; }
     .detail-cover-bg {
-      position: absolute; top: 0; left: -24px; right: -24px; height: 220px;
-      background-size: cover; background-position: center;
-      filter: blur(20px) brightness(0.3); opacity: 0;
+      position: absolute; top: 0; left: -24px; right: -24px; height: 300px;
+      background-size: cover; background-position: center top;
+      filter: brightness(0.45); opacity: 0;
       transition: opacity 0.5s ease;
       z-index: 0; pointer-events: none;
-      mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
-      -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+      mask-image: linear-gradient(to bottom, black 0%, black 80%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, black 0%, black 80%, transparent 100%);
     }
     .detail-cover-bg.active { opacity: 1; }
     #songDetailView .card, #songDetailView #tabParts,
