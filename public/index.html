@@ -1720,7 +1720,18 @@
     }
 
     async function runDetection() {
-      const stavesPerSystem = parseInt(document.getElementById('sysEditorStaves').value) || 1;
+      const modeVal = document.getElementById('sysEditorStaves').value;
+      const isManual = modeVal === 'manual';
+      const stavesPerSystem = isManual ? -1 : (parseInt(modeVal) || 1);
+
+      // 수동 모드: 패턴이 하나도 없으면 경고
+      if (isManual) {
+        const hasAny = Object.values(sysEditorState.manualPatterns).some(v => v && v.trim());
+        if (!hasAny) {
+          alert('페이지별 오선 패턴을 입력해주세요.\n예: 2,2,2,2,3');
+          return;
+        }
+      }
 
       const partId = sysEditorState.partId;
       const part = currentSong.parts.find(p => p.id === partId);
@@ -1778,7 +1789,24 @@
 
           // 오선을 시스템으로 그룹핑
           const systems = [];
-          if (stavesPerSystem === 0) {
+          if (isManual) {
+            // ── 수동 입력 모드 ──
+            const patternStr = sysEditorState.manualPatterns[pn] || '';
+            const pattern = patternStr.split(/[,\s]+/).map(Number).filter(n => n > 0);
+            if (pattern.length > 0 && pattern.reduce((a, b) => a + b, 0) <= staves.length) {
+              let si = 0;
+              for (const count of pattern) {
+                const group = staves.slice(si, si + count);
+                if (group.length > 0) {
+                  systems.push({ top: group[0].top, bottom: group[group.length - 1].bottom });
+                }
+                si += count;
+              }
+            } else {
+              // 패턴 미입력이거나 오선 수 불일치 → 각 오선을 개별 시스템으로
+              staves.forEach(s => systems.push({ top: s.top, bottom: s.bottom }));
+            }
+          } else if (stavesPerSystem === 0) {
             // ── 자동감지 모드: Max Gap Jump 알고리즘 ──
             // 오선 간 간격을 정렬 → 가장 큰 차이(점프)가 나는 지점으로 분리
             if (staves.length <= 1) {
@@ -1881,7 +1909,21 @@
     }
 
     // ── 전체화면 줄 설정 에디터 ──
-    let sysEditorState = { partId: null, systems: [], pdf: null, currentPage: 1, totalPages: 1, activeLineIdx: -1 };
+    let sysEditorState = { partId: null, systems: [], pdf: null, currentPage: 1, totalPages: 1, activeLineIdx: -1, manualPatterns: {} };
+
+    // 수동 입력 모드 토글
+    function onStaveModeChange() {
+      const val = document.getElementById('sysEditorStaves').value;
+      document.getElementById('manualPatternWrap').style.display = val === 'manual' ? 'flex' : 'none';
+    }
+    function saveManualPattern() {
+      const input = document.getElementById('manualPatternInput');
+      sysEditorState.manualPatterns[sysEditorState.currentPage] = input.value.trim();
+    }
+    function loadManualPattern() {
+      const input = document.getElementById('manualPatternInput');
+      if (input) input.value = sysEditorState.manualPatterns[sysEditorState.currentPage] || '';
+    }
 
     async function showSystemEditModal(partId, systems) {
       const part = currentSong.parts.find(p => p.id === partId);
@@ -1968,6 +2010,8 @@
       document.getElementById('sysEditorPageInd').textContent = `${currentPage} / ${sysEditorState.totalPages}`;
       document.getElementById('sysEditorPrev').disabled = currentPage <= 1;
       document.getElementById('sysEditorNext').disabled = currentPage >= sysEditorState.totalPages;
+      // 수동 패턴 로드
+      loadManualPattern();
     }
 
     function sysEditorPrevPage() {
@@ -1976,6 +2020,7 @@
         sysEditorState.activeLineIdx = -1;
         sysEditorRenderPage();
         sysEditorRenderPanel();
+        loadManualPattern();
       }
     }
 
@@ -1985,6 +2030,7 @@
         sysEditorState.activeLineIdx = -1;
         sysEditorRenderPage();
         sysEditorRenderPanel();
+        loadManualPattern();
       }
     }
 
@@ -2186,9 +2232,10 @@
     </div>
     <!-- 오선수 선택 + 감지 버튼 (감지 모드에서만 표시) -->
     <div id="sysEditorDetectBar"
-      style="display:none;align-items:center;gap:12px;padding:10px 20px;background:rgba(74,222,128,0.08);border-bottom:1px solid rgba(74,222,128,0.15);flex-shrink:0">
+      style="display:none;align-items:center;gap:12px;padding:10px 20px;background:rgba(74,222,128,0.08);border-bottom:1px solid rgba(74,222,128,0.15);flex-shrink:0;flex-wrap:wrap">
       <span style="font-size:0.85rem;font-weight:600;color:var(--success)">🎼 오선 수</span>
-      <select id="sysEditorStaves" class="form-control" style="width:auto;padding:6px 12px;font-size:0.85rem">
+      <select id="sysEditorStaves" class="form-control" style="width:auto;padding:6px 12px;font-size:0.85rem" onchange="onStaveModeChange()">
+        <option value="manual">📝 수동 입력</option>
         <option value="0">🔮 자동감지 (간격 기반)</option>
         <option value="1">단선 악보 (드럼/보컬) — 1</option>
         <option value="2">기타/베이스 (표준보+TAB보) — 2</option>
@@ -2196,6 +2243,11 @@
         <option value="4">밴드스코어 4단 — 4</option>
         <option value="5">밴드스코어 5단 — 5</option>
       </select>
+      <div id="manualPatternWrap" style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:0.8rem;color:var(--text-muted)">이 페이지:</span>
+        <input type="text" id="manualPatternInput" class="form-control" placeholder="2,2,2,2,3" style="width:140px;padding:6px 10px;font-size:0.85rem;font-family:monospace" oninput="saveManualPattern()">
+        <span style="font-size:0.7rem;color:var(--text-muted)">(쉼표로 구분)</span>
+      </div>
       <button class="btn btn-success" onclick="runDetection()" style="font-size:0.85rem;padding:8px 16px">🔍 줄 감지
         실행</button>
     </div>
