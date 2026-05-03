@@ -353,6 +353,12 @@ select.form-control { cursor: pointer; }
   flex-wrap: wrap; gap: 12px;
 }
 
+.song-info-card { margin-bottom: 20px; }
+.song-info-row { display: flex; gap: 24px; flex-wrap: wrap; align-items: center; }
+.song-info-label { color: var(--text-muted); font-size: 0.82rem; }
+.song-info-val { font-size: 1rem; font-weight: 700; }
+.song-info-bpm { font-size: 1.4rem; font-weight: 800; color: var(--primary); }
+
 .parts-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
 
 .part-item {
@@ -535,6 +541,13 @@ select.form-control { cursor: pointer; }
 
   /* 곡 상세 헤더 */
   .song-detail-header { margin-bottom: 16px; gap: 8px; }
+
+  /* 곡 정보 카드 */
+  .song-info-row { gap: 16px; }
+  .song-info-label { font-size: 0.72rem; }
+  .song-info-val { font-size: 0.85rem; }
+  .song-info-bpm { font-size: 1.1rem; }
+  .song-info-card { margin-bottom: 14px; }
 
   /* 탭바 */
   .tab-btn { padding: 8px 10px; font-size: 0.78rem; }

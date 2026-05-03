@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 
 <head>
@@ -527,7 +527,7 @@
       <div class="song-detail-header" style="position:relative;z-index:1">
         <div>
           <button class="btn btn-ghost btn-sm" onclick="showSongList()">← <span class="btn-label">목록</span></button>
-          <h1 id="detailSongName" style="display:inline;margin-left:12px;font-size:1.3rem"></h1>
+          <h1 id="detailSongName" style="display:inline;margin-left:12px;font-size:1.1rem"></h1>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-ghost btn-sm" onclick="showEditSongModal()">⚙️ <span
@@ -537,16 +537,19 @@
       </div>
 
       <!-- Song Settings Quick View -->
-      <div class="card" style="margin-bottom:20px">
-        <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center">
-          <div><span style="color:var(--text-muted);font-size:0.85rem">BPM</span>
-            <div style="font-size:1.5rem;font-weight:800;color:var(--primary)" id="detailBpm">120</div>
+      <div class="card song-info-card">
+        <div class="song-info-row">
+          <div class="song-info-item">
+            <span class="song-info-label">BPM</span>
+            <div class="song-info-val song-info-bpm" id="detailBpm">120</div>
           </div>
-          <div><span style="color:var(--text-muted);font-size:0.85rem">박자</span>
-            <div style="font-size:1rem;font-weight:700" id="detailTimeSignature">4/4</div>
+          <div class="song-info-item">
+            <span class="song-info-label">박자</span>
+            <div class="song-info-val" id="detailTimeSignature">4/4</div>
           </div>
-          <div><span style="color:var(--text-muted);font-size:0.85rem">카운트인</span>
-            <div style="font-size:1rem;font-weight:700" id="detailCountIn">2마디</div>
+          <div class="song-info-item">
+            <span class="song-info-label">카운트인</span>
+            <div class="song-info-val" id="detailCountIn">2마디</div>
           </div>
         </div>
       </div>
@@ -2776,7 +2779,10 @@
       box-shadow: 0 4px 30px rgba(200, 149, 108, 0.15);
     }
 
-    .brand-banner-emoji { font-size: 1.3rem; flex-shrink: 0; }
+    .brand-banner-emoji {
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
 
     .brand-banner-text {
       font-size: 0.8rem;
@@ -2785,24 +2791,58 @@
       text-align: left;
     }
 
-    .brand-banner-text strong { color: #c8956c; display: block; }
-    .brand-banner-sub { color: #aaa; font-size: 0.72rem; }
+    .brand-banner-text strong {
+      color: #c8956c;
+      display: block;
+    }
+
+    .brand-banner-sub {
+      color: #aaa;
+      font-size: 0.72rem;
+    }
 
     .brand-banner-close {
-      background: none; border: none; color: #666; cursor: pointer;
-      font-size: 0.9rem; padding: 0 0 0 6px; line-height: 1; flex-shrink: 0;
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 0 0 0 6px;
+      line-height: 1;
+      flex-shrink: 0;
     }
 
     @keyframes bannerSlideUp {
-      from { opacity: 0; transform: translateX(-50%) translateY(30px); }
-      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
     }
 
     @media (max-width: 480px) {
-      .brand-banner { bottom: 60px; padding: 8px 16px; gap: 8px; border-radius: 12px; }
-      .brand-banner-text { font-size: 0.72rem; }
-      .brand-banner-sub { font-size: 0.65rem; }
-      .brand-banner-emoji { font-size: 1.1rem; }
+      .brand-banner {
+        bottom: 60px;
+        padding: 8px 16px;
+        gap: 8px;
+        border-radius: 12px;
+      }
+
+      .brand-banner-text {
+        font-size: 0.72rem;
+      }
+
+      .brand-banner-sub {
+        font-size: 0.65rem;
+      }
+
+      .brand-banner-emoji {
+        font-size: 1.1rem;
+      }
     }
   </style>
 
