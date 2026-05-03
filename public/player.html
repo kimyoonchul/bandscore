@@ -1867,7 +1867,7 @@
       if (state === 'paused') { elapsedBefore = r.elapsedMs || 0 }
       updateUI();
     });
-    socket.on('member-count', c => document.getElementById('memberCount').textContent = c + '명');
+    // member-count는 member-list의 이모지 표시로 대체
     socket.on('member-list', list => {
       memberList = list;
       // 서버에서 전달된 instMuted 상태 동기화 (자기 자신은 로컬 instEnabled 기준)
