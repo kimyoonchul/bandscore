@@ -296,6 +296,21 @@
         max-height: 45vh;
       }
     }
+
+    /* 앨범 커버 배경 */
+    #songDetailView { position: relative; }
+    .detail-cover-bg {
+      position: absolute; top: 0; left: -24px; right: -24px; height: 220px;
+      background-size: cover; background-position: center;
+      filter: blur(20px) brightness(0.3); opacity: 0;
+      transition: opacity 0.5s ease;
+      z-index: 0; pointer-events: none;
+      mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+    }
+    .detail-cover-bg.active { opacity: 1; }
+    #songDetailView .card, #songDetailView #tabParts,
+    #songDetailView #tabSections { position: relative; z-index: 1; }
   </style>
 </head>
 
@@ -320,7 +335,9 @@
 
     <!-- Song Detail View -->
     <div id="songDetailView" style="display:none">
-      <div class="song-detail-header">
+      <!-- 앨범 커버 배경 -->
+      <div class="detail-cover-bg" id="detailCoverBg"></div>
+      <div class="song-detail-header" style="position:relative;z-index:1">
         <div>
           <button class="btn btn-ghost btn-sm" onclick="showSongList()">← 목록</button>
           <h1 id="detailSongName" style="display:inline;margin-left:12px;font-size:1.5rem"></h1>
@@ -820,6 +837,15 @@
       document.getElementById('detailBpm').textContent = s.bpm;
       document.getElementById('detailTimeSignature').textContent = s.time_signature;
       document.getElementById('detailCountIn').textContent = s.count_in_bars + '마디';
+      // 앨범 커버 배경
+      const bg = document.getElementById('detailCoverBg');
+      if (s.cover_filename) {
+        bg.style.backgroundImage = `url(/uploads/${s.cover_filename})`;
+        bg.classList.add('active');
+      } else {
+        bg.style.backgroundImage = '';
+        bg.classList.remove('active');
+      }
       renderParts();
       renderSections();
       renderFlowEditor();
