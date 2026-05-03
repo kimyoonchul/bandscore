@@ -2602,30 +2602,44 @@
   </div>
 
   <!-- 서비스명 투표 배너 -->
-  <a href="/favicon_preview.html" id="brandBanner" style="
-    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-    background: rgba(30,20,13,0.92); backdrop-filter: blur(12px);
-    border: 1px solid rgba(200,149,108,0.3); border-radius: 16px;
-    padding: 10px 24px; display: flex; align-items: center; gap: 12px;
-    text-decoration: none; color: #fff; z-index: 9999;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4); transition: all 0.3s;
-    max-width: calc(100% - 32px); animation: bannerSlideUp 0.6s ease-out;
-  ">
-    <span style="font-size: 1.4rem;">🎨</span>
-    <span style="font-size: 0.85rem; line-height: 1.4;">
-      <strong style="color:#c8956c;">새 이름을 고민 중이에요!</strong>
-      <span style="color:#aaa; margin-left: 4px;">의견 남기러 가기 →</span>
+  <a href="/favicon_preview.html" id="brandBanner" class="brand-banner">
+    <span class="brand-banner-emoji">🎸</span>
+    <span class="brand-banner-text">
+      <strong>새로운 서비스를 준비하고 있어요!</strong>
+      <span class="brand-banner-sub">로고 & 이름 구경하기 →</span>
     </span>
-    <button onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('brandBanner').style.display='none';" style="
-      background: none; border: none; color: #666; cursor: pointer; font-size: 1rem; padding: 0 0 0 8px; line-height: 1;
-    ">✕</button>
+    <button class="brand-banner-close" onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('brandBanner').style.display='none';">✕</button>
   </a>
   <style>
+    .brand-banner {
+      position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+      background: rgba(30,20,13,0.92); backdrop-filter: blur(12px);
+      border: 1px solid rgba(200,149,108,0.3); border-radius: 14px;
+      padding: 10px 18px; display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: #fff; z-index: 9999;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4); transition: all 0.3s;
+      width: auto; max-width: calc(100% - 24px);
+      animation: bannerSlideUp 0.6s ease-out;
+    }
+    .brand-banner:hover { border-color: rgba(200,149,108,0.6); box-shadow: 0 4px 30px rgba(200,149,108,0.15); }
+    .brand-banner-emoji { font-size: 1.3rem; flex-shrink: 0; }
+    .brand-banner-text { font-size: 0.82rem; line-height: 1.4; white-space: nowrap; }
+    .brand-banner-text strong { color: #c8956c; }
+    .brand-banner-sub { color: #aaa; margin-left: 4px; }
+    .brand-banner-close {
+      background: none; border: none; color: #666; cursor: pointer;
+      font-size: 0.9rem; padding: 0 0 0 6px; line-height: 1; flex-shrink: 0;
+    }
     @keyframes bannerSlideUp {
       from { opacity: 0; transform: translateX(-50%) translateY(30px); }
       to   { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
-    #brandBanner:hover { border-color: rgba(200,149,108,0.6); box-shadow: 0 4px 30px rgba(200,149,108,0.15); }
+    @media (max-width: 480px) {
+      .brand-banner { padding: 8px 14px; gap: 8px; bottom: 8px; }
+      .brand-banner-text { font-size: 0.75rem; white-space: normal; }
+      .brand-banner-sub { display: block; margin-left: 0; margin-top: 2px; }
+      .brand-banner-emoji { font-size: 1.1rem; }
+    }
   </style>
 
 </body>
