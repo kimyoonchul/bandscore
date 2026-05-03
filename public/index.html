@@ -339,14 +339,7 @@
           onchange="onPdfSelected(this)">
       </div>
       <div id="uploadPreview" style="display:none">
-        <div class="form-group">
-          <label>감지된 페이지 수</label>
-          <input class="form-control" id="uploadTotalPages" type="number" min="1" value="1" readonly>
-        </div>
-        <h4 style="margin:12px 0 8px">페이지별 마디 수 설정</h4>
-        <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:8px">각 페이지에 몇 마디가 있는지 입력하세요 (자동 스크롤 속도 계산에 사용)
-        </p>
-        <div id="pageSettingsContainer"></div>
+        <p style="color:var(--success);font-size:0.85rem">✅ <span id="uploadPageCount">0</span>페이지 감지됨 — 업로드 후 줄 설정이 진행됩니다.</p>
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
         <button class="btn btn-ghost" onclick="closeModal('uploadModal')">취소</button>
@@ -555,23 +548,18 @@
       const file = input.files[0];
       const buf = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
-      const total = pdf.numPages;
-      document.getElementById('uploadTotalPages').value = total;
+      document.getElementById('uploadPageCount').textContent = pdf.numPages;
       document.getElementById('uploadPreview').style.display = 'block';
       document.getElementById('btnUpload').disabled = false;
-
-      let html = '<table class="page-settings-table"><tr><th>페이지</th><th>마디 수</th></tr>';
-      for (let i = 1; i <= total; i++) {
-        html += `<tr><td>${i}</td><td><input class="form-control" type="number" value="4" min="1" max="50" data-page="${i}"></td></tr>`;
-      }
-      html += '</table>';
-      document.getElementById('pageSettingsContainer').innerHTML = html;
+      // 총 페이지 수 저장 (hidden)
+      input.dataset.totalPages = pdf.numPages;
     }
 
     async function uploadPart() {
-      const file = document.getElementById('uploadPdfFile').files[0];
+      const fileInput = document.getElementById('uploadPdfFile');
+      const file = fileInput.files[0];
       if (!file) return;
-      const totalPages = document.getElementById('uploadTotalPages').value;
+      const totalPages = fileInput.dataset.totalPages || 1;
       const name = document.getElementById('uploadPartName').value;
 
       const fd = new FormData();
@@ -582,18 +570,15 @@
       const r = await fetch(`/api/songs/${currentSong.id}/parts`, { method: 'POST', body: fd });
       const part = await r.json();
 
-      // Save page measures
-      const inputs = document.querySelectorAll('#pageSettingsContainer input[data-page]');
-      const pages = Array.from(inputs).map(inp => ({
-        page_number: parseInt(inp.dataset.page),
-        measures: parseInt(inp.value) || 4
-      }));
+      // 기본 마디수(4)로 페이지 정보 저장
+      const pages = [];
+      for (let i = 1; i <= parseInt(totalPages); i++) pages.push({ page_number: i, measures: 4 });
       await api(`/api/parts/${part.id}/pages`, { method: 'PUT', body: { pages } });
 
       closeModal('uploadModal');
       await openSong(currentSong.id);
 
-      // Auto-detect systems after upload (자동 실행)
+      // 업로드 후 바로 줄감지 에디터 열기
       await detectSystems(part.id);
     }
 
@@ -820,28 +805,44 @@
       const part = currentSong.parts.find(p => p.id === partId);
       if (!part) return;
 
-      // 사용자에게 오선 묶기 수 물어보기
-      const stavesPerSystem = parseInt(prompt(
-        '시스템당 오선 수를 입력하세요:\n\n' +
-        '• 드럼/보컬/단선 악보 → 1\n' +
-        '• 기타 (표준보+TAB보) → 2\n' +
-        '• 밴드스코어 (멜로디+기타1+기타2 등) → 3~5\n\n' +
-        '잘 모르겠으면 1을 입력하세요.',
-        '1'
-      ));
-      if (!stavesPerSystem || stavesPerSystem < 1) return;
+      // 전체화면 에디터를 열고 첫 장 보여주면서 오선 수 선택 UI 제공
+      sysEditorState.partId = partId;
+      sysEditorState.systems = [];
+      sysEditorState.currentPage = 1;
+      sysEditorState.activeLineIdx = -1;
+      sysEditorState.detectMode = true; // 감지 모드 플래그
 
-      const statusEl = document.createElement('div');
-      statusEl.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-surface);padding:32px;border-radius:16px;z-index:2000;text-align:center;border:1px solid var(--border);box-shadow:var(--shadow);';
-      statusEl.innerHTML = '<div style="font-size:2rem;margin-bottom:12px">🔍</div><div>줄(시스템) 분석 중...</div><div style="color:var(--text-muted);font-size:0.85rem;margin-top:8px" id="detectProgress">PDF 로딩중...</div>';
-      document.body.appendChild(statusEl);
+      sysEditorState.pdf = await pdfjsLib.getDocument(`/uploads/${part.pdf_filename}`).promise;
+      sysEditorState.totalPages = sysEditorState.pdf.numPages;
+
+      const overlay = document.getElementById('sysEditorOverlay');
+      document.getElementById('sysEditorTitle').textContent = part.name;
+      overlay.classList.add('active');
+
+      // 감지 모드 UI 표시
+      document.getElementById('sysEditorDetectBar').style.display = 'flex';
+      document.getElementById('sysEditorPanelBody').innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted)"><div style="font-size:2rem;margin-bottom:12px">🔍</div><p>위의 <strong>오선 수를 선택</strong>하고<br><strong>줄 감지 실행</strong> 버튼을 누르세요</p><p style="font-size:0.75rem;margin-top:8px">악보를 넘기면서 오선 구조를 확인하세요</p></div>';
+
+      sysEditorRenderPage();
+    }
+
+    async function runDetection() {
+      const stavesPerSystem = parseInt(document.getElementById('sysEditorStaves').value) || 1;
+
+      const partId = sysEditorState.partId;
+      const part = currentSong.parts.find(p => p.id === partId);
+      if (!part) return;
+
+      // 진행 표시
+      document.getElementById('sysEditorPanelBody').innerHTML = '<div style="padding:24px;text-align:center"><div style="font-size:2rem;margin-bottom:12px">⏳</div><div id="detectProgress2">분석 중...</div></div>';
 
       try {
-        const pdf = await pdfjsLib.getDocument(`/uploads/${part.pdf_filename}`).promise;
+        const pdf = sysEditorState.pdf;
         const allSystems = [];
 
         for (let pn = 1; pn <= pdf.numPages; pn++) {
-          document.getElementById('detectProgress').textContent = `페이지 ${pn}/${pdf.numPages} 분석중...`;
+          const prog = document.getElementById('detectProgress2');
+          if (prog) prog.textContent = `페이지 ${pn}/${pdf.numPages} 분석중...`;
           const page = await pdf.getPage(pn);
           const scale = 2;
           const vp = page.getViewport({ scale });
@@ -927,13 +928,18 @@
 
         // Save to server
         await api(`/api/parts/${partId}/systems`, { method: 'PUT', body: { systems: allSystems } });
-        document.body.removeChild(statusEl);
 
-        // 줄 감지 결과 편집 모달 표시
-        showSystemEditModal(partId, allSystems);
+        // 감지 모드 해제 → 편집 모드로 전환
+        sysEditorState.detectMode = false;
+        document.getElementById('sysEditorDetectBar').style.display = 'none';
+        sysEditorState.systems = allSystems;
+        sysEditorState.currentPage = 1;
+        sysEditorState.activeLineIdx = -1;
+        sysEditorRenderPage();
+        sysEditorRenderPanel();
+        await openSong(currentSong.id);
       } catch (err) {
-        document.body.removeChild(statusEl);
-        alert('줄 감지 실패: ' + err.message);
+        document.getElementById('sysEditorPanelBody').innerHTML = `<div style="padding:24px;text-align:center;color:var(--danger)"><div style="font-size:2rem;margin-bottom:12px">❌</div><p>줄 감지 실패: ${err.message}</p></div>`;
       }
     }
 
@@ -948,6 +954,7 @@
       sysEditorState.systems = systems.map(s => ({ ...s }));
       sysEditorState.currentPage = 1;
       sysEditorState.activeLineIdx = -1;
+      sysEditorState.detectMode = false;
 
       // PDF 로드
       sysEditorState.pdf = await pdfjsLib.getDocument(`/uploads/${part.pdf_filename}`).promise;
@@ -956,6 +963,7 @@
       // 에디터 열기
       const overlay = document.getElementById('sysEditorOverlay');
       document.getElementById('sysEditorTitle').textContent = part.name;
+      document.getElementById('sysEditorDetectBar').style.display = 'none';
       overlay.classList.add('active');
 
       sysEditorRenderPage();
@@ -964,7 +972,9 @@
 
     function closeSysEditor() {
       document.getElementById('sysEditorOverlay').classList.remove('active');
+      document.getElementById('sysEditorDetectBar').style.display = 'none';
       sysEditorState.pdf = null;
+      sysEditorState.detectMode = false;
     }
 
     async function sysEditorRenderPage() {
@@ -1218,6 +1228,18 @@
     <div class="sys-editor-guide">
       <strong>💡 사용법:</strong> 왼쪽 악보에서 줄 영역을 확인하고, 오른쪽 패널에서 각 줄의 마디 수와 도돌이표를 설정하세요. 줄을 클릭하면 양쪽이 연동됩니다.
       <br><strong>|:</strong> 반복시작 마디, <strong>:|</strong> 반복끝 마디 (0=없음). <strong>괄호:</strong> 1번=첫 통과, 2번=둘째만.
+    </div>
+    <!-- 오선수 선택 + 감지 버튼 (감지 모드에서만 표시) -->
+    <div id="sysEditorDetectBar" style="display:none;align-items:center;gap:12px;padding:10px 20px;background:rgba(74,222,128,0.08);border-bottom:1px solid rgba(74,222,128,0.15);flex-shrink:0">
+      <span style="font-size:0.85rem;font-weight:600;color:var(--success)">🎼 오선 수</span>
+      <select id="sysEditorStaves" class="form-control" style="width:auto;padding:6px 12px;font-size:0.85rem">
+        <option value="1">단선 악보 (드럼/보컬) — 1</option>
+        <option value="2">기타 (표준보+TAB보) — 2</option>
+        <option value="3">밴드스코어 3단 — 3</option>
+        <option value="4">밴드스코어 4단 — 4</option>
+        <option value="5">밴드스코어 5단 — 5</option>
+      </select>
+      <button class="btn btn-success" onclick="runDetection()" style="font-size:0.85rem;padding:8px 16px">🔍 줄 감지 실행</button>
     </div>
     <div class="sys-editor-body">
       <div class="sys-editor-score">
