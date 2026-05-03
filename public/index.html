@@ -1779,26 +1779,36 @@
           // 오선을 시스템으로 그룹핑
           const systems = [];
           if (stavesPerSystem === 0) {
-            // ── 자동감지 모드: 간격 기반 ──
+            // ── 자동감지 모드: Max Gap Jump 알고리즘 ──
+            // 오선 간 간격을 정렬 → 가장 큰 차이(점프)가 나는 지점으로 분리
             if (staves.length <= 1) {
-              // 오선이 0~1개면 그대로
               staves.forEach(s => systems.push({ top: s.top, bottom: s.bottom }));
             } else {
-              // 오선 간 간격 계산
               const gaps = [];
               for (let i = 1; i < staves.length; i++) {
-                gaps.push(staves[i].top - staves[i - 1].bottom);
+                gaps.push({ idx: i, val: staves[i].top - staves[i - 1].bottom });
               }
-              // 간격의 중앙값 계산
-              const sorted = [...gaps].sort((a, b) => a - b);
-              const median = sorted[Math.floor(sorted.length / 2)];
-              // 중앙값의 1.8배 이상이면 시스템 경계
-              const gapThreshold = median * 1.8;
+              // 간격값 정렬 → 연속 값 간 최대 점프 찾기
+              const sorted = [...gaps].sort((a, b) => a.val - b.val);
+              let maxJump = 0, splitVal = 0;
+              for (let j = 1; j < sorted.length; j++) {
+                const jump = sorted[j].val - sorted[j - 1].val;
+                if (jump > maxJump) {
+                  maxJump = jump;
+                  splitVal = (sorted[j - 1].val + sorted[j].val) / 2;
+                }
+              }
+              // 최대 점프가 충분히 크면 (최소 간격의 30% 이상) 경계로 사용
+              // 아니면 모든 오선을 개별 시스템으로
+              const minGap = sorted[0].val;
+              const useGap = maxJump > Math.max(minGap * 0.3, 10);
               let group = [staves[0]];
               for (let i = 1; i < staves.length; i++) {
                 const gap = staves[i].top - staves[i - 1].bottom;
-                if (gap > gapThreshold) {
-                  // 시스템 경계 → 현재 그룹 저장
+                if (useGap && gap > splitVal) {
+                  systems.push({ top: group[0].top, bottom: group[group.length - 1].bottom });
+                  group = [staves[i]];
+                } else if (!useGap) {
                   systems.push({ top: group[0].top, bottom: group[group.length - 1].bottom });
                   group = [staves[i]];
                 } else {
