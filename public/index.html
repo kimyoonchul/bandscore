@@ -272,7 +272,25 @@
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
+      align-items: stretch;
+    }
+
+    .sys-field-group {
+      display: flex;
       align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 6px;
+    }
+
+    .sys-field-label {
+      font-size: 0.65rem;
+      color: var(--primary);
+      font-weight: 700;
+      white-space: nowrap;
+      margin-right: 2px;
     }
 
     .sys-field {
@@ -301,6 +319,8 @@
       text-align: left;
     }
 
+    .mobile-br { display: none; }
+
     /* 가이드 배너 */
     .sys-editor-guide {
       padding: 10px 16px;
@@ -324,6 +344,7 @@
 
       .sys-editor-score {
         min-height: 70vh;
+        min-height: 70svh;
         flex-shrink: 0;
       }
 
@@ -428,6 +449,16 @@
       .sys-field select {
         width: 52px;
       }
+
+      .sys-field-group {
+        padding: 3px 6px;
+      }
+
+      .sys-field-label {
+        font-size: 0.58rem;
+      }
+
+      .mobile-br { display: inline; }
     }
 
     /* 앨범 커버 배경 */
@@ -492,7 +523,7 @@
       <div class="song-detail-header" style="position:relative;z-index:1">
         <div>
           <button class="btn btn-ghost btn-sm" onclick="showSongList()">← <span class="btn-label">목록</span></button>
-          <h1 id="detailSongName" style="display:inline;margin-left:12px;font-size:1.5rem"></h1>
+          <h1 id="detailSongName" style="display:inline;margin-left:12px;font-size:1.3rem"></h1>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-ghost btn-sm" onclick="showEditSongModal()">⚙️ <span
@@ -505,13 +536,13 @@
       <div class="card" style="margin-bottom:20px">
         <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center">
           <div><span style="color:var(--text-muted);font-size:0.85rem">BPM</span>
-            <div style="font-size:1.8rem;font-weight:800;color:var(--primary)" id="detailBpm">120</div>
+            <div style="font-size:1.5rem;font-weight:800;color:var(--primary)" id="detailBpm">120</div>
           </div>
           <div><span style="color:var(--text-muted);font-size:0.85rem">박자</span>
-            <div style="font-size:1.3rem;font-weight:700" id="detailTimeSignature">4/4</div>
+            <div style="font-size:1rem;font-weight:700" id="detailTimeSignature">4/4</div>
           </div>
           <div><span style="color:var(--text-muted);font-size:0.85rem">카운트인</span>
-            <div style="font-size:1.3rem;font-weight:700" id="detailCountIn">2마디</div>
+            <div style="font-size:1rem;font-weight:700" id="detailCountIn">2마디</div>
           </div>
         </div>
       </div>
@@ -519,7 +550,7 @@
       <!-- Parts (탭 없이 바로 표시) -->
       <div id="tabParts">
         <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-          <button class="btn btn-accent" onclick="showUploadModal()">📄 <span class="btn-label">악보 업로드</span></button>
+          <button class="btn btn-accent" onclick="showUploadModal()">➕ 악보 업로드</button>
         </div>
         <div id="partsList" class="parts-list"></div>
       </div>
@@ -1607,10 +1638,10 @@
         const sysCount = hasSystems ? p.systems.length : 0;
         return `
     <div class="part-item card-clickable" style="flex-wrap:wrap;cursor:pointer" onclick="openPlayer('${p.id}')">
-      <div style="flex:1;min-width:200px">
+      <div style="flex:1;min-width:140px">
         <div class="part-name">${partEmoji(p.name)} ${esc(p.name)}</div>
-        <div class="part-info">${esc(p.original_filename)} · ${p.total_pages}페이지
-          ${hasSystems ? ' · <span style="color:var(--success)">✅ 설정완료</span>' : ' · <span style="color:var(--warning)">⚠️ 악보설정 필요</span>'}
+        <div class="part-info">${esc(p.original_filename)}
+          <br class="mobile-br">${hasSystems ? '<span style="color:var(--success)">✅ 설정완료</span>' : '<span style="color:var(--warning)">⚠️ 악보설정 필요</span>'}
         </div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap" onclick="event.stopPropagation()">
@@ -2503,11 +2534,9 @@
           html += `<div class="sys-row ${isActive ? 'active' : ''}" id="sysRow_${gi}" onclick="sysEditorSelectLine(${gi})">`;
           html += `<div class="sys-row-header"><span class="label">줄${i + 1}</span><span class="range">${s.top_pct.toFixed(0)}% ~ ${s.bottom_pct.toFixed(0)}%</span></div>`;
           html += `<div class="sys-row-fields">`;
-          html += `<span class="sys-field">마디<input type="number" value="${s.measures}" min="1" max="20" onchange="sysEditorUpdate(${gi},'measures',this.value)" onclick="event.stopPropagation()"></span>`;
-          html += `<span class="sys-field">|:<input type="number" value="${rs}" min="0" max="20" onchange="sysEditorUpdate(${gi},'repeat_start_at',this.value)" onclick="event.stopPropagation()"></span>`;
-          html += `<span class="sys-field">:|<input type="number" value="${re}" min="0" max="20" onchange="sysEditorUpdate(${gi},'repeat_end_at',this.value)" onclick="event.stopPropagation()"></span>`;
-          html += `<span class="sys-field">괄호<select onchange="sysEditorUpdate(${gi},'volta',this.value)" onclick="event.stopPropagation()"><option value="0" ${v === 0 ? 'selected' : ''}>-</option><option value="1" ${v === 1 ? 'selected' : ''}>1번</option><option value="2" ${v === 2 ? 'selected' : ''}>2번</option></select></span>`;
-          html += `<span class="sys-field">구간<input type="number" value="${vf}" min="0" max="20" style="width:38px" onchange="sysEditorUpdate(${gi},'volta_from',this.value)" onclick="event.stopPropagation()">~<input type="number" value="${vt}" min="0" max="20" style="width:38px" onchange="sysEditorUpdate(${gi},'volta_to',this.value)" onclick="event.stopPropagation()"></span>`;
+          html += `<div class="sys-field-group"><span class="sys-field-label">마디</span><span class="sys-field"><input type="number" value="${s.measures}" min="1" max="20" onchange="sysEditorUpdate(${gi},'measures',this.value)" onclick="event.stopPropagation()"></span></div>`;
+          html += `<div class="sys-field-group"><span class="sys-field-label">도돌이표</span><span class="sys-field">|:<input type="number" value="${rs}" min="0" max="20" onchange="sysEditorUpdate(${gi},'repeat_start_at',this.value)" onclick="event.stopPropagation()"></span><span class="sys-field">:|<input type="number" value="${re}" min="0" max="20" onchange="sysEditorUpdate(${gi},'repeat_end_at',this.value)" onclick="event.stopPropagation()"></span></div>`;
+          html += `<div class="sys-field-group"><span class="sys-field-label">괄호</span><span class="sys-field"><select onchange="sysEditorUpdate(${gi},'volta',this.value)" onclick="event.stopPropagation()"><option value="0" ${v === 0 ? 'selected' : ''}>-</option><option value="1" ${v === 1 ? 'selected' : ''}>1번</option><option value="2" ${v === 2 ? 'selected' : ''}>2번</option></select></span><span class="sys-field">구간<input type="number" value="${vf}" min="0" max="20" style="width:38px" onchange="sysEditorUpdate(${gi},'volta_from',this.value)" onclick="event.stopPropagation()">~<input type="number" value="${vt}" min="0" max="20" style="width:38px" onchange="sysEditorUpdate(${gi},'volta_to',this.value)" onclick="event.stopPropagation()"></span></div>`;
           html += `</div></div>`;
         });
         html += '</div>';
@@ -2710,7 +2739,7 @@
     <span class="brand-banner-emoji">🎸</span>
     <span class="brand-banner-text">
       <strong>새로운 서비스를 준비하고 있어요!</strong>
-      <span class="brand-banner-sub">로고 & 이름 구경하기 →</span>
+      <br><span class="brand-banner-sub">로고 & 이름 구경하기 →</span>
     </span>
     <button class="brand-banner-close"
       onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('brandBanner').style.display='none';">✕</button>
@@ -2751,8 +2780,7 @@
 
     .brand-banner-text {
       font-size: 0.82rem;
-      line-height: 1.4;
-      white-space: nowrap;
+      line-height: 1.5;
     }
 
     .brand-banner-text strong {
@@ -2761,7 +2789,7 @@
 
     .brand-banner-sub {
       color: #aaa;
-      margin-left: 4px;
+      font-size: 0.78rem;
     }
 
     .brand-banner-close {
@@ -2792,18 +2820,17 @@
         padding: 8px 14px;
         gap: 8px;
         bottom: 8px;
-        max-width: calc(100% - 16px);
-        width: calc(100% - 16px);
+        max-width: calc(100% - 30px);
+        width: calc(100% - 30px);
         border-radius: 12px;
       }
 
       .brand-banner-text {
-        font-size: 0.75rem;
-        white-space: nowrap;
+        font-size: 0.72rem;
       }
 
       .brand-banner-sub {
-        margin-left: 4px;
+        font-size: 0.68rem;
       }
 
       .brand-banner-emoji {
