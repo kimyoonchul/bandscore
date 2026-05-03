@@ -353,11 +353,49 @@ select.form-control { cursor: pointer; }
   flex-wrap: wrap; gap: 12px;
 }
 
-.song-info-card { margin-bottom: 20px; }
-.song-info-row { display: flex; gap: 24px; flex-wrap: wrap; align-items: center; }
-.song-info-label { color: var(--text-muted); font-size: 0.82rem; }
-.song-info-val { font-size: 1rem; font-weight: 700; }
-.song-info-bpm { font-size: 1.4rem; font-weight: 800; color: var(--primary); }
+.song-info-card {
+  margin-bottom: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.song-info-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 4px 24px rgba(212,165,116,0.08);
+}
+.song-info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.song-info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+.song-info-item:hover { background: rgba(255,255,255,0.05); }
+.song-info-icon { font-size: 1.2rem; flex-shrink: 0; }
+.song-info-label { color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.song-info-val { font-size: 0.95rem; font-weight: 700; margin-top: 1px; }
+.song-info-bpm { font-size: 1.2rem; font-weight: 800; color: var(--primary); }
+.song-info-hint {
+  text-align: right;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+.song-info-card:hover .song-info-hint { opacity: 1; }
+.inst-status-on { color: var(--success); }
+.inst-status-off { color: var(--text-muted); }
 
 .parts-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
 
@@ -543,11 +581,14 @@ select.form-control { cursor: pointer; }
   .song-detail-header { margin-bottom: 16px; gap: 8px; }
 
   /* 곡 정보 카드 */
-  .song-info-row { gap: 16px; }
-  .song-info-label { font-size: 0.72rem; }
-  .song-info-val { font-size: 0.85rem; }
-  .song-info-bpm { font-size: 1.1rem; }
-  .song-info-card { margin-bottom: 14px; }
+  .song-info-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .song-info-card { padding: 12px; margin-bottom: 14px; }
+  .song-info-item { padding: 6px 8px; gap: 6px; }
+  .song-info-icon { font-size: 1rem; }
+  .song-info-label { font-size: 0.65rem; }
+  .song-info-val { font-size: 0.82rem; }
+  .song-info-bpm { font-size: 1rem; }
+  .song-info-hint { font-size: 0.6rem; margin-top: 6px; }
 
   /* 탭바 */
   .tab-btn { padding: 8px 10px; font-size: 0.78rem; }

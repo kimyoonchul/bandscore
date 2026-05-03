@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 
 <head>
@@ -537,21 +537,38 @@
       </div>
 
       <!-- Song Settings Quick View -->
-      <div class="card song-info-card">
-        <div class="song-info-row">
-          <div class="song-info-item">
-            <span class="song-info-label">BPM</span>
-            <div class="song-info-val song-info-bpm" id="detailBpm">120</div>
+      <div class="song-info-card" onclick="const t=event.target.closest('[data-focus]'); showEditSongModal(t?t.dataset.focus:null)">
+        <div class="song-info-grid">
+          <div class="song-info-item" data-focus="editSongBpm">
+            <span class="song-info-icon">🎵</span>
+            <div>
+              <span class="song-info-label">BPM</span>
+              <div class="song-info-val song-info-bpm" id="detailBpm">120</div>
+            </div>
           </div>
-          <div class="song-info-item">
-            <span class="song-info-label">박자</span>
-            <div class="song-info-val" id="detailTimeSignature">4/4</div>
+          <div class="song-info-item" data-focus="editSongTime">
+            <span class="song-info-icon">🥁</span>
+            <div>
+              <span class="song-info-label">박자</span>
+              <div class="song-info-val" id="detailTimeSignature">4/4</div>
+            </div>
           </div>
-          <div class="song-info-item">
-            <span class="song-info-label">카운트인</span>
-            <div class="song-info-val" id="detailCountIn">2마디</div>
+          <div class="song-info-item" data-focus="editSongCountIn">
+            <span class="song-info-icon">⏱️</span>
+            <div>
+              <span class="song-info-label">카운트인</span>
+              <div class="song-info-val" id="detailCountIn">2마디</div>
+            </div>
+          </div>
+          <div class="song-info-item" id="instStatusItem" data-focus="editInstFile">
+            <span class="song-info-icon">🔊</span>
+            <div>
+              <span class="song-info-label">Inst 음원</span>
+              <div class="song-info-val" id="detailInstStatus">미등록</div>
+            </div>
           </div>
         </div>
+        <div class="song-info-hint">탭하여 설정 변경 →</div>
       </div>
 
       <!-- Parts (탭 없이 바로 표시) -->
@@ -1609,6 +1626,15 @@
       document.getElementById('detailBpm').textContent = s.bpm;
       document.getElementById('detailTimeSignature').textContent = s.time_signature;
       document.getElementById('detailCountIn').textContent = s.count_in_bars + '마디';
+      // inst 상태
+      const instEl = document.getElementById('detailInstStatus');
+      if (s.inst_filename) {
+        instEl.textContent = '등록됨';
+        instEl.className = 'song-info-val inst-status-on';
+      } else {
+        instEl.textContent = '미등록';
+        instEl.className = 'song-info-val inst-status-off';
+      }
       // 앨범 커버 배경
       const bg = document.getElementById('detailCoverBg');
       if (s.cover_filename) {
@@ -1745,7 +1771,7 @@
     }
 
     // ── Song Settings ──
-    function showEditSongModal() {
+    function showEditSongModal(focusField) {
       const s = currentSong;
       const coverImg = s.cover_filename ? `<img src="/uploads/${s.cover_filename}">` : '<span class="placeholder">🎸</span>';
       const instInfo = s.inst_filename ? '✅ inst 음원 등록됨' : '';
@@ -1782,6 +1808,12 @@
       <button class="btn btn-primary" onclick="updateSong()">저장</button>
     </div>`;
       showModal('editSongModal');
+      if (focusField) {
+        setTimeout(() => {
+          const el = document.getElementById(focusField);
+          if (el) { el.focus(); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        }, 200);
+      }
     }
 
     async function updateSong() {
