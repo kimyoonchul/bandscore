@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!--
   ================================================================
   AsomeScorePlayer — Player View
@@ -913,6 +913,7 @@
     let timeline = [];          // 빌드된 타임라인 [{start, dur, page, topPct, bottomPct, ...}]
     let curDispPage = 1;        // 현재 표시 중인 페이지 번호
     let soloMode = new URLSearchParams(location.search).get('mode') !== 'together';
+    let currentPartName = '';   // 순수 파트 이름 (이모지 없이)
     let memberList = [];         // 현재 접속 멤버 목록
 
     // ── 스타일 기본값 (파트별 DB 저장) ──
@@ -957,6 +958,7 @@
       }
       document.getElementById('songName').textContent = song.name;
       document.getElementById('partName').innerHTML = partEmoji(part.name) + ' ' + part.name;
+      currentPartName = part.name;
       bpm = song.bpm; originalBpm = song.bpm; document.getElementById('bpmVal').textContent = bpm;
       pdfUrl = `/uploads/${part.pdf_filename}`;
       pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
@@ -977,7 +979,7 @@
         }
       }
       buildTimeline(); showView();
-      if (!soloMode) socket.emit('join-room', { songId, partId, partName: part.name });
+      if (!soloMode) socket.emit('join-room', { songId, partId, partName: currentPartName });
       applyModeUI();
       // 저장된 스타일 설정 로드
       try {
@@ -1493,7 +1495,7 @@
       soloMode = !soloMode;
       if (!soloMode) {
         // 합주로 전환 → 소켓 방 입장
-        socket.emit('join-room', { songId, partId: new URLSearchParams(location.search).get('partId'), partName: document.getElementById('partName')?.textContent?.trim() });
+        socket.emit('join-room', { songId, partId: new URLSearchParams(location.search).get('partId'), partName: currentPartName });
       } else {
         // 연습으로 전환 → 방 나가기
         socket.emit('leave-room');
