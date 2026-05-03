@@ -274,7 +274,7 @@
       justify-content: space-between;
       font-size: 0.65rem;
       color: rgba(255, 255, 255, 0.5);
-      margin-top: 2px;
+      margin-top: 7px;
       user-select: none;
     }
 
@@ -906,7 +906,7 @@
       }
       try {
         song = await (await fetch(`/api/songs/${songId}`)).json();
-      } catch(e) {
+      } catch (e) {
         alert('곡 정보를 불러올 수 없습니다.\n메인 페이지로 이동합니다.');
         window.location.href = '/';
         return;
@@ -928,7 +928,7 @@
         return;
       }
       document.getElementById('songName').textContent = song.name;
-      document.getElementById('partName').textContent = part.name;
+      document.getElementById('partName').innerHTML = partEmoji(part.name) + ' ' + part.name;
       bpm = song.bpm; document.getElementById('bpmVal').textContent = bpm;
       pdfUrl = `/uploads/${part.pdf_filename}`;
       pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
@@ -1507,7 +1507,7 @@
         if (state === 'playing' && startTime) {
           const elapsed = Date.now() - startTime + (elapsedBefore || 0);
           instAudio.currentTime = elapsed / 1000;
-          instAudio.play().catch(() => {});
+          instAudio.play().catch(() => { });
         }
       }
       socket.emit('inst-state-changed', { muted: !instEnabled });
@@ -1527,7 +1527,7 @@
         if (instEnabled && state === 'playing' && startTime && instAudio) {
           const elapsed = Date.now() - startTime + (elapsedBefore || 0);
           instAudio.currentTime = elapsed / 1000;
-          instAudio.play().catch(() => {});
+          instAudio.play().catch(() => { });
         }
       }
     }
@@ -1769,7 +1769,7 @@
       if (state === 'playing' && startTime && instAudio) {
         const elapsed = Date.now() - startTime + (elapsedBefore || 0);
         instAudio.currentTime = elapsed / 1000;
-        instAudio.play().catch(() => {});
+        instAudio.play().catch(() => { });
       }
       // 상태 변경을 방 전체에 알림
       socket.emit('inst-state-changed', { muted: false });
