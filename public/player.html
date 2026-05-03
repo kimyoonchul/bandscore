@@ -590,8 +590,8 @@
     </div>
 
     <div class="player-canvas-area" id="canvasArea" onclick="onCanvasTap()">
-      <button class="nav-arrow left" onclick="manualNav(-1)">‹</button>
-      <button class="nav-arrow right" onclick="manualNav(1)">›</button>
+      <button class="nav-arrow left" onclick="event.stopPropagation();manualNav(-1)">‹</button>
+      <button class="nav-arrow right" onclick="event.stopPropagation();manualNav(1)">›</button>
 
       <div class="score-display" id="viewSingle">
         <div class="score-page-wrapper" id="wS">
