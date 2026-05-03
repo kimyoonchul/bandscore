@@ -1503,6 +1503,12 @@
         document.getElementById('btnInst').textContent = '🔊';
         const slider = document.querySelector('.inst-vol-slider input');
         if (slider) slider.value = Math.round(instPrevVolume * 100);
+        // 현재 재생 중이면 inst 음원도 동기화하여 재생
+        if (state === 'playing' && startTime) {
+          const elapsed = Date.now() - startTime + (elapsedBefore || 0);
+          instAudio.currentTime = elapsed / 1000;
+          instAudio.play().catch(() => {});
+        }
       }
       socket.emit('inst-state-changed', { muted: !instEnabled });
       renderMemberList();
@@ -1517,6 +1523,12 @@
       if (wasMuted !== !instEnabled) {
         socket.emit('inst-state-changed', { muted: !instEnabled });
         renderMemberList();
+        // 음소거 해제 + 재생 중이면 동기화
+        if (instEnabled && state === 'playing' && startTime && instAudio) {
+          const elapsed = Date.now() - startTime + (elapsedBefore || 0);
+          instAudio.currentTime = elapsed / 1000;
+          instAudio.play().catch(() => {});
+        }
       }
     }
     function instPlay() {
@@ -1753,6 +1765,12 @@
       document.getElementById('btnInst').textContent = '🔊';
       const slider = document.querySelector('.inst-vol-slider input');
       if (slider) slider.value = Math.round(instPrevVolume * 100);
+      // 재생 중이면 동기화
+      if (state === 'playing' && startTime && instAudio) {
+        const elapsed = Date.now() - startTime + (elapsedBefore || 0);
+        instAudio.currentTime = elapsed / 1000;
+        instAudio.play().catch(() => {});
+      }
       // 상태 변경을 방 전체에 알림
       socket.emit('inst-state-changed', { muted: false });
       renderMemberList();
