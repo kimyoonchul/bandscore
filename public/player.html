@@ -918,8 +918,13 @@
       }
       part = song.parts.find(p => p.id === partId);
       if (!part) {
-        alert('해당 파트가 존재하지 않습니다.\n악보가 재업로드되었을 수 있습니다.\n곡 상세 페이지로 이동합니다.');
-        window.location.href = '/#song/' + songId;
+        // 현재 partId가 유효하지 않으면 첫 번째 파트로 리다이렉트
+        if (song.parts.length > 0) {
+          const firstPart = song.parts[0];
+          window.location.href = `/player.html?songId=${songId}&partId=${firstPart.id}`;
+        } else {
+          window.location.href = '/#song/' + songId;
+        }
         return;
       }
       document.getElementById('songName').textContent = song.name;
