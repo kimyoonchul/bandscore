@@ -7,7 +7,17 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>AsomeScorePlayer - 밴드 악보 자동 넘김</title>
-  <meta name="description" content="밴드 연주용 악보 자동 넘김 및 실시간 동기화 웹앱">
+  <meta name="description" content="밴드 연주용 악보 자동 넘김 및 실시간 동기화 웹앱 · 성수역 6번출구">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AsomeScorePlayer 🎸">
+  <meta property="og:description" content="밴드 악보 자동 넘김 · BPM 동기화 · 실시간 합주 · 성수역 6번출구">
+  <meta property="og:image" content="/icons/base2.svg">
+  <meta property="og:locale" content="ko_KR">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="AsomeScorePlayer 🎸">
+  <meta name="twitter:description" content="밴드 악보 자동 넘김 · BPM 동기화 · 실시간 합주">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="/css/style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -395,7 +405,7 @@
 
   <!-- ═══════════════ BAND FOOTER ═══════════════ -->
   <footer class="band-footer" id="bandFooter">
-    <div class="footer-trigger" onclick="document.getElementById('footerAccordion').classList.toggle('open')">
+    <div class="footer-trigger" onclick="document.getElementById('footerAccordion').classList.toggle('open');setTimeout(()=>document.getElementById('bandFooter').scrollIntoView({behavior:'smooth',block:'end'}),100)">
       <span class="footer-copy-text">© 2026 성수역 6번출구</span>
       <span class="footer-hint">👆</span>
     </div>
