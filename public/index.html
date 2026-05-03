@@ -1997,6 +1997,77 @@
       const countEl = document.getElementById('manualStaveCount');
       if (countEl && cache) countEl.textContent = `(감지: ${cache.staves.length}개 오선)`;
       else if (countEl) countEl.textContent = '';
+      // 감지된 오선 위치를 마커로 표시
+      showStaveMarkers();
+    }
+
+    function showStaveMarkers() {
+      const cache = sysEditorState.staveCache[sysEditorState.currentPage];
+      let markersEl = document.getElementById('staveMarkers');
+      if (!markersEl) {
+        const overlay = document.getElementById('sysEditorLineOverlay');
+        if (!overlay) return;
+        markersEl = document.createElement('div');
+        markersEl.id = 'staveMarkers';
+        markersEl.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5';
+        overlay.parentElement.appendChild(markersEl);
+      }
+      if (!cache) { markersEl.innerHTML = ''; return; }
+      const { staves, height: h } = cache;
+      markersEl.innerHTML = staves.map((s, i) => {
+        const midPct = ((s.top + s.bottom) / 2 / h * 100);
+        const hPct = ((s.bottom - s.top) / h * 100);
+        return `<div style="position:absolute;left:0;width:100%;top:${(s.top/h*100).toFixed(1)}%;height:${hPct.toFixed(1)}%;border:1px dashed rgba(255,80,80,0.4);background:rgba(255,80,80,0.05);pointer-events:none">
+          <span style="position:absolute;right:4px;top:0;font-size:0.6rem;color:rgba(255,80,80,0.7);font-weight:600">${i+1}</span>
+        </div>`;
+      }).join('');
+    }
+
+    // 감도 슬라이더 변경 → 현재 페이지 재분석
+    async function onThresholdChange(val) {
+      document.getElementById('thresholdVal').textContent = val + '%';
+      await reAnalyzePage(sysEditorState.currentPage, parseInt(val));
+      updateStaveCountDisplay();
+      previewManualPattern();
+    }
+
+    // 단일 페이지 오선 재분석 (threshold 조절)
+    async function reAnalyzePage(pn, thresholdPct) {
+      const pdf = sysEditorState.pdf;
+      if (!pdf) return;
+      const page = await pdf.getPage(pn);
+      const scale = 2;
+      const vp = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      canvas.width = vp.width; canvas.height = vp.height;
+      const ctx = canvas.getContext('2d');
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = img.data, w = canvas.width, h = canvas.height;
+      const rowDark = new Array(h).fill(0);
+      for (let y = 0; y < h; y++)
+        for (let x = 0; x < w; x++)
+          if ((d[(y * w + x) * 4] + d[(y * w + x) * 4 + 1] + d[(y * w + x) * 4 + 2]) / 3 < 100) rowDark[y]++;
+      const threshold = w * (thresholdPct / 100);
+      const staffLines = [];
+      let gs = -1;
+      for (let y = 0; y < h; y++) {
+        if (rowDark[y] > threshold) { if (gs === -1) gs = y; }
+        else if (gs !== -1) { staffLines.push({ y: Math.round((gs + y - 1) / 2) }); gs = -1; }
+      }
+      if (gs !== -1) staffLines.push({ y: Math.round((gs + h - 1) / 2) });
+      const staves = [];
+      let cur = [];
+      for (let i = 0; i < staffLines.length; i++) {
+        if (cur.length === 0) { cur.push(staffLines[i]); continue; }
+        if (staffLines[i].y - cur[cur.length - 1].y < 25) cur.push(staffLines[i]);
+        else {
+          if (cur.length >= 3) staves.push({ top: cur[0].y, bottom: cur[cur.length - 1].y });
+          cur = [staffLines[i]];
+        }
+      }
+      if (cur.length >= 3) staves.push({ top: cur[0].y, bottom: cur[cur.length - 1].y });
+      sysEditorState.staveCache[pn] = { staves, height: h };
     }
 
     function saveManualPattern() {
@@ -2386,6 +2457,9 @@
         <span style="font-size:0.8rem;color:var(--text-muted)">이 페이지:</span>
         <input type="text" id="manualPatternInput" class="form-control" placeholder="22223" style="width:140px;padding:6px 10px;font-size:0.85rem;font-family:monospace" oninput="saveManualPattern()">
         <span id="manualStaveCount" style="font-size:0.75rem;color:var(--accent);font-weight:600"></span>
+        <span style="font-size:0.75rem;color:var(--text-muted);margin-left:8px">감도:</span>
+        <input type="range" id="staveThreshold" min="15" max="50" value="30" style="width:80px;accent-color:var(--accent)" oninput="onThresholdChange(this.value)">
+        <span id="thresholdVal" style="font-size:0.7rem;color:var(--text-muted);min-width:28px">30%</span>
       </div>
       <button class="btn btn-success" onclick="runDetection()" style="font-size:0.85rem;padding:8px 16px">🔍 줄 감지
         실행</button>
