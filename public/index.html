@@ -2540,10 +2540,12 @@
   <!-- 전체화면 줄 설정 에디터 -->
   <div class="sys-editor-overlay" id="sysEditorOverlay">
     <div class="sys-editor-header">
-      <div class="title">📋 악보설정 <span class="part-label" id="sysEditorTitle"></span></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn btn-ghost" onclick="closeSysEditor()" style="font-size:1rem;padding:4px 8px">←</button>
+        <div class="title" style="margin:0">📋 악보설정 <span class="part-label" id="sysEditorTitle"></span></div>
+      </div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost" onclick="reDetectSystems()" style="font-size:0.8rem">🔍 줄 재감지</button>
-        <button class="btn btn-ghost" onclick="closeSysEditor()" title="닫기">← 돌아가기</button>
         <button class="btn btn-primary" onclick="sysEditorSave()">💾 저장</button>
       </div>
     </div>
