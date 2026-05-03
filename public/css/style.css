@@ -355,7 +355,7 @@ select.form-control { cursor: pointer; }
 
 .song-info-card {
   margin-bottom: 20px;
-  background: var(--bg-card);
+  background: rgba(16, 28, 23, 0.95);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 16px;
@@ -363,7 +363,7 @@ select.form-control { cursor: pointer; }
   transition: var(--transition);
   position: relative;
   z-index: 1;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(20px);
 }
 .song-info-card:hover {
   border-color: var(--border-hover);

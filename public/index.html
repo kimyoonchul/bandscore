@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 
 <head>
@@ -537,7 +537,8 @@
       </div>
 
       <!-- Song Settings Quick View -->
-      <div class="song-info-card" onclick="const t=event.target.closest('[data-focus]'); showEditSongModal(t?t.dataset.focus:null)">
+      <div class="song-info-card"
+        onclick="const t=event.target.closest('[data-focus]'); showEditSongModal(t?t.dataset.focus:null)">
         <div class="song-info-grid">
           <div class="song-info-item" data-focus="editSongBpm">
             <span class="song-info-icon">🎵</span>
@@ -568,7 +569,6 @@
             </div>
           </div>
         </div>
-        <div class="song-info-hint">탭하여 설정 변경 →</div>
       </div>
 
       <!-- Parts (탭 없이 바로 표시) -->
