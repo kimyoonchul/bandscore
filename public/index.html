@@ -1703,6 +1703,7 @@
       sysEditorRenderPage();
       sysEditorRenderPanel();
       document.getElementById('sysEditorPanelBody').innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted)"><div style="font-size:2rem;margin-bottom:12px">🔍</div><p>위의 <strong>오선 수를 선택</strong>하고<br><strong>줄 감지 실행</strong> 버튼을 누르세요</p></div>';
+      onStaveModeChange();
     }
 
     async function detectSystems(partId) {
@@ -1728,6 +1729,7 @@
       document.getElementById('sysEditorPanelBody').innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted)"><div style="font-size:2rem;margin-bottom:12px">🔍</div><p>위의 <strong>오선 수를 선택</strong>하고<br><strong>줄 감지 실행</strong> 버튼을 누르세요</p><p style="font-size:0.75rem;margin-top:8px">악보를 넘기면서 오선 구조를 확인하세요</p></div>';
 
       sysEditorRenderPage();
+      onStaveModeChange();
     }
 
     async function runDetection() {
@@ -1803,7 +1805,7 @@
           if (isManual) {
             // ── 수동 입력 모드 ──
             const patternStr = sysEditorState.manualPatterns[pn] || '';
-            const pattern = patternStr.split(/[,\s]+/).map(Number).filter(n => n > 0);
+            const pattern = parsePattern(patternStr);
             if (pattern.length > 0 && pattern.reduce((a, b) => a + b, 0) <= staves.length) {
               let si = 0;
               for (const count of pattern) {
@@ -1973,9 +1975,21 @@
         if (cur.length >= 3) staves.push({ top: cur[0].y, bottom: cur[cur.length - 1].y });
         sysEditorState.staveCache[pn] = { staves, height: h };
       }
-      if (indicator) indicator.placeholder = '2,2,2,2,3';
+      if (indicator) indicator.placeholder = '22223';
       loadManualPattern();
       updateStaveCountDisplay();
+    }
+
+    // 패턴 문자열 파싱: "2,2,3" 또는 "223" 모두 지원
+    function parsePattern(str) {
+      if (!str || !str.trim()) return [];
+      const trimmed = str.trim();
+      // 쉼표나 공백이 있으면 구분자로 분리
+      if (/[,\s]/.test(trimmed)) {
+        return trimmed.split(/[,\s]+/).map(Number).filter(n => n > 0);
+      }
+      // 연속 숫자면 각 글자를 개별 숫자로
+      return trimmed.split('').map(Number).filter(n => n > 0);
     }
 
     function updateStaveCountDisplay() {
@@ -1998,7 +2012,7 @@
       if (!cache) return;
       const { staves, height: h } = cache;
       const patternStr = sysEditorState.manualPatterns[sysEditorState.currentPage] || '';
-      const pattern = patternStr.split(/[,\s]+/).map(Number).filter(n => n > 0);
+      const pattern = parsePattern(patternStr);
       const patternSum = pattern.reduce((a, b) => a + b, 0);
 
       const overlayEl = document.getElementById('sysEditorLineOverlay');
@@ -2370,7 +2384,7 @@
       </select>
       <div id="manualPatternWrap" style="display:flex;align-items:center;gap:8px">
         <span style="font-size:0.8rem;color:var(--text-muted)">이 페이지:</span>
-        <input type="text" id="manualPatternInput" class="form-control" placeholder="2,2,2,2,3" style="width:140px;padding:6px 10px;font-size:0.85rem;font-family:monospace" oninput="saveManualPattern()">
+        <input type="text" id="manualPatternInput" class="form-control" placeholder="22223" style="width:140px;padding:6px 10px;font-size:0.85rem;font-family:monospace" oninput="saveManualPattern()">
         <span id="manualStaveCount" style="font-size:0.75rem;color:var(--accent);font-weight:600"></span>
       </div>
       <button class="btn btn-success" onclick="runDetection()" style="font-size:0.85rem;padding:8px 16px">🔍 줄 감지
