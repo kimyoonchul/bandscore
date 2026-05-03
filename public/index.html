@@ -13,133 +13,190 @@
   <style>
     /* ── System Editor (전체화면) ── */
     .sys-editor-overlay {
-      position: fixed; inset: 0; z-index: 2000;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
       background: var(--bg-deep);
-      display: none; flex-direction: column;
+      display: none;
+      flex-direction: column;
     }
-    .sys-editor-overlay.active { display: flex; }
+
+    .sys-editor-overlay.active {
+      display: flex;
+    }
 
     .sys-editor-header {
       background: var(--glass);
       backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--glass-border);
       padding: 12px 20px;
-      display: flex; align-items: center;
+      display: flex;
+      align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
     }
+
     .sys-editor-header .title {
-      font-weight: 700; font-size: 1.1rem;
-      display: flex; align-items: center; gap: 8px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
+
     .sys-editor-header .title .part-label {
-      color: var(--primary); font-size: 0.85rem;
+      color: var(--primary);
+      font-size: 0.85rem;
     }
 
     .sys-editor-body {
-      flex: 1; display: flex; overflow: hidden;
+      flex: 1;
+      display: flex;
+      overflow: hidden;
     }
 
     /* 좌측: 악보 뷰어 */
     .sys-editor-score {
-      flex: 1; position: relative;
+      flex: 1;
+      position: relative;
       background: #1a1a1a;
-      display: flex; flex-direction: column;
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
     }
+
     .sys-editor-canvas-wrap {
-      flex: 1; position: relative;
-      display: flex; align-items: center; justify-content: center;
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       overflow: hidden;
       padding: 12px;
     }
+
     .sys-editor-canvas-inner {
-      position: relative; display: inline-block;
+      position: relative;
+      display: inline-block;
     }
+
     .sys-editor-canvas-inner canvas {
-      display: block; max-width: 100%; max-height: 100%;
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
     }
+
     .sys-editor-line-overlay {
-      position: absolute; inset: 0; pointer-events: none;
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
     }
+
     .sys-line-region {
-      position: absolute; left: 0; width: 100%;
-      background: rgba(45,122,90,0.15);
-      border: 1px solid rgba(45,122,90,0.4);
+      position: absolute;
+      left: 0;
+      width: 100%;
+      background: rgba(45, 122, 90, 0.15);
+      border: 1px solid rgba(45, 122, 90, 0.4);
       border-radius: 4px;
       cursor: pointer;
       pointer-events: auto;
       transition: background 0.15s, border-color 0.15s;
-      display: flex; align-items: flex-start;
+      display: flex;
+      align-items: flex-start;
     }
+
     .sys-line-region:hover {
-      background: rgba(212,165,116,0.2);
+      background: rgba(212, 165, 116, 0.2);
       border-color: var(--primary);
     }
+
     .sys-line-region.active {
-      background: rgba(212,165,116,0.25);
+      background: rgba(212, 165, 116, 0.25);
       border-color: var(--primary);
-      box-shadow: 0 0 12px rgba(212,165,116,0.2);
+      box-shadow: 0 0 12px rgba(212, 165, 116, 0.2);
     }
+
     .sys-line-label {
-      background: rgba(0,0,0,0.6);
-      color: #fff; font-size: 0.65rem;
-      font-weight: 700; padding: 2px 6px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
       border-radius: 0 0 4px 0;
     }
 
     /* 페이지 네비게이션 */
     .sys-editor-page-nav {
-      display: flex; align-items: center;
-      justify-content: center; gap: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
       padding: 8px 16px;
-      background: rgba(0,0,0,0.4);
-      border-top: 1px solid rgba(255,255,255,0.06);
+      background: rgba(0, 0, 0, 0.4);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
       flex-shrink: 0;
     }
+
     .sys-editor-page-nav button {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.12);
-      color: #ddd; padding: 8px 16px;
-      border-radius: 8px; cursor: pointer;
-      font-family: inherit; font-weight: 600;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ddd;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
       font-size: 0.85rem;
       transition: all 0.15s;
     }
+
     .sys-editor-page-nav button:hover {
-      background: rgba(255,255,255,0.15);
+      background: rgba(255, 255, 255, 0.15);
     }
+
     .sys-editor-page-nav button:disabled {
-      opacity: 0.3; cursor: default;
+      opacity: 0.3;
+      cursor: default;
     }
+
     .sys-editor-page-nav .page-indicator {
-      color: var(--primary); font-weight: 700;
+      color: var(--primary);
+      font-weight: 700;
       font-size: 0.9rem;
     }
 
     /* 우측: 설정 패널 */
     .sys-editor-panel {
-      width: 360px; flex-shrink: 0;
+      width: 360px;
+      flex-shrink: 0;
       background: var(--bg-surface);
       border-left: 1px solid var(--glass-border);
-      display: flex; flex-direction: column;
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
     }
+
     .sys-editor-panel-header {
       padding: 14px 16px;
       border-bottom: 1px solid var(--border);
-      font-weight: 700; font-size: 0.9rem;
+      font-weight: 700;
+      font-size: 0.9rem;
       color: var(--primary);
       flex-shrink: 0;
     }
+
     .sys-editor-panel-body {
-      flex: 1; overflow-y: auto;
+      flex: 1;
+      overflow-y: auto;
       padding: 12px;
     }
+
     .sys-editor-panel-footer {
       padding: 12px 16px;
       border-top: 1px solid var(--border);
-      display: flex; gap: 8px;
+      display: flex;
+      gap: 8px;
       justify-content: flex-end;
       flex-shrink: 0;
     }
@@ -154,53 +211,89 @@
       cursor: pointer;
       transition: all 0.15s;
     }
-    .sys-row:hover { border-color: var(--border-hover); }
+
+    .sys-row:hover {
+      border-color: var(--border-hover);
+    }
+
     .sys-row.active {
       border-color: var(--primary);
-      background: rgba(212,165,116,0.08);
+      background: rgba(212, 165, 116, 0.08);
     }
+
     .sys-row-header {
-      display: flex; align-items: center;
+      display: flex;
+      align-items: center;
       justify-content: space-between;
       margin-bottom: 6px;
     }
+
     .sys-row-header .label {
-      font-weight: 700; font-size: 0.85rem;
+      font-weight: 700;
+      font-size: 0.85rem;
     }
+
     .sys-row-header .range {
-      font-size: 0.7rem; color: var(--text-muted);
+      font-size: 0.7rem;
+      color: var(--text-muted);
     }
+
     .sys-row-fields {
-      display: flex; flex-wrap: wrap; gap: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
       align-items: center;
     }
+
     .sys-field {
-      display: flex; align-items: center; gap: 4px;
-      font-size: 0.75rem; color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
     }
-    .sys-field input, .sys-field select {
-      width: 52px; padding: 4px 6px;
+
+    .sys-field input,
+    .sys-field select {
+      width: 52px;
+      padding: 4px 6px;
       background: var(--bg-elevated);
       border: 1px solid var(--border);
-      border-radius: 6px; color: var(--text);
-      font-size: 0.8rem; text-align: center;
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.8rem;
+      text-align: center;
       font-family: inherit;
     }
-    .sys-field select { width: 60px; text-align: left; }
+
+    .sys-field select {
+      width: 60px;
+      text-align: left;
+    }
 
     /* 가이드 배너 */
     .sys-editor-guide {
       padding: 10px 16px;
-      background: rgba(212,165,116,0.08);
-      border-bottom: 1px solid rgba(212,165,116,0.15);
-      font-size: 0.78rem; color: var(--text-secondary);
+      background: rgba(212, 165, 116, 0.08);
+      border-bottom: 1px solid rgba(212, 165, 116, 0.15);
+      font-size: 0.78rem;
+      color: var(--text-secondary);
       flex-shrink: 0;
     }
-    .sys-editor-guide strong { color: var(--primary); }
+
+    .sys-editor-guide strong {
+      color: var(--primary);
+    }
 
     @media (max-width: 768px) {
-      .sys-editor-body { flex-direction: column; }
-      .sys-editor-panel { width: 100%; max-height: 45vh; }
+      .sys-editor-body {
+        flex-direction: column;
+      }
+
+      .sys-editor-panel {
+        width: 100%;
+        max-height: 45vh;
+      }
     }
   </style>
 </head>
@@ -339,7 +432,8 @@
           onchange="onPdfSelected(this)">
       </div>
       <div id="uploadPreview" style="display:none">
-        <p style="color:var(--success);font-size:0.85rem">✅ <span id="uploadPageCount">0</span>페이지 감지됨 — 업로드 후 줄 설정이 진행됩니다.</p>
+        <p style="color:var(--success);font-size:0.85rem">✅ <span id="uploadPageCount">0</span>페이지 감지됨 — 업로드 후 줄 설정이
+          진행됩니다.</p>
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
         <button class="btn btn-ghost" onclick="closeModal('uploadModal')">취소</button>
@@ -523,8 +617,7 @@
         </div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap" onclick="event.stopPropagation()">
-        <button class="btn btn-accent btn-sm" onclick="detectSystems('${p.id}')">🔍 줄감지</button>
-        ${hasSystems ? '<button class="btn btn-ghost btn-sm" onclick="editExistingSystems(\'' + p.id + '\')">✏️ 줄설정</button>' : ''}
+        <button class="btn btn-accent btn-sm" onclick="openScoreEditor('${p.id}')">📋 악보설정</button>
         <button class="btn btn-danger btn-sm" onclick="deletePart('${p.id}')">🗑️</button>
       </div>
     </div>
@@ -799,6 +892,35 @@
       const systems = await (await fetch(`/api/parts/${partId}/systems`)).json();
       if (!systems.length) return alert('줄 데이터가 없습니다. 먼저 줄감지를 실행하세요.');
       showSystemEditModal(partId, systems);
+    }
+
+    async function openScoreEditor(partId) {
+      const part = currentSong.parts.find(p => p.id === partId);
+      if (!part) return;
+      const hasSystems = part.systems && part.systems.length > 0;
+      if (hasSystems) {
+        // 줄이 이미 있으면 → 편집 모드로 열기
+        await editExistingSystems(partId);
+      } else {
+        // 줄이 없으면 → 감지 모드로 열기
+        await detectSystems(partId);
+      }
+    }
+
+    async function reDetectSystems() {
+      // 기존 설정이 있으면 컨펀 표시
+      if (sysEditorState.systems.length > 0) {
+        if (!confirm('기존 줄 설정이 초기화됩니다. 계속하시겠습니까?')) return;
+      }
+      // 감지 모드로 전환
+      sysEditorState.systems = [];
+      sysEditorState.detectMode = true;
+      sysEditorState.currentPage = 1;
+      sysEditorState.activeLineIdx = -1;
+      document.getElementById('sysEditorDetectBar').style.display = 'flex';
+      sysEditorRenderPage();
+      sysEditorRenderPanel();
+      document.getElementById('sysEditorPanelBody').innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted)"><div style="font-size:2rem;margin-bottom:12px">🔍</div><p>위의 <strong>오선 수를 선택</strong>하고<br><strong>줄 감지 실행</strong> 버튼을 누르세요</p></div>';
     }
 
     async function detectSystems(partId) {
@@ -1098,7 +1220,7 @@
           html += `<span class="sys-field">마디<input type="number" value="${s.measures}" min="1" max="20" onchange="sysEditorUpdate(${gi},'measures',this.value)" onclick="event.stopPropagation()"></span>`;
           html += `<span class="sys-field">|:<input type="number" value="${rs}" min="0" max="20" onchange="sysEditorUpdate(${gi},'repeat_start_at',this.value)" onclick="event.stopPropagation()"></span>`;
           html += `<span class="sys-field">:|<input type="number" value="${re}" min="0" max="20" onchange="sysEditorUpdate(${gi},'repeat_end_at',this.value)" onclick="event.stopPropagation()"></span>`;
-          html += `<span class="sys-field">괄호<select onchange="sysEditorUpdate(${gi},'volta',this.value)" onclick="event.stopPropagation()"><option value="0" ${v===0?'selected':''}>-</option><option value="1" ${v===1?'selected':''}>1번</option><option value="2" ${v===2?'selected':''}>2번</option></select></span>`;
+          html += `<span class="sys-field">괄호<select onchange="sysEditorUpdate(${gi},'volta',this.value)" onclick="event.stopPropagation()"><option value="0" ${v === 0 ? 'selected' : ''}>-</option><option value="1" ${v === 1 ? 'selected' : ''}>1번</option><option value="2" ${v === 2 ? 'selected' : ''}>2번</option></select></span>`;
           html += `<span class="sys-field">구간<input type="number" value="${vf}" min="0" max="20" style="width:38px" onchange="sysEditorUpdate(${gi},'volta_from',this.value)" onclick="event.stopPropagation()">~<input type="number" value="${vt}" min="0" max="20" style="width:38px" onchange="sysEditorUpdate(${gi},'volta_to',this.value)" onclick="event.stopPropagation()"></span>`;
           html += `</div></div>`;
         });
@@ -1219,18 +1341,20 @@
   <!-- 전체화면 줄 설정 에디터 -->
   <div class="sys-editor-overlay" id="sysEditorOverlay">
     <div class="sys-editor-header">
-      <div class="title">🔍 줄 설정 <span class="part-label" id="sysEditorTitle"></span></div>
+      <div class="title">📋 악보설정 <span class="part-label" id="sysEditorTitle"></span></div>
       <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="reDetectSystems()" style="font-size:0.8rem">🔍 줄 재감지</button>
         <button class="btn btn-ghost" onclick="closeSysEditor()">닫기</button>
         <button class="btn btn-primary" onclick="sysEditorSave()">💾 저장</button>
       </div>
     </div>
     <div class="sys-editor-guide">
-      <strong>💡 사용법:</strong> 왼쪽 악보에서 줄 영역을 확인하고, 오른쪽 패널에서 각 줄의 마디 수와 도돌이표를 설정하세요. 줄을 클릭하면 양쪽이 연동됩니다.
+      <strong>💡 사용법:</strong> 왼쪽 악보에서 줄 영역을 확인하고, 오른쪽 패널에서 각 줄의 마디 수와 도돌이표를 설정하세요.
       <br><strong>|:</strong> 반복시작 마디, <strong>:|</strong> 반복끝 마디 (0=없음). <strong>괄호:</strong> 1번=첫 통과, 2번=둘째만.
     </div>
     <!-- 오선수 선택 + 감지 버튼 (감지 모드에서만 표시) -->
-    <div id="sysEditorDetectBar" style="display:none;align-items:center;gap:12px;padding:10px 20px;background:rgba(74,222,128,0.08);border-bottom:1px solid rgba(74,222,128,0.15);flex-shrink:0">
+    <div id="sysEditorDetectBar"
+      style="display:none;align-items:center;gap:12px;padding:10px 20px;background:rgba(74,222,128,0.08);border-bottom:1px solid rgba(74,222,128,0.15);flex-shrink:0">
       <span style="font-size:0.85rem;font-weight:600;color:var(--success)">🎼 오선 수</span>
       <select id="sysEditorStaves" class="form-control" style="width:auto;padding:6px 12px;font-size:0.85rem">
         <option value="1">단선 악보 (드럼/보컬) — 1</option>
@@ -1239,7 +1363,8 @@
         <option value="4">밴드스코어 4단 — 4</option>
         <option value="5">밴드스코어 5단 — 5</option>
       </select>
-      <button class="btn btn-success" onclick="runDetection()" style="font-size:0.85rem;padding:8px 16px">🔍 줄 감지 실행</button>
+      <button class="btn btn-success" onclick="runDetection()" style="font-size:0.85rem;padding:8px 16px">🔍 줄 감지
+        실행</button>
     </div>
     <div class="sys-editor-body">
       <div class="sys-editor-score">
