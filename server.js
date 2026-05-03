@@ -450,6 +450,13 @@ io.on('connection', (socket) => {
     io.to(targetId).emit('remote-unmute-inst');
   });
 
+  // inst 상태 변경을 방 전체에 브로드캐스트
+  socket.on('inst-state-changed', ({ muted }) => {
+    if (socket.songId) {
+      socket.to(socket.songId).emit('inst-state-update', { memberId: socket.id, muted });
+    }
+  });
+
   socket.on('disconnect', () => {
     if (socket.songId) {
       broadcastMembers(socket.songId);

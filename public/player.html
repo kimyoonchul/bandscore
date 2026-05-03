@@ -1480,13 +1480,20 @@
         const slider = document.querySelector('.inst-vol-slider input');
         if (slider) slider.value = Math.round(instPrevVolume * 100);
       }
+      socket.emit('inst-state-changed', { muted: !instEnabled });
+      renderMemberList();
     }
     function setInstVolume(val) {
       const v = parseInt(val);
       if (instAudio) instAudio.volume = v / 100;
+      const wasMuted = !instEnabled;
       instEnabled = v > 0;
       document.getElementById('btnInst').textContent = v > 0 ? '🔊' : '🔇';
       if (v > 0) instPrevVolume = v / 100;
+      if (wasMuted !== !instEnabled) {
+        socket.emit('inst-state-changed', { muted: !instEnabled });
+        renderMemberList();
+      }
     }
     function instPlay() {
       if (!instAudio || !instEnabled) return;
@@ -1673,10 +1680,13 @@
         const isMe = m.id === socket.id;
         const hasInst = !!song?.inst_filename;
         const emoji = partEmoji(m.partName);
-        const isMuted = mutedMembers.has(m.id);
+        // 자기 자신은 instEnabled 기준, 다른 사람은 mutedMembers 기준
+        const isMuted = isMe ? !instEnabled : mutedMembers.has(m.id);
         const instBtn = (hasInst && !isMe)
           ? `<button class="member-inst-btn" onclick="event.stopPropagation();toggleRemoteInst('${m.id}')" title="inst 음소거" id="mInst_${m.id}">${isMuted ? '🔇' : '🔊'}</button>`
-          : '';
+          : (hasInst && isMe)
+            ? `<span class="member-inst-btn" style="opacity:0.5;cursor:default">${isMuted ? '🔇' : '🔊'}</span>`
+            : '';
         return `<div class="member-item">
           <span class="member-dot"></span>
           <span class="member-name">${emoji} ${m.partName}${isMe ? ' <span class="member-me">(나)</span>' : ''}</span>
@@ -1709,6 +1719,9 @@
       document.getElementById('btnInst').textContent = '🔇';
       const slider = document.querySelector('.inst-vol-slider input');
       if (slider) slider.value = 0;
+      // 상태 변경을 방 전체에 알림
+      socket.emit('inst-state-changed', { muted: true });
+      renderMemberList();
     });
     socket.on('remote-unmute-inst', () => {
       if (instAudio) instAudio.volume = instPrevVolume;
@@ -1716,6 +1729,15 @@
       document.getElementById('btnInst').textContent = '🔊';
       const slider = document.querySelector('.inst-vol-slider input');
       if (slider) slider.value = Math.round(instPrevVolume * 100);
+      // 상태 변경을 방 전체에 알림
+      socket.emit('inst-state-changed', { muted: false });
+      renderMemberList();
+    });
+    // 다른 멤버의 inst 상태 변경 수신 → 팝오버 업데이트
+    socket.on('inst-state-update', ({ memberId, muted }) => {
+      if (muted) mutedMembers.add(memberId);
+      else mutedMembers.delete(memberId);
+      renderMemberList();
     });
 
     // 외부 클릭 시 메뉴/팝오버 닫기
