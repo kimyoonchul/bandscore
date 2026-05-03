@@ -661,6 +661,7 @@
         <button onclick="setView('dual',this)">2벌</button>
         <button onclick="setView('portrait',this)">세로</button>
       </div>
+      <button class="btn btn-ghost" onclick="toggleInst()" id="btnInst" style="display:none" title="inst 음원">🔇</button>
       <button class="btn btn-ghost" onclick="toggleFullscreen()">⛶</button>
       <button class="btn btn-ghost" onclick="toggleSettings()">⚙</button>
       <span style="font-size:0.7rem;color:var(--text-muted)" id="pgInd">1/1</span>
@@ -781,6 +782,8 @@
     const styleSettings = { ...STYLE_DEFAULTS };
     let previewAnim = null;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let instAudio = null; // inst 음원 Audio 객체
+    let instEnabled = false;
     const socket = io();
 
     /** 초기화: API에서 곡/파트 로드 → PDF 렌더 → 타임라인 빌드 → 소켓 연결 */
@@ -813,6 +816,14 @@
           applyStyleToUI();
         }
       } catch(e) {}
+
+      // inst 음원 로드
+      if (song.inst_filename) {
+        instAudio = new Audio(`/uploads/${song.inst_filename}`);
+        instAudio.preload = 'auto';
+        instAudio.loop = false;
+        document.getElementById('btnInst').style.display = 'inline-flex';
+      }
     }
 
     function applyStyleToUI() {
@@ -1297,6 +1308,7 @@
       doCountIn(() => {
         state = 'playing'; playStartTime = Date.now(); elapsedBefore = 0;
         updateUI(); startAnim();
+        instPlay();
         clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
       });
     }
@@ -1306,6 +1318,7 @@
         elapsedBefore += Date.now() - playStartTime;
         if (animFrame) cancelAnimationFrame(animFrame); updateUI();
         updateSeekbar(elapsedBefore / 1000);
+        instPause();
         if (!uiVisible) { uiVisible = true; document.getElementById('topBar').classList.remove('hidden'); document.getElementById('ctrlBar').classList.remove('hidden'); showView() }
       } else { socket.emit('pause') }
     }
@@ -1313,6 +1326,7 @@
       if (soloMode) {
         state = 'playing'; playStartTime = Date.now();
         updateUI(); startAnim();
+        instResume();
         clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
       } else { socket.emit('resume') }
     }
@@ -1323,10 +1337,37 @@
         if (animFrame) cancelAnimationFrame(animFrame);
         curDispPage = playbackOrder[0] || 1; elapsedBefore = 0;
         clearHL(); showView(); updateUI(); updateSeekbar(0);
+        instStop();
         if (!uiVisible) { uiVisible = true; document.getElementById('topBar').classList.remove('hidden'); document.getElementById('ctrlBar').classList.remove('hidden'); showView() }
       } else { socket.emit('stop') }
     }
     function changeBpm(d) { bpm = Math.max(30, Math.min(300, bpm + d)); document.getElementById('bpmVal').textContent = bpm; buildTimeline(); socket.emit('tempo-change', { bpm }) }
+
+    // ── inst 음원 제어 ──
+    function toggleInst() {
+      instEnabled = !instEnabled;
+      document.getElementById('btnInst').textContent = instEnabled ? '🔊' : '🔇';
+      if (!instEnabled && instAudio) { instAudio.pause(); }
+    }
+    function instPlay() {
+      if (!instAudio || !instEnabled) return;
+      instAudio.currentTime = 0;
+      instAudio.play().catch(() => {});
+    }
+    function instPause() {
+      if (!instAudio || !instEnabled) return;
+      instAudio.pause();
+    }
+    function instResume() {
+      if (!instAudio || !instEnabled) return;
+      instAudio.play().catch(() => {});
+    }
+    function instStop() {
+      if (!instAudio) return;
+      instAudio.pause();
+      instAudio.currentTime = 0;
+    }
+
     function editBpm() {
       const v = prompt('BPM을 입력하세요 (30~300):', bpm);
       if (v === null) return;
