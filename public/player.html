@@ -752,7 +752,7 @@
       </div>
       <div class="inst-vol-wrap" id="instVolWrap" style="display:none">
         <div class="inst-vol-slider">
-          <input type="range" min="0" max="100" value="80" oninput="setInstVolume(this.value)">
+          <input type="range" min="0" max="100" value="0" oninput="setInstVolume(this.value)">
         </div>
         <button class="btn btn-ghost" onclick="toggleInst()" id="btnInst" title="inst 음원">🔇</button>
       </div>
@@ -934,7 +934,7 @@
         instAudio = new Audio(`/uploads/${song.inst_filename}`);
         instAudio.preload = 'auto';
         instAudio.loop = false;
-        instAudio.volume = 0.8;
+        instAudio.volume = 0;
         document.getElementById('instVolWrap').style.display = 'inline-flex';
       }
     }
@@ -1667,8 +1667,9 @@
         const isMe = m.id === socket.id;
         const hasInst = !!song?.inst_filename;
         const emoji = partEmoji(m.partName);
+        const isMuted = mutedMembers.has(m.id);
         const instBtn = (hasInst && !isMe)
-          ? `<button class="member-inst-btn" onclick="event.stopPropagation();toggleRemoteInst('${m.id}')" title="inst 음소거" id="mInst_${m.id}">🔊</button>`
+          ? `<button class="member-inst-btn" onclick="event.stopPropagation();toggleRemoteInst('${m.id}')" title="inst 음소거" id="mInst_${m.id}">${isMuted ? '🔇' : '🔊'}</button>`
           : '';
         return `<div class="member-item">
           <span class="member-dot"></span>

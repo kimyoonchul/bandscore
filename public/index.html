@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 
 <head>
@@ -375,314 +375,227 @@
     </div>
   </div>
 
+
   <!-- ═══════════════ BAND FOOTER ═══════════════ -->
   <footer class="band-footer" id="bandFooter">
-    <div class="footer-inner">
+    <div class="footer-trigger" onclick="document.getElementById('footerAccordion').classList.toggle('open')">
+      <span>© 2026 성수역 6번출구 · Powered by AsomeScorePlayer</span>
+      <span class="footer-hint">👆 click!</span>
+      <span class="footer-ai-badge">🤖 AI Generated</span>
+    </div>
+    <div class="footer-accordion" id="footerAccordion">
+      <div class="footer-inner">
 
-      <!-- 밴드 타이틀 -->
-      <div class="footer-title-wrap">
-        <h2 class="footer-band-name" id="bandNameTitle">
-          <span class="band-char" style="--i:0">성</span>
-          <span class="band-char" style="--i:1">수</span>
-          <span class="band-char" style="--i:2">역</span>
-          <span class="band-char" style="--i:3"> </span>
-          <span class="band-char" style="--i:4">6</span>
-          <span class="band-char" style="--i:5">번</span>
-          <span class="band-char" style="--i:6">출</span>
-          <span class="band-char" style="--i:7">구</span>
-          <span class="band-char" style="--i:8">?</span>
-        </h2>
-        <p class="footer-subtitle">formed at <strong>Asome 성수점</strong> 🎵</p>
-      </div>
+        <!-- 밴드 타이틀 -->
+        <div class="footer-title-wrap">
+          <h2 class="footer-band-name">
+            <span class="band-char" style="--i:0">성</span><span class="band-char" style="--i:1">수</span><span class="band-char" style="--i:2">역</span><span class="band-char" style="--i:3"> </span><span class="band-char" style="--i:4">6</span><span class="band-char" style="--i:5">번</span><span class="band-char" style="--i:6">출</span><span class="band-char" style="--i:7">구</span><span class="band-char" style="--i:8">?</span>
+          </h2>
+          <p class="footer-subtitle">formed at <strong>Asome 성수점</strong> 🎵</p>
+        </div>
 
-      <!-- 팀명 변천사 타임라인 -->
-      <div class="name-timeline">
-        <div class="timeline-item" onmouseenter="this.classList.add('pop')" onmouseleave="this.classList.remove('pop')">
-          <div class="timeline-dot">1</div>
-          <div class="timeline-content">
-            <span class="timeline-name">슈링스타 ⭐</span>
-            <span class="timeline-desc">Ring Ring + Star 의 합작</span>
+        <!-- 팀명 변천사 -->
+        <div class="name-timeline">
+          <div class="timeline-item" onmouseenter="this.classList.add('pop')" onmouseleave="this.classList.remove('pop')">
+            <div class="timeline-dot">1</div>
+            <div class="timeline-content"><span class="timeline-name">슈링스타 ⭐</span><span class="timeline-desc">Ring Ring + Star 합작</span></div>
+          </div>
+          <div class="timeline-arrow">→</div>
+          <div class="timeline-item" onmouseenter="this.classList.add('pop')" onmouseleave="this.classList.remove('pop')">
+            <div class="timeline-dot">2</div>
+            <div class="timeline-content"><span class="timeline-name">홀리워터 💧</span><span class="timeline-desc">성수(聖水)... 반응 미지근</span></div>
+          </div>
+          <div class="timeline-arrow">→</div>
+          <div class="timeline-item" onmouseenter="this.classList.add('pop')" onmouseleave="this.classList.remove('pop')">
+            <div class="timeline-dot">3</div>
+            <div class="timeline-content"><span class="timeline-name">크레이지 홀리워터 🤪</span><span class="timeline-desc">윤철의 반격</span></div>
+          </div>
+          <div class="timeline-arrow">→</div>
+          <div class="timeline-item active" onmouseenter="this.classList.add('pop')" onmouseleave="this.classList.remove('pop')">
+            <div class="timeline-dot">🔥</div>
+            <div class="timeline-content"><span class="timeline-name">성수역 6번출구 🚇</span><span class="timeline-desc">재한이의 한 마디 (예정)</span></div>
           </div>
         </div>
-        <div class="timeline-arrow">→</div>
-        <div class="timeline-item" onmouseenter="this.classList.add('pop')" onmouseleave="this.classList.remove('pop')">
-          <div class="timeline-dot">2</div>
-          <div class="timeline-content">
-            <span class="timeline-name">홀리워터 💧</span>
-            <span class="timeline-desc">성수(聖水)의 영어 번역... 반응 미지근</span>
-          </div>
-        </div>
-        <div class="timeline-arrow">→</div>
-        <div class="timeline-item" onmouseenter="this.classList.add('pop')" onmouseleave="this.classList.remove('pop')">
-          <div class="timeline-dot">3</div>
-          <div class="timeline-content">
-            <span class="timeline-name">크레이지 홀리워터 🤪💧</span>
-            <span class="timeline-desc">미지근한 반응에 화가 난 윤철의 반격</span>
-          </div>
-        </div>
-        <div class="timeline-arrow">→</div>
-        <div class="timeline-item active" onmouseenter="this.classList.add('pop')" onmouseleave="this.classList.remove('pop')">
-          <div class="timeline-dot">🔥</div>
-          <div class="timeline-content">
-            <span class="timeline-name">성수역 6번출구 🚇</span>
-            <span class="timeline-desc">재한이의 한 마디로 결정(예정)</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- 멤버 카드 -->
-      <div class="member-cards">
-        <div class="member-card" onclick="this.classList.toggle('flipped')">
-          <div class="card-inner">
-            <div class="card-front"><span class="card-emoji">🎤</span><span class="card-name">김윤철</span></div>
-            <div class="card-back"><span class="card-role">보컬</span><span class="card-note">밴드의 열정맨 🔥<br>팀명 독려 담당</span></div>
+        <!-- 멤버 카드 -->
+        <div class="member-cards">
+          <div class="member-card enfp-master" onclick="this.classList.toggle('flipped')">
+            <div class="card-inner">
+              <div class="card-front"><span class="master-badge">👑 밴드마스터</span><span class="card-emoji">🎤</span><span class="card-name">서마리</span><span class="enfp-tag">ENFP</span></div>
+              <div class="card-back"><span class="card-role">학원 실장님</span><span class="card-note">노래 잘하는 ENFP 🌟<br>화려한 게 좋아! 🎉<br>밴드를 이끄는 에너지!</span></div>
+            </div>
+          </div>
+          <div class="member-card" onclick="this.classList.toggle('flipped')">
+            <div class="card-inner">
+              <div class="card-front"><span class="card-emoji">🎤</span><span class="card-name">김윤철</span></div>
+              <div class="card-back"><span class="card-role">보컬</span><span class="card-note">밴드의 열정맨 🔥<br>팀명 독려 담당</span></div>
+            </div>
+          </div>
+          <div class="member-card" onclick="this.classList.toggle('flipped')">
+            <div class="card-inner">
+              <div class="card-front"><span class="card-emoji"><img src="/icons/base2.svg" style="width:2em;height:2em"></span><span class="card-name">김재한</span></div>
+              <div class="card-back"><span class="card-role">베이스</span><span class="card-note">네이밍 마스터 🧠</span></div>
+            </div>
+          </div>
+          <div class="member-card" onclick="this.classList.toggle('flipped')">
+            <div class="card-inner">
+              <div class="card-front"><span class="card-emoji">🎸</span><span class="card-name">김성용</span></div>
+              <div class="card-back"><span class="card-role">기타</span><span class="card-note">묵묵한 리프 장인 🎶</span></div>
+            </div>
+          </div>
+          <div class="member-card" onclick="this.classList.toggle('flipped')">
+            <div class="card-inner">
+              <div class="card-front"><span class="card-emoji">🥁</span><span class="card-name">김하정</span></div>
+              <div class="card-back"><span class="card-role">드럼</span><span class="card-note">비트의 심장 💓</span></div>
+            </div>
+          </div>
+          <div class="member-card resting" onclick="this.classList.toggle('flipped')">
+            <div class="card-inner">
+              <div class="card-front"><span class="card-emoji">🎸</span><span class="card-name">조민진</span></div>
+              <div class="card-back"><span class="card-role">기타</span><span class="card-note">잠시 충전 중 🔋</span></div>
+            </div>
+          </div>
+          <div class="member-card new-member" onclick="this.classList.toggle('flipped')">
+            <div class="card-inner">
+              <div class="card-front"><span class="card-emoji">🎹</span><span class="card-name">김민</span></div>
+              <div class="card-back"><span class="card-role">건반</span><span class="card-note">NEW! ✨</span></div>
+            </div>
+          </div>
+          <div class="member-card new-member" onclick="this.classList.toggle('flipped')">
+            <div class="card-inner">
+              <div class="card-front"><span class="card-emoji">🎸</span><span class="card-name">방한별</span></div>
+              <div class="card-back"><span class="card-role">기타</span><span class="card-note">NEW! ⭐</span></div>
+            </div>
           </div>
         </div>
-        <div class="member-card" onclick="this.classList.toggle('flipped')">
-          <div class="card-inner">
-            <div class="card-front"><span class="card-emoji"><img src="/icons/base2.svg" style="width:2em;height:2em"></span><span class="card-name">김재한</span></div>
-            <div class="card-back"><span class="card-role">베이스</span><span class="card-note">성수역 6번출구의<br>네이밍 마스터 🧠</span></div>
-          </div>
-        </div>
-        <div class="member-card" onclick="this.classList.toggle('flipped')">
-          <div class="card-inner">
-            <div class="card-front"><span class="card-emoji">🎸</span><span class="card-name">김성용</span></div>
-            <div class="card-back"><span class="card-role">기타</span><span class="card-note">묵묵한 리프 장인 🎶</span></div>
-          </div>
-        </div>
-        <div class="member-card" onclick="this.classList.toggle('flipped')">
-          <div class="card-inner">
-            <div class="card-front"><span class="card-emoji">🥁</span><span class="card-name">김하정</span></div>
-            <div class="card-back"><span class="card-role">드럼</span><span class="card-note">비트의 심장 💓</span></div>
-          </div>
-        </div>
-        <div class="member-card resting" onclick="this.classList.toggle('flipped')">
-          <div class="card-inner">
-            <div class="card-front"><span class="card-emoji">🎸</span><span class="card-name">조민진</span></div>
-            <div class="card-back"><span class="card-role">기타</span><span class="card-note">잠시 충전 중... 🔋<br>곧 돌아옵니다</span></div>
-          </div>
-        </div>
-        <div class="member-card new-member" onclick="this.classList.toggle('flipped')">
-          <div class="card-inner">
-            <div class="card-front"><span class="card-emoji">🎹</span><span class="card-name">김민</span></div>
-            <div class="card-back"><span class="card-role">건반</span><span class="card-note">NEW! ✨<br>새로운 사운드</span></div>
-          </div>
-        </div>
-        <div class="member-card new-member" onclick="this.classList.toggle('flipped')">
-          <div class="card-inner">
-            <div class="card-front"><span class="card-emoji">🎸</span><span class="card-name">방한별</span></div>
-            <div class="card-back"><span class="card-role">기타</span><span class="card-note">NEW! ⭐<br>별처럼 합류</span></div>
-          </div>
-        </div>
-      </div>
 
-      <!-- 경연대회 카운트다운 -->
-      <div class="contest-banner" id="contestBanner">
-        <div class="contest-icon">🏆</div>
-        <div class="contest-info">
-          <div class="contest-title">밴드 경연대회</div>
-          <div class="contest-date">2026.05.31</div>
+        <!-- 밴드 히스토리 -->
+        <div class="band-history">
+          <div class="history-item">
+            <span class="history-date">3.13</span><span class="history-event">🎵 첫 합주</span>
+          </div>
+          <div class="history-item">
+            <span class="history-date">4.18</span><span class="history-event">🎤 첫 공연 <small>(성수파티)</small></span>
+          </div>
+          <div class="history-item upcoming">
+            <span class="history-date">5.31</span><span class="history-event">🏆 밴드 경연대회</span>
+            <span class="history-dday" id="contestCountdown">D-??</span>
+          </div>
         </div>
-        <div class="contest-countdown" id="contestCountdown">D-??</div>
-      </div>
 
-      <div class="footer-copy">
-        <span>© 2026 성수역 6번출구 · Powered by AsomeScorePlayer</span>
       </div>
     </div>
   </footer>
 
   <style>
-    /* ═══════ BAND FOOTER ═══════ */
-    .band-footer {
+    .band-footer { margin-top: 40px; position: relative; }
+    .footer-trigger {
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      padding: 14px 20px; cursor: pointer;
+      background: linear-gradient(135deg, #0a0a1a, #1a1035);
+      border-top: 1px solid rgba(139,92,246,0.15);
+      color: rgba(255,255,255,0.25); font-size: 0.72rem;
+      transition: all 0.3s;
+    }
+    .footer-trigger:hover { color: rgba(255,255,255,0.5); background: #1a1035; }
+    .footer-hint { color: rgba(139,92,246,0.4); font-size: 0.65rem; animation: hint-pulse 2s ease-in-out infinite; }
+    @keyframes hint-pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+    .footer-ai-badge {
+      font-size: 0.55rem; padding: 2px 6px; border-radius: 4px;
+      background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2); color: rgba(139,92,246,0.5);
+    }
+    .footer-accordion {
+      max-height: 0; overflow: hidden; transition: max-height 0.6s cubic-bezier(.4,0,.2,1);
       background: linear-gradient(135deg, #0a0a1a 0%, #1a1035 40%, #0f1a2e 100%);
-      border-top: 1px solid rgba(139,92,246,0.2);
-      padding: 50px 20px 30px;
-      margin-top: 40px;
-      position: relative;
-      overflow: hidden;
     }
-    .band-footer::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-      background: radial-gradient(circle at 20% 50%, rgba(139,92,246,0.08) 0%, transparent 50%),
-                  radial-gradient(circle at 80% 20%, rgba(59,130,246,0.06) 0%, transparent 50%);
-      pointer-events: none;
-    }
-    .footer-inner {
-      max-width: 900px; margin: 0 auto; position: relative; z-index: 1;
-    }
+    .footer-accordion.open { max-height: 800px; }
+    .footer-inner { max-width: 900px; margin: 0 auto; padding: 30px 20px; }
 
-    /* 밴드 타이틀 */
-    .footer-title-wrap { text-align: center; margin-bottom: 36px; }
+    .footer-title-wrap { text-align: center; margin-bottom: 28px; }
     .footer-band-name {
-      font-size: 2.2rem; font-weight: 800; margin: 0 0 6px;
-      background: linear-gradient(90deg, #a78bfa, #60a5fa, #a78bfa);
-      background-size: 200% auto;
+      font-size: 2rem; font-weight: 800; margin: 0 0 4px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa, #a78bfa); background-size: 200% auto;
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       animation: shimmer 3s ease-in-out infinite;
     }
-    @keyframes shimmer { 0%,100% { background-position: 0% center; } 50% { background-position: 200% center; } }
-    .band-char {
-      display: inline-block; cursor: default;
-      transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+    @keyframes shimmer { 0%,100%{background-position:0% center} 50%{background-position:200% center} }
+    .band-char { display: inline-block; cursor: default; transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); }
+    .band-char:hover { transform: translateY(-8px) scale(1.15) rotate(calc(var(--i)*3deg - 12deg)); -webkit-text-fill-color: #f59e0b; }
+    .footer-subtitle { color: rgba(255,255,255,0.35); font-size: 0.8rem; margin: 0; }
+
+    .name-timeline { display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:28px; flex-wrap:wrap; }
+    .timeline-item { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:8px 12px; cursor:pointer; transition:all 0.3s; text-align:center; min-width:85px; }
+    .timeline-item:hover,.timeline-item.pop { transform:translateY(-3px) scale(1.04); border-color:rgba(139,92,246,0.4); background:rgba(139,92,246,0.08); box-shadow:0 6px 20px rgba(139,92,246,0.12); }
+    .timeline-item.active { border-color:rgba(245,158,11,0.5); background:rgba(245,158,11,0.08); }
+    .timeline-dot { font-size:0.65rem; font-weight:700; background:rgba(139,92,246,0.2); color:#a78bfa; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 4px; }
+    .timeline-item.active .timeline-dot { background:rgba(245,158,11,0.2); color:#f59e0b; }
+    .timeline-name { display:block; font-weight:700; font-size:0.75rem; color:#e2e8f0; }
+    .timeline-desc { display:block; font-size:0.6rem; color:rgba(255,255,255,0.3); margin-top:2px; }
+    .timeline-arrow { color:rgba(255,255,255,0.12); font-size:1rem; }
+
+    .member-cards { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:28px; }
+    .member-card { width:95px; height:115px; perspective:600px; cursor:pointer; }
+    .card-inner { width:100%; height:100%; position:relative; transition:transform 0.6s cubic-bezier(.34,1.56,.64,1); transform-style:preserve-3d; }
+    .member-card.flipped .card-inner { transform:rotateY(180deg); }
+    .member-card:hover .card-inner { transform:translateY(-3px); }
+    .member-card.flipped:hover .card-inner { transform:rotateY(180deg) translateY(-3px); }
+    .card-front,.card-back { position:absolute; inset:0; border-radius:10px; backface-visibility:hidden; -webkit-backface-visibility:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:8px; }
+    .card-front { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); }
+    .card-back { background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(59,130,246,0.1)); border:1px solid rgba(139,92,246,0.3); transform:rotateY(180deg); }
+    .card-emoji { font-size:1.6rem; }
+    .card-name { font-size:0.75rem; font-weight:700; color:#e2e8f0; }
+    .card-role { font-size:0.8rem; font-weight:800; color:#a78bfa; }
+    .card-note { font-size:0.6rem; color:rgba(255,255,255,0.5); text-align:center; line-height:1.3; }
+    .member-card.resting .card-front { opacity:0.5; }
+    .member-card.resting .card-front::after { content:'💤'; position:absolute; top:4px; right:4px; font-size:0.65rem; }
+    .member-card.new-member .card-front { border-color:rgba(74,222,128,0.3); }
+    .member-card.new-member .card-front::after { content:'NEW'; position:absolute; top:4px; right:4px; font-size:0.45rem; font-weight:800; color:#4ade80; background:rgba(74,222,128,0.15); padding:1px 4px; border-radius:3px; }
+
+    /* ENFP 밴드마스터 서마리 */
+    .member-card.enfp-master { width:105px; height:125px; }
+    .member-card.enfp-master .card-front {
+      border: 2px solid transparent;
+      background-image: linear-gradient(rgba(20,10,30,0.9), rgba(20,10,30,0.9)), linear-gradient(135deg, #f59e0b, #ec4899, #8b5cf6, #06b6d4, #f59e0b);
+      background-origin: border-box; background-clip: padding-box, border-box;
+      animation: enfp-glow 2s ease-in-out infinite alternate;
     }
-    .band-char:hover {
-      transform: translateY(-8px) scale(1.15) rotate(calc(var(--i) * 3deg - 12deg));
-      -webkit-text-fill-color: #f59e0b;
+    @keyframes enfp-glow {
+      0% { box-shadow: 0 0 8px rgba(245,158,11,0.3), 0 0 16px rgba(236,72,153,0.15); }
+      50% { box-shadow: 0 0 12px rgba(139,92,246,0.4), 0 0 24px rgba(6,182,212,0.2); }
+      100% { box-shadow: 0 0 8px rgba(245,158,11,0.3), 0 0 16px rgba(236,72,153,0.15); }
     }
-    .footer-subtitle {
-      color: rgba(255,255,255,0.4); font-size: 0.85rem; margin: 0;
+    .member-card.enfp-master:hover .card-inner { transform: translateY(-6px) scale(1.05) rotate(2deg); }
+    .member-card.enfp-master.flipped:hover .card-inner { transform: rotateY(180deg) translateY(-6px) scale(1.05); }
+    .master-badge { font-size:0.45rem; font-weight:800; color:#f59e0b; background:rgba(245,158,11,0.1); padding:1px 5px; border-radius:4px; margin-bottom:-2px; }
+    .enfp-tag { font-size:0.5rem; font-weight:800; color:#ec4899; background:rgba(236,72,153,0.1); padding:1px 5px; border-radius:4px; animation: enfp-bounce 1s ease-in-out infinite; }
+    @keyframes enfp-bounce { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+    .member-card.enfp-master .card-back {
+      background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(236,72,153,0.1), rgba(139,92,246,0.12));
+      border: 2px solid rgba(245,158,11,0.4);
     }
 
-    /* 타임라인 */
-    .name-timeline {
-      display: flex; align-items: center; justify-content: center;
-      gap: 8px; margin-bottom: 36px; flex-wrap: wrap;
-    }
-    .timeline-item {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px; padding: 10px 14px;
-      cursor: pointer; transition: all 0.3s ease;
-      text-align: center; min-width: 100px;
-    }
-    .timeline-item:hover, .timeline-item.pop {
-      transform: translateY(-4px) scale(1.05);
-      border-color: rgba(139,92,246,0.4);
-      background: rgba(139,92,246,0.08);
-      box-shadow: 0 8px 24px rgba(139,92,246,0.15);
-    }
-    .timeline-item.active {
-      border-color: rgba(245,158,11,0.5);
-      background: rgba(245,158,11,0.08);
-    }
-    .timeline-item.active:hover {
-      border-color: rgba(245,158,11,0.6);
-      background: rgba(245,158,11,0.15);
-      box-shadow: 0 8px 24px rgba(245,158,11,0.2);
-    }
-    .timeline-dot {
-      font-size: 0.7rem; font-weight: 700;
-      background: rgba(139,92,246,0.2); color: #a78bfa;
-      width: 24px; height: 24px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 6px;
-    }
-    .timeline-item.active .timeline-dot {
-      background: rgba(245,158,11,0.2); color: #f59e0b;
-    }
-    .timeline-name { display: block; font-weight: 700; font-size: 0.82rem; color: #e2e8f0; }
-    .timeline-desc { display: block; font-size: 0.68rem; color: rgba(255,255,255,0.35); margin-top: 3px; }
-    .timeline-arrow { color: rgba(255,255,255,0.15); font-size: 1.2rem; }
+    /* 밴드 히스토리 */
+    .band-history { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+    .history-item { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:10px 16px; transition:all 0.3s; }
+    .history-item:hover { transform:translateY(-2px); border-color:rgba(139,92,246,0.3); }
+    .history-date { font-weight:800; font-size:0.85rem; color:#a78bfa; }
+    .history-event { font-size:0.78rem; color:#e2e8f0; }
+    .history-event small { color:rgba(255,255,255,0.35); }
+    .history-item.upcoming { border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.05); animation:pulse-border 2s ease-in-out infinite; }
+    @keyframes pulse-border { 0%,100%{border-color:rgba(245,158,11,0.2)} 50%{border-color:rgba(245,158,11,0.5)} }
+    .history-dday { font-weight:900; font-size:0.9rem; background:linear-gradient(90deg,#f59e0b,#ef4444); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
-    /* 멤버 카드 */
-    .member-cards {
-      display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 36px;
-    }
-    .member-card {
-      width: 105px; height: 125px; perspective: 600px; cursor: pointer;
-    }
-    .card-inner {
-      width: 100%; height: 100%; position: relative;
-      transition: transform 0.6s cubic-bezier(.34,1.56,.64,1);
-      transform-style: preserve-3d;
-    }
-    .member-card.flipped .card-inner { transform: rotateY(180deg); }
-    .member-card:hover .card-inner { transform: translateY(-4px); }
-    .member-card.flipped:hover .card-inner { transform: rotateY(180deg) translateY(-4px); }
-    .card-front, .card-back {
-      position: absolute; inset: 0; border-radius: 12px;
-      backface-visibility: hidden; -webkit-backface-visibility: hidden;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 6px; padding: 10px;
-    }
-    .card-front {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-    .card-back {
-      background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(59,130,246,0.1));
-      border: 1px solid rgba(139,92,246,0.3);
-      transform: rotateY(180deg);
-    }
-    .card-emoji { font-size: 1.8rem; }
-    .card-name { font-size: 0.82rem; font-weight: 700; color: #e2e8f0; }
-    .card-role { font-size: 0.9rem; font-weight: 800; color: #a78bfa; }
-    .card-note { font-size: 0.65rem; color: rgba(255,255,255,0.5); text-align: center; line-height: 1.4; }
-    .member-card.resting .card-front { opacity: 0.5; }
-    .member-card.resting .card-front::after {
-      content: '💤'; position: absolute; top: 6px; right: 6px; font-size: 0.7rem;
-    }
-    .member-card.new-member .card-front {
-      border-color: rgba(74,222,128,0.3);
-      box-shadow: 0 0 12px rgba(74,222,128,0.08);
-    }
-    .member-card.new-member .card-front::after {
-      content: 'NEW'; position: absolute; top: 5px; right: 5px;
-      font-size: 0.5rem; font-weight: 800; color: #4ade80;
-      background: rgba(74,222,128,0.15); padding: 1px 5px; border-radius: 4px;
-    }
-
-    /* 경연대회 배너 */
-    .contest-banner {
-      display: flex; align-items: center; gap: 16px;
-      background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(239,68,68,0.05));
-      border: 1px solid rgba(245,158,11,0.2);
-      border-radius: 16px; padding: 16px 24px;
-      margin-bottom: 24px; cursor: pointer;
-      transition: all 0.3s ease;
-      animation: pulse-border 2s ease-in-out infinite;
-    }
-    @keyframes pulse-border {
-      0%,100% { border-color: rgba(245,158,11,0.2); }
-      50% { border-color: rgba(245,158,11,0.5); }
-    }
-    .contest-banner:hover {
-      transform: scale(1.02);
-      box-shadow: 0 8px 32px rgba(245,158,11,0.15);
-    }
-    .contest-icon { font-size: 2rem; animation: trophy-bounce 1.5s ease-in-out infinite; }
-    @keyframes trophy-bounce {
-      0%,100% { transform: rotate(0deg); }
-      25% { transform: rotate(-10deg); }
-      75% { transform: rotate(10deg); }
-    }
-    .contest-title { font-weight: 700; font-size: 0.95rem; color: #f59e0b; }
-    .contest-date { font-size: 0.8rem; color: rgba(255,255,255,0.4); }
-    .contest-countdown {
-      margin-left: auto; font-size: 1.5rem; font-weight: 900;
-      background: linear-gradient(90deg, #f59e0b, #ef4444);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-
-    /* 카피라이트 */
-    .footer-copy {
-      text-align: center; color: rgba(255,255,255,0.2); font-size: 0.7rem;
-      padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.04);
-    }
-
-    @media (max-width: 600px) {
-      .footer-band-name { font-size: 1.5rem; }
-      .name-timeline { gap: 6px; }
-      .timeline-item { min-width: 80px; padding: 8px 10px; }
-      .timeline-name { font-size: 0.72rem; }
-      .member-card { width: 85px; height: 110px; }
+    @media(max-width:600px) {
+      .footer-band-name{font-size:1.4rem} .timeline-item{min-width:70px;padding:6px 8px} .member-card{width:80px;height:100px}
+      .member-card.enfp-master{width:90px;height:110px}
     }
   </style>
 
   <script>
-    // 경연대회 카운트다운
-    (function updateContestCountdown() {
-      const target = new Date('2026-05-31T00:00:00');
-      const now = new Date();
-      const diff = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
-      const el = document.getElementById('contestCountdown');
-      if (el) {
-        if (diff > 0) el.textContent = 'D-' + diff;
-        else if (diff === 0) el.textContent = 'D-DAY! 🔥';
-        else el.textContent = '종료!';
-      }
+    (function(){
+      const t=new Date('2026-05-31'),n=new Date(),d=Math.ceil((t-n)/(864e5));
+      const el=document.getElementById('contestCountdown');
+      if(el){if(d>0)el.textContent='D-'+d;else if(d===0)el.textContent='D-DAY!🔥';else el.textContent='완료!';}
     })();
   </script>
 
