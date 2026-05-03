@@ -909,33 +909,6 @@
       transform: rotateY(180deg) translateY(-6px) scale(1.05);
     }
 
-    /* 마스터 카드 스핀 애니메이션 */
-    .member-card.enfp-master.spinning .card-inner {
-      animation: masterSpin 1.8s cubic-bezier(.22, .68, .36, 1.2) forwards;
-    }
-    .member-card.enfp-master.spinning-back .card-inner {
-      animation: masterSpinBack 1.8s cubic-bezier(.22, .68, .36, 1.2) forwards;
-    }
-    @keyframes masterSpin {
-      0% { transform: rotateY(0deg) scale(1); }
-      15% { transform: rotateY(360deg) scale(0.85); }
-      30% { transform: rotateY(720deg) scale(0.8); }
-      50% { transform: rotateY(1260deg) scale(0.75); }
-      70% { transform: rotateY(1980deg) scale(0.85); }
-      85% { transform: rotateY(2340deg) scale(1.15); }
-      92% { transform: rotateY(2520deg) scale(1.25); box-shadow: 0 0 40px rgba(245,158,11,0.6); }
-      100% { transform: rotateY(2700deg) scale(1); }
-    }
-    @keyframes masterSpinBack {
-      0% { transform: rotateY(180deg) scale(1); }
-      15% { transform: rotateY(540deg) scale(0.85); }
-      30% { transform: rotateY(900deg) scale(0.8); }
-      50% { transform: rotateY(1440deg) scale(0.75); }
-      70% { transform: rotateY(2160deg) scale(0.85); }
-      85% { transform: rotateY(2520deg) scale(1.15); }
-      92% { transform: rotateY(2700deg) scale(1.25); box-shadow: 0 0 40px rgba(245,158,11,0.6); }
-      100% { transform: rotateY(2880deg) scale(1); }
-    }
 
     .master-badge {
       font-size: 0.45rem;
@@ -1168,33 +1141,58 @@
     })();
 
     function masterCardFlip(el) {
-      if (el.classList.contains('spinning') || el.classList.contains('spinning-back')) return;
+      if (el.dataset.animating) return;
+      el.dataset.animating = '1';
+      const inner = el.querySelector('.card-inner');
       const isFlipped = el.classList.contains('flipped');
-      const spinClass = isFlipped ? 'spinning-back' : 'spinning';
-      el.classList.add(spinClass);
-      // 파티클 효과
-      for (let i = 0; i < 12; i++) {
-        const p = document.createElement('div');
-        const colors = ['#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#ef4444', '#10b981'];
-        p.style.cssText = `position:absolute;width:6px;height:6px;border-radius:50%;background:${colors[i%6]};pointer-events:none;z-index:999;transition:all 1s cubic-bezier(.25,.46,.45,.94);opacity:1;`;
-        const rect = el.getBoundingClientRect();
-        p.style.left = (rect.left + rect.width/2) + 'px';
-        p.style.top = (rect.top + rect.height/2) + 'px';
-        p.style.position = 'fixed';
+
+      // 골드 반짝이 파티클 - 위로 떠오르는 연출
+      const rect = el.getBoundingClientRect();
+      const shapes = ['✦', '✧', '⭐', '💫', '✨', '⋆'];
+      for (let i = 0; i < 8; i++) {
+        const p = document.createElement('span');
+        p.textContent = shapes[i % shapes.length];
+        const x = rect.left + Math.random() * rect.width;
+        const y = rect.top + rect.height * 0.3 + Math.random() * rect.height * 0.4;
+        p.style.cssText = `position:fixed;left:${x}px;top:${y}px;font-size:${8 + Math.random() * 10}px;pointer-events:none;z-index:999;opacity:1;transition:all ${1 + Math.random() * 0.8}s ease-out;`;
         document.body.appendChild(p);
         requestAnimationFrame(() => {
-          const angle = (i / 12) * 360;
-          const dist = 40 + Math.random() * 60;
-          p.style.transform = `translate(${Math.cos(angle*Math.PI/180)*dist}px, ${Math.sin(angle*Math.PI/180)*dist}px) scale(0)`;
+          p.style.transform = `translate(${(Math.random() - 0.5) * 60}px, ${-40 - Math.random() * 80}px) rotate(${Math.random() * 360}deg)`;
           p.style.opacity = '0';
         });
-        setTimeout(() => p.remove(), 1200);
+        setTimeout(() => p.remove(), 2000);
       }
-      el.addEventListener('animationend', function handler() {
-        el.classList.remove(spinClass);
-        el.classList.toggle('flipped');
-        el.removeEventListener('animationend', handler);
-      }, { once: true });
+
+      // 부드러운 3D 플립 + 떠오르며 스케일
+      inner.style.transition = 'none';
+      const start = isFlipped ? 180 : 0;
+      const end = isFlipped ? 360 : 180;
+      const duration = 600;
+      const startTime = performance.now();
+      function animate(now) {
+        const t = Math.min((now - startTime) / duration, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        const overshoot = t < 1 ? Math.sin(t * Math.PI) * 0.12 : 0;
+        const rot = start + (end - start) * ease;
+        const sc = 1 + overshoot;
+        const lift = Math.sin(t * Math.PI) * 8;
+        inner.style.transform = `rotateY(${rot}deg) scale(${sc}) translateY(${-lift}px)`;
+        if (t > 0.3 && t < 0.7) {
+          const glow = Math.sin((t - 0.3) / 0.4 * Math.PI) * 0.5;
+          el.style.filter = `drop-shadow(0 0 ${12 * glow}px rgba(245,158,11,${glow}))`;
+        } else {
+          el.style.filter = '';
+        }
+        if (t < 1) requestAnimationFrame(animate);
+        else {
+          inner.style.transition = '';
+          inner.style.transform = '';
+          el.style.filter = '';
+          el.classList.toggle('flipped');
+          delete el.dataset.animating;
+        }
+      }
+      requestAnimationFrame(animate);
     }
 
     function toggleFooter() {
