@@ -1581,6 +1581,17 @@
       document.getElementById('startMenu').classList.remove('open');
     }
 
+    // ── 파트명 이모지 ──
+    function partEmoji(name) {
+      const n = (name || '').toLowerCase();
+      if (n.includes('드럼') || n.includes('drum')) return '🥁';
+      if (n.includes('보컬') || n.includes('vocal') || n.includes('노래')) return '🎤';
+      if (n.includes('베이스') || n.includes('bass')) return '🎸';
+      if (n.includes('기타') || n.includes('guitar') || n.includes('gt')) return '🎸';
+      if (n.includes('키보드') || n.includes('keyboard') || n.includes('key') || n.includes('피아노')) return '🎹';
+      return '🎵';
+    }
+
     // ── 멤버 팝오버 ──
     function toggleMemberPopover(e) {
       e.stopPropagation();
@@ -1596,12 +1607,13 @@
       inner.innerHTML = memberList.map(m => {
         const isMe = m.id === socket.id;
         const hasInst = !!song?.inst_filename;
+        const emoji = partEmoji(m.partName);
         const instBtn = (hasInst && !isMe)
           ? `<button class="member-inst-btn" onclick="event.stopPropagation();toggleRemoteInst('${m.id}')" title="inst 음소거" id="mInst_${m.id}">🔊</button>`
           : '';
         return `<div class="member-item">
           <span class="member-dot"></span>
-          <span class="member-name">${m.partName}${isMe ? ' <span class="member-me">(나)</span>' : ''}</span>
+          <span class="member-name">${emoji} ${m.partName}${isMe ? ' <span class="member-me">(나)</span>' : ''}</span>
           ${instBtn}
         </div>`;
       }).join('');
@@ -1625,13 +1637,19 @@
 
     // 원격 inst 음소거 처리
     socket.on('remote-mute-inst', () => {
+      if (instAudio && instAudio.volume > 0) instPrevVolume = instAudio.volume;
+      if (instAudio) instAudio.volume = 0;
       instEnabled = false;
       document.getElementById('btnInst').textContent = '🔇';
-      if (instAudio) instAudio.pause();
+      const slider = document.querySelector('.inst-vol-slider input');
+      if (slider) slider.value = 0;
     });
     socket.on('remote-unmute-inst', () => {
+      if (instAudio) instAudio.volume = instPrevVolume;
       instEnabled = true;
       document.getElementById('btnInst').textContent = '🔊';
+      const slider = document.querySelector('.inst-vol-slider input');
+      if (slider) slider.value = Math.round(instPrevVolume * 100);
     });
 
     // 외부 클릭 시 메뉴/팝오버 닫기
