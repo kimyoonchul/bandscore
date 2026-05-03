@@ -90,9 +90,11 @@
       cursor: pointer;
       transition: border-color 0.3s;
     }
+
     .mode-switch:hover {
       border-color: rgba(255, 255, 255, 0.25);
     }
+
     .mode-switch-opt {
       font-size: 0.68rem;
       padding: 0.1875rem 0.625rem;
@@ -101,14 +103,17 @@
       white-space: nowrap;
       user-select: none;
     }
+
     .mode-switch-opt.active {
       color: #fff;
       font-weight: 700;
     }
+
     .mode-switch.solo .mode-switch-opt.solo-opt {
       background: rgba(200, 149, 108, 0.25);
       color: var(--primary, #c8956c);
     }
+
     .mode-switch.together .mode-switch-opt.together-opt {
       background: rgba(74, 222, 128, 0.2);
       color: #4ade80;
@@ -284,7 +289,7 @@
       cursor: pointer;
       order: -1;
       padding: 0 2px 0px;
-      margin-bottom: -5px;
+      margin-bottom: 5px;
     }
 
     .seekbar-track {
@@ -692,7 +697,7 @@
 
     .inst-vol-wrap:hover .inst-vol-slider,
     .inst-vol-slider:hover,
-    .metro-wrap #btnMetro:hover + .inst-vol-slider,
+    .metro-wrap #btnMetro:hover+.inst-vol-slider,
     .metro-wrap .inst-vol-slider:hover {
       display: flex;
     }
@@ -703,10 +708,11 @@
       border-bottom-right-radius: 0;
       margin-right: 0;
     }
+
     .metro-wrap #btnMetroMenu {
       border-top-left-radius: 0;
       border-bottom-left-radius: 0;
-      border-left: 1px solid rgba(255,255,255,0.1);
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
       margin-left: 0;
     }
 
@@ -725,13 +731,16 @@
       color: var(--text);
       white-space: nowrap;
     }
+
     .metro-menu::after {
       content: '';
       position: absolute;
       bottom: -12px;
-      left: 0; right: 0;
+      left: 0;
+      right: 0;
       height: 12px;
     }
+
     .metro-menu.open {
       display: block;
     }
@@ -759,7 +768,7 @@
         gap: 0.25rem;
       }
 
-      .player-top-bar > div:first-child {
+      .player-top-bar>div:first-child {
         flex-wrap: wrap;
         gap: 4px;
         width: 100%;
@@ -777,6 +786,7 @@
       .mode-switch {
         border-radius: 0.75rem;
       }
+
       .mode-switch-opt {
         font-size: 0.55rem;
         padding: 0.1rem 0.375rem;
@@ -794,7 +804,7 @@
         justify-content: center;
       }
 
-      .player-controls > .seekbar-wrap {
+      .player-controls>.seekbar-wrap {
         width: 100%;
         order: -1;
       }
@@ -889,7 +899,7 @@
       }
 
       /* 모바일에서 구분선 축소 */
-      .player-controls > div[style*="width:1px"] {
+      .player-controls>div[style*="width:1px"] {
         height: 16px !important;
       }
     }
@@ -904,7 +914,8 @@
     <div class="player-top-bar" id="topBar">
       <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0">
         <a href="#" onclick="goBack(event)" style="color:#888;text-decoration:none;font-size:1rem">←</a>
-        <span class="song-title" id="songName" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">...</span>
+        <span class="song-title" id="songName"
+          style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">...</span>
         <span class="part-label" id="partName"></span>
         <div class="mode-switch solo" id="modeSwitch" onclick="toggleMode()" title="혼자하기/같이하기 전환 (F2)">
           <span class="mode-switch-opt solo-opt active" id="modeSolo">🎸 혼자하기</span>
@@ -994,14 +1005,17 @@
         <button onclick="setView('portrait',this)" title="세로 보기 (3)">세로</button>
       </div>
       <div class="metro-wrap" style="position:relative;display:inline-flex;align-items:center">
-        <button class="btn btn-ghost" onclick="toggleMetronome()" id="btnMetro" title="메트로놈 (N)" style="opacity:0.5">🥁</button>
+        <button class="btn btn-ghost" onclick="toggleMetronome()" id="btnMetro" title="메트로놈 (N)"
+          style="opacity:0.5">🥁</button>
         <div class="inst-vol-slider" id="metroVolSlider">
           <input type="range" min="0" max="100" value="60" oninput="setMetroVolume(this.value)">
         </div>
-        <button class="btn btn-ghost" onclick="toggleMetroMenu(event)" id="btnMetroMenu" style="font-size:0.55rem;padding:0 0.15rem;min-width:0;opacity:0.6" title="메트로놈 옵션">▴</button>
+        <button class="btn btn-ghost" onclick="toggleMetroMenu(event)" id="btnMetroMenu"
+          style="font-size:0.55rem;padding:0 0.15rem;min-width:0;opacity:0.6" title="메트로놈 옵션">▴</button>
         <div class="metro-menu" id="metroMenu" onclick="event.stopPropagation()">
           <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;white-space:nowrap">
-            <input type="checkbox" id="chkBorderFlash" onchange="toggleBorderFlash(this.checked)" style="accent-color:var(--primary);width:0.85rem;height:0.85rem">
+            <input type="checkbox" id="chkBorderFlash" onchange="toggleBorderFlash(this.checked)"
+              style="accent-color:var(--primary);width:0.85rem;height:0.85rem">
             💡 테두리 깜빡임
           </label>
         </div>
