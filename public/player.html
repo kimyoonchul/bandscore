@@ -362,18 +362,7 @@
       color: var(--text-muted)
     }
 
-    .beat-flash {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 100;
-      border: 3px solid transparent;
-      transition: border-color 0.08s
-    }
 
-    .beat-flash.flash {
-      border-color: var(--primary)
-    }
 
     .count-overlay {
       position: fixed;
@@ -712,48 +701,7 @@
       display: flex;
     }
 
-    /* 메트로놈 + 화살표 버튼 그룹 */
-    .metro-wrap #btnMetro {
-      border-top-right-radius: 0;
-      border-bottom-right-radius: 0;
-      margin-right: 0;
-    }
 
-    .metro-wrap #btnMetroMenu {
-      border-top-left-radius: 0;
-      border-bottom-left-radius: 0;
-      border-left: 1px solid rgba(255, 255, 255, 0.1);
-      margin-left: 0;
-    }
-
-    .metro-menu {
-      display: none;
-      position: absolute;
-      bottom: 100%;
-      right: 0;
-      background: rgba(17, 24, 39, 0.96);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 0.5rem;
-      padding: 0.5rem 0.75rem;
-      z-index: 120;
-      font-size: 0.78rem;
-      color: var(--text);
-      white-space: nowrap;
-    }
-
-    .metro-menu::after {
-      content: '';
-      position: absolute;
-      bottom: -12px;
-      left: 0;
-      right: 0;
-      height: 12px;
-    }
-
-    .metro-menu.open {
-      display: block;
-    }
 
     .inst-vol-slider input[type="range"] {
       width: 6.25rem;
@@ -924,7 +872,7 @@
 <body style="overflow:hidden">
 
   <div class="player-container" id="pc">
-    <div class="beat-flash" id="beatFlash"></div>
+
 
     <div class="player-top-bar" id="topBar">
       <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0">
@@ -1027,15 +975,6 @@
         </div>
         <button class="btn btn-ghost" onclick="toggleMetronome()" id="btnMetro" title="메트로놈 (N)"
           style="opacity:0.5">🥁</button>
-        <button class="btn btn-ghost" onclick="toggleMetroMenu(event)" id="btnMetroMenu"
-          style="font-size:0.55rem;padding:0 0.15rem;min-width:0;opacity:0.6" title="메트로놈 옵션">▴</button>
-        <div class="metro-menu" id="metroMenu" onclick="event.stopPropagation()">
-          <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;white-space:nowrap">
-            <input type="checkbox" id="chkBorderFlash" onchange="toggleBorderFlash(this.checked)"
-              style="accent-color:var(--primary);width:0.85rem;height:0.85rem">
-            💡 테두리 깜빡임
-          </label>
-        </div>
       </div>
       <div class="inst-vol-wrap" id="instVolWrap" style="display:none">
         <div class="inst-vol-slider">
@@ -1164,7 +1103,7 @@
         <kbd>F</kbd><span>전체화면 토글</span>
         <kbd>M</kbd><span>inst 음소거 토글</span>
         <kbd>N</kbd><span>메트로놈 토글</span>
-        <kbd>B</kbd><span>테두리 깜빡임 토글</span>
+
         <kbd>H</kbd><span>UI 표시/숨김</span>
         <kbd>S</kbd><span>설정 패널</span>
         <kbd>1</kbd><span>1벌 보기</span>
@@ -1239,7 +1178,6 @@
     let metronomeOn = false;      // 메트로놈 활성 여부
     let metroVolume = 0.6;        // 메트로놈 볼륨 (0~1)
     let lastBeatIndex = -1;       // 마지막 재생한 비트 인덱스 (중복 방지)
-    let borderFlashOn = false;    // 테두리 깜빡임 활성 여부
     const socket = io();
 
     /** 초기화: API에서 곡/파트 로드 → PDF 렌더 → 타임라인 빌드 → 소켓 연결 */
@@ -1778,31 +1716,15 @@
         const e = timeline[idx], prog = Math.min(1, (sec - e.start) / e.dur);
         highlightSys(idx, prog);
         updateSeekbar(sec);
-        // ── 비트 감지 (메트로놈 + 테두리 깜빡임 공용) ──
-        if (metronomeOn || borderFlashOn) {
+        // ── 비트 감지 (메트로놈) ──
+        if (metronomeOn) {
           const bpb = parseInt(song.time_signature?.split('/')[0]) || 4;
           const beatDur = 60 / bpm;
           const globalBeatIdx = Math.floor(sec / beatDur);
           if (globalBeatIdx !== lastBeatIndex) {
             lastBeatIndex = globalBeatIdx;
             const isDownbeat = (globalBeatIdx % bpb) === 0;
-            // 메트로놈 클릭음
-            if (metronomeOn) {
-              playClick(audioCtx.currentTime, isDownbeat ? 1200 : 800, metroVolume);
-              const fl = document.getElementById('beatFlash');
-              fl.classList.add('flash');
-              setTimeout(() => fl.classList.remove('flash'), 80);
-            }
-            // 테두리 깜빡임
-            if (borderFlashOn) {
-              document.querySelectorAll('.sys-active-border').forEach(el => {
-                el.style.transition = 'box-shadow 0.08s';
-                el.style.boxShadow = isDownbeat
-                  ? `0 0 18px 4px ${styleSettings.lineColor || '#c8956c'}`
-                  : `0 0 10px 2px ${styleSettings.lineColor || '#c8956c'}`;
-                setTimeout(() => { el.style.boxShadow = 'none'; }, 120);
-              });
-            }
+            playClick(audioCtx.currentTime, isDownbeat ? 1200 : 800, metroVolume);
           }
         }
         animFrame = requestAnimationFrame(tick);
@@ -1831,7 +1753,7 @@
       let beat = 0;
       function show() {
         if (beat >= beats) { ov.classList.remove('active'); cb(); return }
-        const fl = document.getElementById('beatFlash'); fl.classList.add('flash'); setTimeout(() => fl.classList.remove('flash'), 80);
+
         num.textContent = (beat % bpb) + 1; num.style.animation = 'none'; void num.offsetWidth; num.style.animation = 'countPop 0.4s ease';
         beat++; setTimeout(show, iv * 1000);
       }
@@ -2068,24 +1990,7 @@
       }
       lastBeatIndex = -1;
     }
-    function toggleBorderFlash(checked) {
-      if (typeof checked === 'boolean') {
-        borderFlashOn = checked;
-      } else {
-        borderFlashOn = !borderFlashOn;
-      }
-      const chk = document.getElementById('chkBorderFlash');
-      if (chk) chk.checked = borderFlashOn;
-      lastBeatIndex = -1;
-    }
-    function toggleMetroMenu(e) {
-      e.stopPropagation();
-      document.getElementById('metroMenu').classList.toggle('open');
-    }
-    // 외부 클릭 시 메뉴 닫기
-    document.addEventListener('click', () => {
-      document.getElementById('metroMenu')?.classList.remove('open');
-    });
+
 
     function editBpm() {
       const v = prompt('BPM을 입력하세요 (30~300):', bpm);
@@ -2577,9 +2482,7 @@
         case 'n': case 'N':
           toggleMetronome();
           break;
-        case 'b': case 'B':
-          toggleBorderFlash();
-          break;
+
         case '1':
           setView('single', document.querySelector('.view-toggle button:nth-child(1)'));
           break;
