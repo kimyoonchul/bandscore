@@ -60,7 +60,7 @@
       right: 0;
       background: rgba(17, 24, 39, 0.85);
       backdrop-filter: blur(16px);
-      padding: 1.25rem 1.25rem;
+      padding: 1.5rem 1.5rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -78,6 +78,11 @@
     .player-container.solo .player-controls {
       background: rgba(30, 20, 10, 0.88);
       border-top-color: rgba(200, 149, 108, 0.2);
+    }
+
+    .player-container.solo .settings-panel {
+      background: rgba(30, 20, 10, 0.95);
+      border-left-color: rgba(200, 149, 108, 0.2);
     }
 
     .mode-switch {
@@ -195,9 +200,12 @@
     .sys-progress {
       position: absolute;
       top: 0;
-      width: 2px;
+      width: 12px;
+      border-radius: 6px;
       background: var(--primary);
-      box-shadow: 0 0 6px var(--primary);
+      opacity: 0.45;
+      filter: blur(4px);
+      box-shadow: 0 0 18px 4px var(--primary);
       z-index: 7;
       pointer-events: none;
       transition: left 0.1s linear
@@ -269,6 +277,7 @@
       backdrop-filter: blur(16px);
       border-top: 1px solid rgba(255, 255, 255, 0.1);
       padding: 0.75rem 1rem;
+      padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
       display: flex;
       align-items: center;
       justify-content: center;
@@ -439,7 +448,7 @@
       background: rgba(17, 24, 39, 0.95);
       backdrop-filter: blur(20px);
       border-left: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 1rem;
+      padding: 3.5rem 1rem 2rem;
       overflow-y: auto;
       transition: right 0.3s ease;
       font-size: 0.85rem;
@@ -504,13 +513,14 @@
 
     .settings-close {
       position: absolute;
-      top: 0.625rem;
+      top: 3rem;
       right: 0.625rem;
       background: none;
       border: none;
       color: #888;
       font-size: 1.2rem;
-      cursor: pointer
+      cursor: pointer;
+      z-index: 10;
     }
 
     /* ── Start Button Split (드롭업) ── */
@@ -697,7 +707,7 @@
 
     .inst-vol-wrap:hover .inst-vol-slider,
     .inst-vol-slider:hover,
-    .metro-wrap #btnMetro:hover+.inst-vol-slider,
+    .metro-wrap:hover .inst-vol-slider,
     .metro-wrap .inst-vol-slider:hover {
       display: flex;
     }
@@ -763,7 +773,7 @@
     /* ── 모바일 축소 ── */
     @media (max-width: 768px) {
       .player-top-bar {
-        padding: 0.5rem 0.75rem;
+        padding: 1rem 1rem;
         flex-wrap: wrap;
         gap: 0.25rem;
       }
@@ -798,8 +808,9 @@
       }
 
       .player-controls {
-        padding: 0.375rem 0.5rem;
-        gap: 0.25rem;
+        padding: 1rem 1rem;
+        padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+        gap: 0.3rem;
         flex-wrap: wrap;
         justify-content: center;
       }
@@ -810,23 +821,25 @@
       }
 
       .btn-icon {
-        width: 1.75rem;
-        height: 1.75rem;
-        font-size: 0.8rem;
+        width: 1.875rem;
+        height: 1.875rem;
+        font-size: 0.85rem;
+        touch-action: manipulation;
       }
 
       .btn {
         padding: 0.25rem 0.5rem;
-        font-size: 0.7rem;
-        min-height: 1.75rem;
-        min-width: 1.75rem;
+        font-size: 0.72rem;
+        min-height: 1.875rem;
+        min-width: 1.875rem;
+        touch-action: manipulation;
       }
 
       .btn-bpm {
         font-size: 0.9rem;
         padding: 0 0.375rem;
-        min-height: 1.75rem;
-        min-width: 1.5rem;
+        min-height: 1.875rem;
+        min-width: 1.625rem;
       }
 
       .bpm-display .val {
@@ -846,13 +859,14 @@
       }
 
       .seekbar-thumb {
-        width: 0.625rem;
-        height: 0.625rem;
+        width: 0.75rem;
+        height: 0.75rem;
       }
 
       .nav-arrow {
         font-size: 1rem;
         padding: 0.5rem 0.3125rem;
+        touch-action: manipulation;
       }
 
       .count-number {
@@ -863,7 +877,7 @@
         width: 16.25rem;
         right: -16.875rem;
         font-size: 0.78rem;
-        padding: 0.75rem;
+        padding: 3rem 0.75rem 1.5rem;
       }
 
       .settings-panel h3 {
@@ -895,7 +909,8 @@
 
       .view-toggle button {
         padding: 0.25rem 0.4rem;
-        font-size: 0.62rem;
+        font-size: 0.64rem;
+        touch-action: manipulation;
       }
 
       /* 모바일에서 구분선 축소 */
@@ -990,7 +1005,9 @@
         title="일시정지 (Space)">⏸</button>
       <button class="btn btn-ghost btn-icon" id="btnResume" onclick="doResume()" style="display:none"
         title="재개 (Space)">▶</button>
-      <button class="btn btn-danger btn-icon" id="btnStop" onclick="doStop()" title="정지 (Esc)">⏹</button>
+      <button class="btn btn-danger btn-icon" id="btnStop" onclick="doStop()" title="정지 (D)"
+        style="position:relative"><span
+          style="display:inline-block;width:0.55em;height:0.55em;background:currentColor;border-radius:1px"></span></button>
       <div style="width:1px;height:20px;background:rgba(255,255,255,0.15)"></div>
       <button class="btn btn-ghost btn-bpm" onclick="changeBpm(-1)" title="BPM -1 (↓)">−</button>
       <div class="bpm-display" onclick="editBpm()">
@@ -1005,11 +1022,11 @@
         <button onclick="setView('portrait',this)" title="세로 보기 (3)">세로</button>
       </div>
       <div class="metro-wrap" style="position:relative;display:inline-flex;align-items:center">
+        <div class="inst-vol-slider" id="metroVolSlider">
+          <input type="range" min="0" max="100" value="0" id="metroVolSliderInput" oninput="setMetroVolume(this.value)">
+        </div>
         <button class="btn btn-ghost" onclick="toggleMetronome()" id="btnMetro" title="메트로놈 (N)"
           style="opacity:0.5">🥁</button>
-        <div class="inst-vol-slider" id="metroVolSlider">
-          <input type="range" min="0" max="100" value="60" oninput="setMetroVolume(this.value)">
-        </div>
         <button class="btn btn-ghost" onclick="toggleMetroMenu(event)" id="btnMetroMenu"
           style="font-size:0.55rem;padding:0 0.15rem;min-width:0;opacity:0.6" title="메트로놈 옵션">▴</button>
         <div class="metro-menu" id="metroMenu" onclick="event.stopPropagation()">
@@ -1022,7 +1039,7 @@
       </div>
       <div class="inst-vol-wrap" id="instVolWrap" style="display:none">
         <div class="inst-vol-slider">
-          <input type="range" min="0" max="100" value="0" oninput="setInstVolume(this.value)">
+          <input type="range" min="0" max="100" value="0" id="instVolSliderInput" oninput="setInstVolume(this.value)">
         </div>
         <button class="btn btn-ghost" onclick="toggleInst()" id="btnInst" title="inst 음소거 토글 (M)">🔇</button>
       </div>
@@ -1133,11 +1150,11 @@
           style="background:none;border:none;color:#888;font-size:1.2rem;cursor:pointer">✕</button>
       </div>
       <div style="display:grid;grid-template-columns:auto 1fr;gap:0.375rem 1rem;font-size:0.82rem">
-        <kbd>F1</kbd><span>이 도움말</span>
+        <kbd>F1</kbd><span>도움말</span>
         <kbd>F2</kbd><span>혼자하기/같이하기 전환</span>
         <kbd>Tab</kbd><span>대기인원 보기</span>
         <kbd>Space</kbd><span>재생 / 일시정지</span>
-        <kbd>Esc</kbd><span>정지</span>
+        <kbd>D</kbd><span>정지</span>
         <kbd>←</kbd><span>5초 뒤로</span>
         <kbd>→</kbd><span>5초 앞으로</span>
         <kbd>↑</kbd><span>BPM +1</span>
@@ -1216,6 +1233,8 @@
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let instAudio = null; // inst 음원 Audio 객체
     let instEnabled = false;
+    let instMuted = true;         // YouTube 방식 음소거 플래그
+    let instSavedVolume = 0.8;    // 음소거 전 기억 볼륨 (기본 80%)
     let pdfUrl = '';
     let metronomeOn = false;      // 메트로놈 활성 여부
     let metroVolume = 0.6;        // 메트로놈 볼륨 (0~1)
@@ -1597,9 +1616,13 @@
         b.style.borderColor = styleSettings.lineColor || '#c8956c';
         const p = document.getElementById('pPT');
         p.style.display = 'block'; p.style.top = absTop + 'px'; p.style.height = sH + 'px';
+        const lw = Math.max(8, (styleSettings.lineWidth || 2) * 5);
+        p.style.width = lw + 'px';
+        p.style.borderRadius = (lw / 2) + 'px';
         p.style.background = styleSettings.lineColor || '#c8956c';
-        p.style.width = (styleSettings.lineWidth || 2) + 'px';
-        p.style.boxShadow = `0 0 6px ${styleSettings.lineColor || '#c8956c'}`;
+        p.style.opacity = '0.45';
+        p.style.filter = 'blur(4px)';
+        p.style.boxShadow = `0 0 18px 4px ${styleSettings.lineColor || '#c8956c'}`;
         const totalM = e.totalMeasures || e.measures;
         const startFrac = (e.measFrom - 1) / totalM;
         const endFrac = e.measTo / totalM;
@@ -1672,9 +1695,13 @@
         let pEl = document.getElementById(pid);
         if (!pEl) pEl = document.getElementById('pDL');
         pEl.style.display = 'block'; pEl.style.top = topPx + 'px'; pEl.style.height = sH + 'px';
+        const lw = Math.max(8, (styleSettings.lineWidth || 2) * 5);
+        pEl.style.width = lw + 'px';
+        pEl.style.borderRadius = (lw / 2) + 'px';
         pEl.style.background = styleSettings.lineColor || '#c8956c';
-        pEl.style.width = (styleSettings.lineWidth || 2) + 'px';
-        pEl.style.boxShadow = `0 0 6px ${styleSettings.lineColor || '#c8956c'}`;
+        pEl.style.opacity = '0.45';
+        pEl.style.filter = 'blur(4px)';
+        pEl.style.boxShadow = `0 0 18px 4px ${styleSettings.lineColor || '#c8956c'}`;
         const inactivePid = isLeft ? 'pDR' : 'pDL';
         const inactiveP = document.getElementById(inactivePid);
         if (inactiveP) inactiveP.style.display = 'none';
@@ -1710,9 +1737,13 @@
       const b = document.getElementById('bS'); b.style.display = styleSettings.showBorder !== false ? 'block' : 'none'; b.style.top = topPx + 'px'; b.style.height = sH + 'px';
       b.style.borderColor = styleSettings.lineColor || '#c8956c';
       const p = document.getElementById('pS'); p.style.display = 'block'; p.style.top = topPx + 'px'; p.style.height = sH + 'px';
+      const lw = Math.max(8, (styleSettings.lineWidth || 2) * 5);
+      p.style.width = lw + 'px';
+      p.style.borderRadius = (lw / 2) + 'px';
       p.style.background = styleSettings.lineColor || '#c8956c';
-      p.style.width = (styleSettings.lineWidth || 2) + 'px';
-      p.style.boxShadow = `0 0 6px ${styleSettings.lineColor || '#c8956c'}`;
+      p.style.opacity = '0.45';
+      p.style.filter = 'blur(4px)';
+      p.style.boxShadow = `0 0 18px 4px ${styleSettings.lineColor || '#c8956c'}`;
       const totalM = e.totalMeasures || e.measures;
       const startFrac = (e.measFrom - 1) / totalM;
       const endFrac = e.measTo / totalM;
@@ -1897,24 +1928,35 @@
       if (!soloMode) socket.emit('tempo-change', { bpm });
     }
 
-    // ── inst 음원 제어 ──
-    let instPrevVolume = 0.8;
+    // ── inst 음원 제어 (YouTube 방식) ──
+    // instMuted: 음소거 상태 플래그 (볼륨과 분리)
+    // instSavedVolume: 음소거 전 기억 볼륨 (기본 80%)
+    function updateInstUI() {
+      const btn = document.getElementById('btnInst');
+      const slider = document.getElementById('instVolSliderInput');
+      if (instMuted) {
+        btn.textContent = '🔇';
+        if (slider) slider.value = 0;
+        if (instAudio) instAudio.volume = 0;
+        instEnabled = false;
+      } else {
+        btn.textContent = '🔊';
+        if (slider) slider.value = Math.round(instSavedVolume * 100);
+        if (instAudio) instAudio.volume = instSavedVolume;
+        instEnabled = true;
+      }
+    }
+    /** 음소거 버튼 클릭 (YouTube 동작): 토글 */
     function toggleInst() {
       if (!instAudio) return;
-      if (instAudio.volume > 0) {
-        instPrevVolume = instAudio.volume;
-        instAudio.volume = 0;
-        instEnabled = false;
-        document.getElementById('btnInst').textContent = '🔇';
-        const slider = document.querySelector('.inst-vol-slider input');
-        if (slider) slider.value = 0;
+      if (!instMuted) {
+        // 현재 소리 나는 상태 → 음소거
+        instMuted = true;
       } else {
-        instAudio.volume = instPrevVolume;
-        instEnabled = true;
-        document.getElementById('btnInst').textContent = '🔊';
-        const slider = document.querySelector('.inst-vol-slider input');
-        if (slider) slider.value = Math.round(instPrevVolume * 100);
-        // 현재 재생 중이면 inst 음원도 동기화하여 재생
+        // 현재 음소거 → 소리 켜기
+        if (instSavedVolume <= 0) instSavedVolume = 0.8; // 기본 80%
+        instMuted = false;
+        // 재생 중이면 동기화
         if (state === 'playing' && playStartTime) {
           const elapsed = Date.now() - playStartTime + (elapsedBefore || 0);
           instAudio.currentTime = elapsed / 1000;
@@ -1922,26 +1964,38 @@
           instAudio.play().catch(() => { });
         }
       }
-      if (!soloMode) socket.emit('inst-state-changed', { muted: !instEnabled });
+      updateInstUI();
+      if (!soloMode) socket.emit('inst-state-changed', { muted: instMuted });
       renderMemberList();
     }
+    /** 슬라이더 드래그 (YouTube 동작): 0이면 자동 음소거, 0보다 크면 자동 해제 */
     function setInstVolume(val) {
       const v = parseInt(val);
-      if (instAudio) instAudio.volume = v / 100;
-      const wasMuted = !instEnabled;
-      instEnabled = v > 0;
-      document.getElementById('btnInst').textContent = v > 0 ? '🔊' : '🔇';
-      if (v > 0) instPrevVolume = v / 100;
-      if (wasMuted !== !instEnabled) {
-        if (!soloMode) socket.emit('inst-state-changed', { muted: !instEnabled });
-        renderMemberList();
-        // 음소거 해제 + 재생 중이면 동기화
-        if (instEnabled && state === 'playing' && playStartTime && instAudio) {
+      const wasEnabled = instEnabled;
+      if (v <= 0) {
+        // 슬라이더를 0으로 내림 → 자동 음소거 (이전 볼륨은 유지)
+        instMuted = true;
+        if (instAudio) instAudio.volume = 0;
+        instEnabled = false;
+        document.getElementById('btnInst').textContent = '🔇';
+      } else {
+        // 슬라이더를 올림 → 음소거 해제
+        instMuted = false;
+        instSavedVolume = v / 100;
+        if (instAudio) instAudio.volume = instSavedVolume;
+        instEnabled = true;
+        document.getElementById('btnInst').textContent = '🔊';
+        // 방금 음소거 해제 + 재생 중이면 동기화
+        if (!wasEnabled && state === 'playing' && playStartTime && instAudio) {
           const elapsed = Date.now() - playStartTime + (elapsedBefore || 0);
           instAudio.currentTime = elapsed / 1000;
           instAudio.playbackRate = bpm / originalBpm;
           instAudio.play().catch(() => { });
         }
+      }
+      if (wasEnabled !== instEnabled) {
+        if (!soloMode) socket.emit('inst-state-changed', { muted: instMuted });
+        renderMemberList();
       }
     }
     function instPlay() {
@@ -1964,15 +2018,55 @@
       instAudio.currentTime = 0;
     }
 
-    // ── 메트로놈 ──
-    function toggleMetronome() {
-      metronomeOn = !metronomeOn;
-      document.getElementById('btnMetro').style.opacity = metronomeOn ? '1' : '0.5';
-      lastBeatIndex = -1;
-      if (metronomeOn && audioCtx.state === 'suspended') audioCtx.resume();
+    // ── 메트로놈 (YouTube 방식) ──
+    let metroMuted = true;          // 음소거 상태 (초기: 껴져있음)
+    let metroSavedVolume = 0.6;     // 기억 볼륨 (기본 60%)
+    function updateMetroUI() {
+      const btn = document.getElementById('btnMetro');
+      const slider = document.getElementById('metroVolSliderInput');
+      if (metroMuted) {
+        btn.style.opacity = '0.5';
+        if (slider) slider.value = 0;
+        metroVolume = 0;
+        metronomeOn = false;
+      } else {
+        btn.style.opacity = '1';
+        if (slider) slider.value = Math.round(metroSavedVolume * 100);
+        metroVolume = metroSavedVolume;
+        metronomeOn = true;
+      }
     }
+    /** 메트로놈 버튼 클릭: 토글 */
+    function toggleMetronome() {
+      if (!metroMuted) {
+        // 현재 ON → OFF
+        metroMuted = true;
+      } else {
+        // 현재 OFF → ON
+        if (metroSavedVolume <= 0) metroSavedVolume = 0.6;
+        metroMuted = false;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+      }
+      lastBeatIndex = -1;
+      updateMetroUI();
+    }
+    /** 메트로놈 슬라이더: 0이면 자동 OFF, 0보다 크면 자동 ON */
     function setMetroVolume(val) {
-      metroVolume = parseInt(val) / 100;
+      const v = parseInt(val) / 100;
+      if (v <= 0) {
+        metroMuted = true;
+        metroVolume = 0;
+        metronomeOn = false;
+        document.getElementById('btnMetro').style.opacity = '0.5';
+      } else {
+        metroMuted = false;
+        metroSavedVolume = v;
+        metroVolume = v;
+        metronomeOn = true;
+        document.getElementById('btnMetro').style.opacity = '1';
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+      }
+      lastBeatIndex = -1;
     }
     function toggleBorderFlash(checked) {
       if (typeof checked === 'boolean') {
@@ -2174,8 +2268,8 @@
         const isMe = m.id === socket.id;
         const hasInst = !!song?.inst_filename;
         const emoji = partEmoji(m.partName);
-        // 자기 자신은 instEnabled 기준, 다른 사람은 mutedMembers 기준
-        const isMuted = isMe ? !instEnabled : mutedMembers.has(m.id);
+        // 자기 자신은 instMuted 기준, 다른 사람은 mutedMembers 기준
+        const isMuted = isMe ? instMuted : mutedMembers.has(m.id);
         const instBtn = (hasInst && !isMe)
           ? `<button class="member-inst-btn" onclick="event.stopPropagation();toggleRemoteInst('${m.id}')" title="inst 음소거" id="mInst_${m.id}">${isMuted ? '🔇' : '🔊'}</button>`
           : (hasInst && isMe)
@@ -2207,22 +2301,15 @@
 
     // 원격 inst 음소거 처리
     socket.on('remote-mute-inst', () => {
-      if (instAudio && instAudio.volume > 0) instPrevVolume = instAudio.volume;
-      if (instAudio) instAudio.volume = 0;
-      instEnabled = false;
-      document.getElementById('btnInst').textContent = '🔇';
-      const slider = document.querySelector('.inst-vol-slider input');
-      if (slider) slider.value = 0;
-      // 상태 변경을 방 전체에 알림
+      instMuted = true;
+      updateInstUI();
       if (!soloMode) socket.emit('inst-state-changed', { muted: true });
       renderMemberList();
     });
     socket.on('remote-unmute-inst', () => {
-      if (instAudio) instAudio.volume = instPrevVolume;
-      instEnabled = true;
-      document.getElementById('btnInst').textContent = '🔊';
-      const slider = document.querySelector('.inst-vol-slider input');
-      if (slider) slider.value = Math.round(instPrevVolume * 100);
+      if (instSavedVolume <= 0) instSavedVolume = 0.8;
+      instMuted = false;
+      updateInstUI();
       // 재생 중이면 동기화
       if (state === 'playing' && playStartTime && instAudio) {
         const elapsed = Date.now() - playStartTime + (elapsedBefore || 0);
@@ -2230,7 +2317,6 @@
         instAudio.playbackRate = bpm / originalBpm;
         instAudio.play().catch(() => { });
       }
-      // 상태 변경을 방 전체에 알림
       if (!soloMode) socket.emit('inst-state-changed', { muted: false });
       renderMemberList();
     });
@@ -2457,7 +2543,7 @@
           else if (state === 'paused') doResume();
           else if (state === 'idle') { soloMode ? doSoloStart() : doStart(); }
           break;
-        case 'Escape':
+        case 'd': case 'D':
           doStop();
           break;
         case 'ArrowLeft':

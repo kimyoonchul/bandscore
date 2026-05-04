@@ -568,7 +568,6 @@
               <span class="song-info-label">Inst 음원</span>
               <div class="song-info-val" id="detailInstStatus">미등록</div>
             </div>
-            <button class="btn btn-ghost" id="instDownloadBtn" style="display:none;font-size:0.75rem;padding:0.2rem 0.5rem;margin-left:auto" title="inst 다운로드">📥</button>
           </div>
         </div>
       </div>
@@ -1630,15 +1629,12 @@
       document.getElementById('detailCountIn').textContent = s.count_in_bars + '마디';
       // inst 상태
       const instEl = document.getElementById('detailInstStatus');
-      const instDlBtn = document.getElementById('instDownloadBtn');
       if (s.inst_filename) {
         instEl.textContent = '등록됨';
         instEl.className = 'song-info-val inst-status-on';
-        if (instDlBtn) { instDlBtn.style.display = 'inline-block'; instDlBtn.onclick = () => { const a = document.createElement('a'); a.href = '/uploads/' + s.inst_filename; a.download = s.name + '_inst' + s.inst_filename.substring(s.inst_filename.lastIndexOf('.')); a.click(); }; }
       } else {
         instEl.textContent = '미등록';
         instEl.className = 'song-info-val inst-status-off';
-        if (instDlBtn) instDlBtn.style.display = 'none';
       }
       // 앨범 커버 배경
       const bg = document.getElementById('detailCoverBg');
@@ -1791,7 +1787,6 @@
     function showEditSongModal(focusField) {
       const s = currentSong;
       const coverImg = s.cover_filename ? `<img src="/uploads/${s.cover_filename}">` : '<span class="placeholder">🎸</span>';
-      const instInfo = s.inst_filename ? '✅ inst 음원 등록됨' : '';
       document.querySelector('#editSongModal .modal').innerHTML = `
     <div class="modal-title">⚙️ 곡 설정</div>
     <div class="form-group"><label>곡 이름</label><input class="form-control" id="editSongName" value="${esc(s.name)}"></div>
@@ -1818,7 +1813,11 @@
     <div class="form-group">
       <label>inst 음원 (mp3/wav)</label>
       <input type="file" class="form-control" id="editInstFile" accept="audio/*" style="font-size:0.85rem">
-      <p style="color:var(--text-muted);font-size:0.75rem;margin-top:4px" id="instStatus">${instInfo}</p>
+      ${s.inst_filename ? `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;padding:8px 10px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:0.5rem">
+        <span style="color:#22c55e;font-size:0.8rem;font-weight:600">✅ 등록됨</span>
+        <span style="color:var(--text-muted);font-size:0.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="${esc(s.inst_filename)}">${esc(s.inst_filename)}</span>
+        <button class="btn btn-ghost" style="font-size:0.72rem;padding:0.15rem 0.4rem;flex-shrink:0" onclick="event.preventDefault();const a=document.createElement('a');a.href='/uploads/${esc(s.inst_filename)}';a.download='${esc(s.name)}_inst${s.inst_filename.substring(s.inst_filename.lastIndexOf('.'))}';a.click()">📥 다운로드</button>
+      </div>` : '<p style="color:var(--text-muted);font-size:0.75rem;margin-top:4px">등록된 inst 음원이 없습니다</p>'}
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
       <button class="btn btn-ghost" onclick="closeModal('editSongModal')">취소</button>
