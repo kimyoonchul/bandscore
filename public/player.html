@@ -224,7 +224,9 @@
     }
 
     .score-dual .score-page-wrapper {
-      margin: auto
+      margin: auto;
+      max-width: 100%;
+      overflow: hidden
     }
 
     .score-portrait {
@@ -1198,7 +1200,7 @@
         </div>
       </div>
       <div class="score-dual" id="viewDual" style="display:none">
-        <div style="position:relative;display:flex;align-items:center;justify-content:center">
+        <div style="position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden">
           <div class="score-page-wrapper" id="wDL"><canvas id="cDL"></canvas>
             <canvas class="draw-canvas" id="dcDL"></canvas>
             <div class="system-overlay" id="oDL"></div>
@@ -1206,7 +1208,7 @@
             <div class="sys-progress" id="pDL" style="display:none"></div>
           </div>
         </div>
-        <div style="position:relative;display:flex;align-items:center;justify-content:center">
+        <div style="position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden">
           <div class="score-page-wrapper" id="wDR"><canvas id="cDR"></canvas>
             <canvas class="draw-canvas" id="dcDR"></canvas>
             <div class="system-overlay" id="oDR"></div>
@@ -1771,9 +1773,9 @@
       if (viewMode === 'portrait') {
         w = area.clientWidth; h = w / r;
       } else if (viewMode === 'dual') {
-        // 듀얼: 각 셀의 가로 100%를 우선 채움
-        const wrap = tgt.parentElement, cont = wrap.parentElement;
-        w = cont.clientWidth - 4; h = w / r;
+        // 듀얼: 그리드 전체 폭의 절반을 기준으로 사이징
+        const dualEl = document.getElementById('viewDual');
+        w = Math.floor(dualEl.clientWidth / 2) - 4; h = w / r;
       } else {
         // 싱글: 가로/세로 fit
         const wrap = tgt.parentElement, cont = wrap.parentElement;
