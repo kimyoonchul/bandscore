@@ -1573,6 +1573,28 @@
       // 핀치 줌 초기화
       initPinchZoom();
       // 플로팅 팔레트 드래그 초기화
+    // ── 스와이프 제스처로 페이지 넘기기 (한벌/두벌) ──
+    let swipeStartX = 0, swipeStartY = 0, swiping = false;
+    function initSwipeNav() {
+      const area = document.getElementById('canvasArea');
+      area.addEventListener('touchstart', function(e) {
+        if (drawMode || zoomScale > 1 || e.touches.length !== 1 || viewMode === 'portrait') return;
+        swipeStartX = e.touches[0].clientX;
+        swipeStartY = e.touches[0].clientY;
+        swiping = true;
+      }, { passive: true });
+
+      area.addEventListener('touchend', function(e) {
+        if (!swiping) return;
+        swiping = false;
+        const dx = e.changedTouches[0].clientX - swipeStartX;
+        const dy = e.changedTouches[0].clientY - swipeStartY;
+        if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          manualNav(dx < 0 ? 1 : -1);
+        }
+      }, { passive: true });
+    }
+
       initPaletteDrag();
       initSwipeNav();
 
@@ -1598,7 +1620,9 @@
           allSystems.push({ page_number: p, system_index: 0, top_pct: 0, bottom_pct: 100, measures: pi ? pi.measures : 4, has_repeat_start: 0, has_repeat_end: 0 });
         }
       }
-      buildTimeline(); showView();
+      buildTimeline();
+      // 레이아웃 계산 완료 후 첫 렌더링 (캔버스 크기 0 방지)
+      requestAnimationFrame(() => { showView(); });
       if (!soloMode) socket.emit('join-room', { songId, partId, partName: currentPartName });
       applyModeUI();
       // 저장된 스타일 설정 로드
