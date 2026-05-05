@@ -759,8 +759,11 @@
 
   <style>
     .band-footer {
-      margin-top: auto;
-      position: relative;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 90;
     }
 
     .footer-trigger {
@@ -813,12 +816,13 @@
     .footer-accordion {
       max-height: 0;
       overflow: hidden;
+      overflow-y: auto;
       transition: max-height 0.6s cubic-bezier(.4, 0, .2, 1);
       background: linear-gradient(135deg, #0a0a1a 0%, #1a1035 40%, #0f1a2e 100%);
     }
 
     .footer-accordion.open {
-      max-height: 800px;
+      max-height: 70vh;
     }
 
     .footer-inner {
@@ -1382,16 +1386,7 @@
 
     function toggleFooter() {
       const acc = document.getElementById('footerAccordion');
-      const footer = document.getElementById('bandFooter');
-      const opening = !acc.classList.contains('open');
       acc.classList.toggle('open');
-      if (opening) {
-        const start = performance.now();
-        (function scroll() {
-          footer.scrollIntoView({ block: 'start' });
-          if (performance.now() - start < 700) requestAnimationFrame(scroll);
-        })();
-      }
     }
 
     // 곡 제목 마키: 넘치면 좌우 스크롤 애니메이션 적용
