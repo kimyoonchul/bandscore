@@ -157,7 +157,35 @@
       inset: 0;
       display: flex;
       align-items: center;
-      justify-content: center
+      justify-content: center;
+      overflow: hidden
+    }
+
+    /* ── 스와이프 트랙 (3패널 슬라이딩) ── */
+    .swipe-track {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      width: 300%;
+      transform: translateX(-33.333%);
+      will-change: transform;
+    }
+    .swipe-track.animating {
+      transition: transform 0.3s ease-out;
+    }
+    .swipe-panel {
+      width: 33.333%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      height: 100%;
+    }
+    .swipe-panel canvas {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
     }
 
     .score-page-wrapper {
@@ -1196,12 +1224,18 @@
       <button class="nav-arrow right" onclick="event.stopPropagation();manualNav(1)">›</button>
 
       <div class="score-display" id="viewSingle">
-        <div class="score-page-wrapper" id="wS">
-          <canvas id="cS"></canvas>
-          <canvas class="draw-canvas" id="dcS"></canvas>
-          <div class="system-overlay" id="oS"></div>
-          <div class="sys-active-border" id="bS" style="display:none"></div>
-          <div class="sys-progress" id="pS" style="display:none"></div>
+        <div class="swipe-track" id="swipeTrack">
+          <div class="swipe-panel" id="swipePrev"><canvas id="cSPrev"></canvas></div>
+          <div class="swipe-panel" id="swipeCur">
+            <div class="score-page-wrapper" id="wS">
+              <canvas id="cS"></canvas>
+              <canvas class="draw-canvas" id="dcS"></canvas>
+              <div class="system-overlay" id="oS"></div>
+              <div class="sys-active-border" id="bS" style="display:none"></div>
+              <div class="sys-progress" id="pS" style="display:none"></div>
+            </div>
+          </div>
+          <div class="swipe-panel" id="swipeNext"><canvas id="cSNext"></canvas></div>
         </div>
       </div>
       <div class="score-dual" id="viewDual" style="display:none">
@@ -1573,12 +1607,22 @@
       // 핀치 줌 초기화
       initPinchZoom();
       // 플로팅 팔레트 드래그 초기화
-    // ── 스와이프 제스처로 페이지 넘기기 (한벌/두벌) ── 슬라이드 애니메이션 ──
+    // ── 인접 페이지 미리 렌더링 (스와이프 시 옆에 보이도록) ──
+    function renderSwipeAdjacent(pg) {
+      const prevCanvas = document.getElementById('cSPrev');
+      const nextCanvas = document.getElementById('cSNext');
+      if (!prevCanvas || !nextCanvas) return;
+      if (pg > 1) { drawTo(prevCanvas, pg - 1); }
+      else { prevCanvas.width = 1; prevCanvas.height = 1; }
+      if (pg < totalPages) { drawTo(nextCanvas, pg + 1); }
+      else { nextCanvas.width = 1; nextCanvas.height = 1; }
+    }
+
+    // ── 스와이프 제스처로 페이지 넘기기 ── 3패널 슬라이딩 트랙 ──
     let swipeStartX = 0, swipeStartY = 0, swiping = false, swipeDx = 0;
-    let swipeAnimating = false; // 슬라이드 애니메이션 진행 중
+    let swipeAnimating = false;
     function getSwipeTarget() {
-      // 현재 뷰 모드에 따라 슬라이드할 요소 반환
-      if (viewMode === 'single') return document.getElementById('viewSingle');
+      if (viewMode === 'single') return document.getElementById('swipeTrack');
       if (viewMode === 'dual') return document.getElementById('viewDual');
       return null;
     }
@@ -1587,11 +1631,11 @@
 
       area.addEventListener('touchstart', function(e) {
         if (drawMode || zoomScale > 1 || e.touches.length !== 1 || viewMode === 'portrait') return;
-        if (swipeAnimating) return; // 애니메이션 중 무시
+        if (swipeAnimating) return;
         swipeStartX = e.touches[0].clientX;
         swipeStartY = e.touches[0].clientY;
         swipeDx = 0;
-        swiping = false; // 아직 확정 안 됨 (방향 판정 전)
+        swiping = false;
       }, { passive: true });
 
       area.addEventListener('touchmove', function(e) {
@@ -1599,28 +1643,27 @@
         if (drawMode || zoomScale > 1 || viewMode === 'portrait') return;
         const dx = e.touches[0].clientX - swipeStartX;
         const dy = e.touches[0].clientY - swipeStartY;
-
-        // 첫 이동: 수평/수직 판정
         if (!swiping) {
           if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2) {
-            swiping = true; // 수평 스와이프 확정
-          } else if (Math.abs(dy) > 10) {
-            return; // 수직 → 스와이프 아님
-          } else {
-            return; // 아직 판정 불가
-          }
+            swiping = true;
+          } else if (Math.abs(dy) > 10) { return; }
+          else { return; }
         }
-
         swipeDx = dx;
         const target = getSwipeTarget();
-        if (target) {
-          // 끝 페이지에서 저항감 (탄성)
-          const step = (viewMode === 'dual') ? 2 : 1;
-          const np = curDispPage + (dx < 0 ? step : -step);
-          const atEdge = np < 1 || np > totalPages;
-          const resistedDx = atEdge ? dx * 0.25 : dx; // 끝이면 25%만 이동
-          target.style.transition = 'none';
-          target.style.transform = `translateX(${resistedDx}px)`;
+        if (!target) return;
+        const step = (viewMode === 'dual') ? 2 : 1;
+        const np = curDispPage + (dx < 0 ? step : -step);
+        const atEdge = np < 1 || np > totalPages;
+        const resistedDx = atEdge ? dx * 0.25 : dx;
+        target.classList.remove('animating');
+        if (viewMode === 'single') {
+          // 3패널 트랙: 기본 -33.333%에서 dx만큼 이동
+          const areaW = area.clientWidth;
+          const dxPct = (resistedDx / areaW) * 33.333;
+          target.style.transform = 'translateX(' + (-33.333 + dxPct) + '%)';
+        } else {
+          target.style.transform = 'translateX(' + resistedDx + 'px)';
         }
       }, { passive: true });
 
@@ -1629,68 +1672,83 @@
         swiping = false;
         const target = getSwipeTarget();
         if (!target) return;
-
-        const areaW = document.getElementById('canvasArea').clientWidth;
-        const threshold = Math.min(80, areaW * 0.2); // 화면 20% 또는 80px
+        const areaW = area.clientWidth;
+        const threshold = Math.min(80, areaW * 0.2);
         const step = (viewMode === 'dual') ? 2 : 1;
-        const dir = swipeDx < 0 ? 1 : -1; // 왼쪽 스와이프 = 다음 페이지
+        const dir = swipeDx < 0 ? 1 : -1;
         const np = curDispPage + dir * step;
         const canNav = np >= 1 && np <= totalPages && Math.abs(swipeDx) > threshold;
 
         if (canNav) {
-          // 슬라이드 아웃 → 페이지 변경 → 슬라이드 인
           swipeAnimating = true;
-          const slideOutX = dir > 0 ? -areaW : areaW;
-          target.style.transition = 'transform 0.2s ease-in';
-          target.style.transform = `translateX(${slideOutX}px)`;
-          target.addEventListener('transitionend', function onOut() {
-            target.removeEventListener('transitionend', onOut);
-            // 페이지 변경
-            curDispPage = np;
-            showView();
-            // 반대편에서 슬라이드 인
-            target.style.transition = 'none';
-            target.style.transform = `translateX(${-slideOutX}px)`;
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                target.style.transition = 'transform 0.25s ease-out';
-                target.style.transform = 'translateX(0)';
-                target.addEventListener('transitionend', function onIn() {
-                  target.removeEventListener('transitionend', onIn);
-                  target.style.transition = '';
-                  target.style.transform = '';
-                  swipeAnimating = false;
-                }, { once: true });
-                // 안전 타임아웃 (transitionend 누락 방지)
-                setTimeout(() => { swipeAnimating = false; target.style.transition = ''; target.style.transform = ''; }, 600);
+          if (viewMode === 'single') {
+            // 다음: -66.666%, 이전: 0% — 인접 패널로 슬라이드
+            const snapPct = dir > 0 ? -66.666 : 0;
+            target.classList.add('animating');
+            target.style.transform = 'translateX(' + snapPct + '%)';
+            const onDone = function() {
+              target.removeEventListener('transitionend', onDone);
+              curDispPage = np;
+              target.classList.remove('animating');
+              target.style.transform = 'translateX(-33.333%)';
+              showView();
+              swipeAnimating = false;
+            };
+            target.addEventListener('transitionend', onDone, { once: true });
+            setTimeout(function() { if (swipeAnimating) { onDone(); } }, 500);
+          } else {
+            // 듀얼: 기존 아웃/인 방식
+            const slideOutX = dir > 0 ? -areaW : areaW;
+            target.style.transition = 'transform 0.25s ease-out';
+            target.style.transform = 'translateX(' + slideOutX + 'px)';
+            target.addEventListener('transitionend', function onOut() {
+              target.removeEventListener('transitionend', onOut);
+              curDispPage = np; showView();
+              target.style.transition = 'none';
+              target.style.transform = 'translateX(' + (-slideOutX) + 'px)';
+              requestAnimationFrame(function() {
+                requestAnimationFrame(function() {
+                  target.style.transition = 'transform 0.25s ease-out';
+                  target.style.transform = 'translateX(0)';
+                  target.addEventListener('transitionend', function() {
+                    target.style.transition = ''; target.style.transform = '';
+                    swipeAnimating = false;
+                  }, { once: true });
+                  setTimeout(function() { swipeAnimating = false; target.style.transition = ''; target.style.transform = ''; }, 600);
+                });
               });
-            });
-          }, { once: true });
-          // 안전 타임아웃
-          setTimeout(() => { if (swipeAnimating) { swipeAnimating = false; target.style.transition = ''; target.style.transform = ''; } }, 800);
+            }, { once: true });
+            setTimeout(function() { if (swipeAnimating) { swipeAnimating = false; target.style.transition = ''; target.style.transform = ''; } }, 800);
+          }
         } else {
-          // 복귀 애니메이션 (원래 위치로)
-          target.style.transition = 'transform 0.25s ease-out';
-          target.style.transform = 'translateX(0)';
-          target.addEventListener('transitionend', function onBack() {
-            target.removeEventListener('transitionend', onBack);
-            target.style.transition = '';
-            target.style.transform = '';
-          }, { once: true });
-          setTimeout(() => { target.style.transition = ''; target.style.transform = ''; }, 400);
+          // 복귀
+          if (viewMode === 'single') {
+            target.classList.add('animating');
+            target.style.transform = 'translateX(-33.333%)';
+            setTimeout(function() { target.classList.remove('animating'); }, 400);
+          } else {
+            target.style.transition = 'transform 0.25s ease-out';
+            target.style.transform = 'translateX(0)';
+            setTimeout(function() { target.style.transition = ''; target.style.transform = ''; }, 400);
+          }
         }
         swipeDx = 0;
       }, { passive: true });
 
-      // 취소 (e.g. 전화옴)
       area.addEventListener('touchcancel', function() {
         if (swiping) {
           swiping = false;
           const target = getSwipeTarget();
           if (target) {
-            target.style.transition = 'transform 0.2s ease-out';
-            target.style.transform = 'translateX(0)';
-            setTimeout(() => { target.style.transition = ''; target.style.transform = ''; }, 300);
+            if (viewMode === 'single') {
+              target.classList.add('animating');
+              target.style.transform = 'translateX(-33.333%)';
+              setTimeout(function() { target.classList.remove('animating'); }, 300);
+            } else {
+              target.style.transition = 'transform 0.2s ease-out';
+              target.style.transform = 'translateX(0)';
+              setTimeout(function() { target.style.transition = ''; target.style.transform = ''; }, 300);
+            }
           }
         }
       }, { passive: true });
@@ -1998,7 +2056,11 @@
     /** 현재 뷰 모드에 맞게 캔버스를 (재)렌더링 */
     function showView() {
       const pg = curDispPage;
-      if (viewMode === 'single') { drawTo(document.getElementById('cS'), pg) }
+      if (viewMode === 'single') {
+        drawTo(document.getElementById('cS'), pg);
+        // 인접 페이지 미리 렌더 (스와이프용)
+        renderSwipeAdjacent(pg);
+      }
       else if (viewMode === 'dual') {
         drawTo(document.getElementById('cDL'), pg);
         const n = pg + 1 <= totalPages ? pg + 1 : null;
