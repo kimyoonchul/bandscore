@@ -2,17 +2,16 @@
  * ================================================================
  * PinchZoom — 악보 핀치 줌 + 팬 기능
  * ================================================================
- * - 핀치 제스처로 악보 확대/축소
  * - 세로 모드: transform scale + spacer + 네이티브 스크롤
- *   (핀치 중심점 기준 확대, 네이티브 스크롤로 이동)
- * - 싱글/듀얼 모드: transform scale + JS 팬
+ * - 싱글 모드: transform scale + JS 팬 (wS)
+ * - 듀얼 모드: transform scale + JS 팬 (viewDual 전체)
  * ================================================================
  */
 
 // ── 줌 상태 ──
 let zoomScale = 1;
-let zoomX = 0;       // 팬 오프셋 X (싱글/듀얼용)
-let zoomY = 0;       // 팬 오프셋 Y (싱글/듀얼용)
+let zoomX = 0;
+let zoomY = 0;
 const ZOOM_MIN = 1;
 const ZOOM_MAX = 4;
 
@@ -22,14 +21,21 @@ let pinchStartScale = 1;
 let pinchMidX = 0, pinchMidY = 0;
 let isPinching = false;
 
-// 팬 (드래그 이동) — 싱글/듀얼 전용
+// 팬 (드래그 이동)
 let isPanning = false;
 let panStartX = 0, panStartY = 0;
 let panStartZoomX = 0, panStartZoomY = 0;
 
+/** 줌 대상 컨테이너 반환 */
+function getZoomContainer() {
+  if (viewMode === 'portrait') return document.getElementById('ptInner');
+  if (viewMode === 'dual') return document.getElementById('viewDual');
+  return document.getElementById('wS'); // single
+}
+
 /** 줌 적용 */
 function applyZoom() {
-  // ── 세로 모드: transform scale + spacer ──
+  // ── 세로 모드: transform scale + spacer (네이티브 스크롤) ──
   if (viewMode === 'portrait') {
     const inner = document.getElementById('ptInner');
     const spacer = document.getElementById('ptSpacer');
@@ -40,7 +46,6 @@ function applyZoom() {
       if (spacer) { spacer.style.height = '0'; spacer.style.width = '0'; }
     } else {
       inner.style.transform = `scale(${zoomScale})`;
-      // spacer로 스크롤 영역 확장 (transform은 레이아웃에 영향 안 줌)
       if (spacer) {
         const contentH = inner.scrollHeight;
         const contentW = inner.scrollWidth;
@@ -52,21 +57,15 @@ function applyZoom() {
   }
 
   // ── 싱글/듀얼 모드: transform + JS 팬 ──
-  const containers = [];
-  if (viewMode === 'single') {
-    containers.push(document.getElementById('wS'));
-  } else if (viewMode === 'dual') {
-    containers.push(document.getElementById('wDL'));
-    containers.push(document.getElementById('wDR'));
-  }
+  const el = getZoomContainer();
+  if (!el) return;
 
   // 팬 범위 제한
-  if (zoomScale > 1 && containers.length > 0) {
+  if (zoomScale > 1) {
     const area = document.getElementById('canvasArea');
     if (area) {
       const aW = area.clientWidth;
       const aH = area.clientHeight;
-      const el = containers[0];
       const elW = el.offsetWidth || aW;
       const elH = el.offsetHeight || aH;
       const minX = aW / zoomScale - elW;
@@ -76,14 +75,11 @@ function applyZoom() {
     }
   }
 
-  containers.forEach(el => {
-    if (!el) return;
-    if (zoomScale <= 1) {
-      el.style.transform = '';
-      return;
-    }
+  if (zoomScale <= 1) {
+    el.style.transform = '';
+  } else {
     el.style.transform = `scale(${zoomScale}) translate(${zoomX}px, ${zoomY}px)`;
-  });
+  }
 }
 
 /** 줌 리셋 */
@@ -91,8 +87,11 @@ function resetZoom() {
   zoomScale = 1;
   zoomX = 0;
   zoomY = 0;
-  const inner = document.getElementById('ptInner');
-  if (inner) { inner.style.transform = ''; inner.style.zoom = ''; }
+  // 모든 줌 대상 리셋
+  ['ptInner', 'viewDual', 'wS'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.transform = '';
+  });
   const spacer = document.getElementById('ptSpacer');
   if (spacer) { spacer.style.height = '0'; spacer.style.width = '0'; }
   applyZoom();
@@ -117,7 +116,6 @@ function pinchMid(touches) {
 function initPinchZoom() {
   const area = document.getElementById('canvasArea');
 
-  // 터치 이벤트
   area.addEventListener('touchstart', (e) => {
     if (drawMode && e.touches.length === 1) return;
     if (e.touches.length === 2) {
@@ -138,8 +136,7 @@ function initPinchZoom() {
       panStartZoomX = zoomX;
       panStartZoomY = zoomY;
     } else if (e.touches.length === 1 && zoomScale > 1 && !drawMode && viewMode !== 'portrait') {
-      // 싱글/듀얼 확대 상태에서 1터치 → 팬
-      // 세로 모드는 네이티브 스크롤이 처리
+      // 싱글/듀얼 확대 상태에서 1터치 → 팬 (세로모드는 네이티브 스크롤)
       isPanning = true;
       panStartX = e.touches[0].clientX;
       panStartY = e.touches[0].clientY;
@@ -170,19 +167,14 @@ function initPinchZoom() {
         const mid = pinchMid(e.touches);
         const localX = mid.x - areaRect.left;
         const localY = mid.y - areaRect.top;
-
-        // 핀치 중심 아래의 콘텐츠 좌표 (줌 전)
         const contentX = (portEl.scrollLeft + localX) / oldScale;
         const contentY = (portEl.scrollTop + localY) / oldScale;
-
         zoomScale = newScale;
         applyZoom();
-
-        // 같은 콘텐츠 좌표가 핀치 중심에 오도록 스크롤 조정
         portEl.scrollLeft = contentX * zoomScale - localX;
         portEl.scrollTop = contentY * zoomScale - localY;
       } else {
-        // ── 싱글/듀얼: 기존 방식 ──
+        // ── 싱글/듀얼: 핀치 중심점 기준 줌 ──
         zoomScale = newScale;
         const areaRect = area.getBoundingClientRect();
         const mid = pinchMid(e.touches);
@@ -222,7 +214,6 @@ function initPinchZoom() {
     if (newScale <= 1.05) {
       zoomScale = 1; zoomX = 0; zoomY = 0;
     } else if (viewMode === 'portrait') {
-      // 세로 모드: 커서 기준 줌 + 스크롤 조정
       const portEl = document.getElementById('viewPortrait');
       const areaRect = area.getBoundingClientRect();
       const localX = e.clientX - areaRect.left;
@@ -245,7 +236,7 @@ function initPinchZoom() {
     applyZoom();
   }, { passive: false });
 
-  // 마우스 드래그 팬 (싱글/듀얼 전용, 세로모드는 네이티브 스크롤)
+  // 마우스 드래그 팬 (싱글/듀얼 전용)
   area.addEventListener('mousedown', (e) => {
     if (drawMode || zoomScale <= 1 || viewMode === 'portrait') return;
     isPanning = true;
