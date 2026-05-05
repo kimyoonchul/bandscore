@@ -5,31 +5,28 @@
  * - PointerEvent API 기반 마우스/터치/Apple Pencil 통합 처리
  * - 펜(스타일러스) 자동 감지: 펜으로 터치하면 자동 드로잉
  * - 필압(pressure) 기반 선 굵기 자동 조절
- * - 플로팅 팔레트: 드래그 가능한 도구 팔레트
+ * - 플로팅 FAB: 접힌 ✏️ ↔ 펼친 팔레트 전환
  * - 페이지별 스트로크 데이터를 localStorage에 자동 저장
  * - 비율 좌표(0~1)로 저장하여 화면 크기 변경에도 정확히 재현
- * - 지우개, 되돌리기, 전체 지우기 지원
  * ================================================================
  */
 
 // ── 드로잉 상태 ──
-let drawMode = false;        // 수동 드로잉 모드 (✏️ 버튼으로 토글)
+let drawMode = false;        // 드로잉 모드 활성화 여부
 let penAutoMode = true;      // 펜 자동 감지 모드 (기본 ON)
 let eraserMode = false;      // 지우개 모드
 let drawColor = '#ef4444';   // 현재 펜 색상
-let drawWidth = 0.8;           // 현재 펜 굵기 (기본값)
-let drawingStrokes = {};     // 페이지별 스트로크 데이터: { pageNum: [{points, color, width}] }
+let drawWidth = 0.8;         // 현재 펜 굵기 (기본값)
+let drawingStrokes = {};     // 페이지별 스트로크 데이터
 let currentStroke = null;    // 현재 그리고 있는 스트로크
 let isDrawing = false;       // 드로잉 진행 중 플래그
 let isPenDrawing = false;    // 펜 자동 감지로 그리는 중인지
+let paletteFadeTimer = null; // 팔레트 자동 접힘 타이머
 
 /** 현재 입력이 드로잉을 해야 하는지 판단 */
 function shouldDraw(e) {
-  // 핀치 줌 중이면 드로잉 금지
   if (isPinching) return false;
-  // 수동 드로잉 모드가 켜져 있으면 모든 입력으로 그리기
   if (drawMode) return true;
-  // 펜 자동 감지: pointerType이 'pen'이면 자동으로 그리기
   if (penAutoMode && e.pointerType === 'pen') return true;
   return false;
 }
@@ -147,7 +144,6 @@ function onDrawStart(e) {
   const canDraw = shouldDraw(e);
   const isPen = e.pointerType === 'pen';
 
-  // 그리기 대상이 아니면 이벤트를 아래 레이어로 관통시킴
   if (!canDraw) {
     const canvas = e.currentTarget;
     canvas.style.pointerEvents = 'none';
@@ -165,10 +161,10 @@ function onDrawStart(e) {
   const pos = getDrawPos(e, canvas);
   const pageNum = getDrawPageNum(canvas.id);
 
-  // 펜 자동 감지 시 팔레트 표시
+  // 펜 자동 감지 시 FAB 펼침
   if (isPen && !drawMode) {
     isPenDrawing = true;
-    showPalette(true);
+    expandDrawFab();
   }
 
   if (eraserMode) {
@@ -226,18 +222,16 @@ function onDrawMove(e) {
 }
 
 function onDrawEnd(e) {
-  // 펜 자동 감지로 그렸다면 팔레트 페이드
+  // 펜 자동 감지 → 일정 시간 후 자동 접힘
   if (isPenDrawing && e.pointerType === 'pen') {
     isPenDrawing = false;
     if (!drawMode) {
-      // 3초 후 팔레트 반투명화
       clearTimeout(paletteFadeTimer);
       paletteFadeTimer = setTimeout(() => {
         if (!isPenDrawing && !drawMode) {
-          const palette = document.getElementById('drawPalette');
-          palette.classList.add('faded');
+          collapseDrawFab();
         }
-      }, 3000);
+      }, 4000);
     }
   }
 
@@ -276,62 +270,70 @@ function eraseAt(pageNum, pos, canvasId) {
   }
 }
 
-// ── UI 제어 함수 ──
+// ── FAB UI 제어 ──
 
-let paletteFadeTimer = null;  // 팔레트 자동 페이드 타이머
-
-/** 팔레트 표시 + 페이드 타이머 관리 */
-function showPalette(autoFade) {
-  const palette = document.getElementById('drawPalette');
-  palette.classList.add('visible');
-  palette.classList.remove('faded');
-  clearTimeout(paletteFadeTimer);
-  if (autoFade) {
-    paletteFadeTimer = setTimeout(() => {
-      if (!drawMode) palette.classList.add('faded');
-    }, 3000);
-  }
-}
-
-function hidePalette() {
-  const palette = document.getElementById('drawPalette');
-  palette.classList.remove('visible', 'faded');
-  clearTimeout(paletteFadeTimer);
-}
-
-/** 드로잉 모드 토글 (수동) */
-function toggleDrawMode() {
-  drawMode = !drawMode;
-  const btn = document.getElementById('btnDraw');
+/** FAB 펼치기 (팔레트 표시 + drawMode ON) */
+function expandDrawFab() {
+  drawMode = true;
   const area = document.getElementById('canvasArea');
-  btn.classList.toggle('active', drawMode);
-  area.classList.toggle('draw-active', drawMode);
+  area.classList.add('draw-active');
+  area.removeAttribute('onclick');
+
+  document.getElementById('fabCollapsed').style.display = 'none';
+  document.getElementById('fabExpanded').style.display = 'flex';
+  clearTimeout(paletteFadeTimer);
+  updateFabColorRing();
+}
+
+/** FAB 접기 (drawMode OFF) */
+function collapseDrawFab() {
+  drawMode = false;
+  const area = document.getElementById('canvasArea');
+  area.classList.remove('draw-active');
+  area.setAttribute('onclick', 'onCanvasTap()');
+
+  eraserMode = false;
+  const btnEraser = document.getElementById('btnEraser');
+  if (btnEraser) btnEraser.classList.remove('active');
+  document.querySelectorAll('.draw-canvas').forEach(c => c.classList.remove('eraser-mode'));
+
+  document.getElementById('fabCollapsed').style.display = 'flex';
+  document.getElementById('fabExpanded').style.display = 'none';
+  clearTimeout(paletteFadeTimer);
+  updateFabColorRing();
+}
+
+/** 기존 toggleDrawMode (단축키 P용) */
+function toggleDrawMode() {
   if (drawMode) {
-    showPalette(false);
-    area.removeAttribute('onclick');
+    collapseDrawFab();
   } else {
-    hidePalette();
-    eraserMode = false;
-    document.getElementById('btnEraser').classList.remove('active');
-    document.querySelectorAll('.draw-canvas').forEach(c => c.classList.remove('eraser-mode'));
-    area.setAttribute('onclick', 'onCanvasTap()');
+    expandDrawFab();
   }
+}
+
+/** 접힌 FAB의 테두리 색상 = 현재 펜 색상 */
+function updateFabColorRing() {
+  const ring = document.getElementById('fabColorRing');
+  if (ring) ring.style.borderColor = drawColor;
 }
 
 /** 펜 색상 변경 */
 function setDrawColor(color, el) {
   drawColor = color;
-  document.querySelectorAll('.draw-palette .dt-color').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.draw-fab .dt-color').forEach(c => c.classList.remove('active'));
   if (el) el.classList.add('active');
   eraserMode = false;
-  document.getElementById('btnEraser').classList.remove('active');
+  const btnEraser = document.getElementById('btnEraser');
+  if (btnEraser) btnEraser.classList.remove('active');
   document.querySelectorAll('.draw-canvas').forEach(c => c.classList.remove('eraser-mode'));
+  updateFabColorRing();
 }
 
 /** 펜 굵기 변경 */
 function setDrawWidth(w, el) {
   drawWidth = w;
-  document.querySelectorAll('.draw-palette .dt-width').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.draw-fab .dt-width').forEach(c => c.classList.remove('active'));
   if (el) el.classList.add('active');
 }
 
@@ -391,48 +393,79 @@ function refreshDrawOnViewChange() {
   });
 }
 
-/** 플로팅 팔레트 드래그 초기화 */
+/** 플로팅 FAB 드래그 초기화 */
 function initPaletteDrag() {
-  const palette = document.getElementById('drawPalette');
+  const fab = document.getElementById('drawFab');
   const handle = document.getElementById('dpHandle');
-  if (!handle || !palette) return;
+  const collapsed = document.getElementById('fabCollapsed');
+  if (!fab) return;
 
   let isDragging = false;
   let startX, startY, origX, origY;
+  let moved = false;
 
-  handle.addEventListener('pointerdown', (e) => {
+  function startDrag(e) {
     isDragging = true;
+    moved = false;
     startX = e.clientX;
     startY = e.clientY;
-    const rect = palette.getBoundingClientRect();
+    const rect = fab.getBoundingClientRect();
     origX = rect.left;
     origY = rect.top;
-    handle.setPointerCapture(e.pointerId);
     e.preventDefault();
-  });
+  }
 
-  handle.addEventListener('pointermove', (e) => {
+  function moveDrag(e) {
     if (!isDragging) return;
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
     let newX = origX + dx;
     let newY = origY + dy;
-    // 화면 밖으로 나가지 않도록 클램핑
-    const pw = palette.offsetWidth;
-    const ph = palette.offsetHeight;
+    const pw = fab.offsetWidth;
+    const ph = fab.offsetHeight;
     newX = Math.max(0, Math.min(window.innerWidth - pw, newX));
     newY = Math.max(0, Math.min(window.innerHeight - ph, newY));
-    palette.style.left = newX + 'px';
-    palette.style.top = newY + 'px';
-    palette.style.right = 'auto';
-  });
+    fab.style.left = newX + 'px';
+    fab.style.top = newY + 'px';
+    fab.style.right = 'auto';
+    fab.style.bottom = 'auto';
+  }
 
-  handle.addEventListener('pointerup', () => { isDragging = false; });
-  handle.addEventListener('pointercancel', () => { isDragging = false; });
+  function endDrag() { isDragging = false; }
 
-  // 팔레트 터치 시 페이드 해제
-  palette.addEventListener('pointerdown', () => {
-    palette.classList.remove('faded');
-    clearTimeout(paletteFadeTimer);
-  });
+  // 핸들 드래그 (펼친 상태)
+  if (handle) {
+    handle.addEventListener('pointerdown', (e) => {
+      startDrag(e);
+      handle.setPointerCapture(e.pointerId);
+    });
+    handle.addEventListener('pointermove', moveDrag);
+    handle.addEventListener('pointerup', endDrag);
+    handle.addEventListener('pointercancel', endDrag);
+  }
+
+  // 접힌 FAB 드래그
+  if (collapsed) {
+    collapsed.addEventListener('pointerdown', (e) => {
+      startDrag(e);
+      collapsed.setPointerCapture(e.pointerId);
+    });
+    collapsed.addEventListener('pointermove', moveDrag);
+    collapsed.addEventListener('pointerup', (e) => {
+      endDrag();
+      // 드래그가 아니라 클릭이면 펼치기
+      if (!moved) expandDrawFab();
+    });
+    collapsed.addEventListener('pointercancel', endDrag);
+  }
+
+  // 팔레트 터치 시 자동 접힘 타이머 리셋
+  if (fab) {
+    fab.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.fab-expanded')) {
+        clearTimeout(paletteFadeTimer);
+      }
+    });
+  }
 }
