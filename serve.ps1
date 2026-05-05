@@ -2,6 +2,22 @@
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $env:PATH = "C:\Program Files\nodejs;" + $env:PATH
 
+# 자동 git pull (서버 시작 전 최신 코드 동기화)
+Write-Host "🔄 최신 코드 동기화 중 (git pull)..." -ForegroundColor Yellow
+Push-Location $scriptDir
+try {
+    $pullResult = git pull origin master 2>&1
+    if ($pullResult -match "Already up to date") {
+        Write-Host "✅ 이미 최신 상태입니다." -ForegroundColor Green
+    } else {
+        Write-Host "✅ 최신 코드를 받았습니다:" -ForegroundColor Green
+        Write-Host $pullResult -ForegroundColor Cyan
+    }
+} catch {
+    Write-Host "⚠️ git pull 실패 (오프라인?). 기존 코드로 시작합니다." -ForegroundColor Yellow
+}
+Pop-Location
+
 Write-Host "🎵 BandScore 서버 시작 중..." -ForegroundColor Yellow
 
 # Start Node server
