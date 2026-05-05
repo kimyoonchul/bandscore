@@ -40,6 +40,8 @@
   <link rel="stylesheet" href="/css/style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/drawing.js"></script>
+  <script src="/js/zoom.js"></script>
   <style>
     * {
       box-sizing: border-box
@@ -866,6 +868,129 @@
         height: 16px !important;
       }
     }
+
+    /* ── 드로잉 캔버스 오버레이 ── */
+    .draw-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 8;
+      pointer-events: auto;
+      touch-action: none;
+    }
+    .draw-active .draw-canvas {
+      pointer-events: auto;
+      cursor: crosshair;
+    }
+    .draw-active .draw-canvas.eraser-mode {
+      cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="none" stroke="white" stroke-width="2"/></svg>') 10 10, crosshair;
+    }
+    .draw-active .system-overlay,
+    .draw-active .sys-active-border,
+    .draw-active .sys-progress {
+      pointer-events: none;
+    }
+
+    /* ── 드로잉 미니 툴바 ── */
+    .draw-toolbar {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: rgba(17, 24, 39, 0.96);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 0.75rem;
+      padding: 6px 10px;
+      z-index: 60;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+    }
+    .draw-toolbar.open {
+      display: flex;
+    }
+    .draw-toolbar .dt-color {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.2);
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+      flex-shrink: 0;
+    }
+    .draw-toolbar .dt-color:hover { transform: scale(1.15); }
+    .draw-toolbar .dt-color.active { border-color: #fff; transform: scale(1.15); }
+    .draw-toolbar .dt-sep {
+      width: 1px;
+      height: 18px;
+      background: rgba(255,255,255,0.15);
+      flex-shrink: 0;
+    }
+    .draw-toolbar .dt-width {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .draw-toolbar .dt-width:hover { background: rgba(255,255,255,0.08); }
+    .draw-toolbar .dt-width.active { background: rgba(255,255,255,0.15); border-color: #fff; }
+    .draw-toolbar .dt-width .dot {
+      border-radius: 50%;
+      background: #fff;
+    }
+    .draw-toolbar .dt-btn {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #ccc;
+      font-size: 0.78rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .draw-toolbar .dt-btn:hover { background: rgba(255,255,255,0.08); }
+    .draw-toolbar .dt-btn.active { background: rgba(239,68,68,0.25); border-color: #ef4444; color: #ef4444; }
+    .btn-draw.active {
+      background: rgba(59, 130, 246, 0.3) !important;
+      border-color: #3b82f6 !important;
+      color: #3b82f6 !important;
+    }
+
+    /* ── 핀치 줌 ── */
+    .score-page-wrapper {
+      transform-origin: 0 0;
+    }
+    @media (max-width: 768px) {
+      .draw-toolbar {
+        gap: 4px;
+        padding: 5px 7px;
+      }
+      .draw-toolbar .dt-color {
+        width: 18px;
+        height: 18px;
+      }
+      .draw-toolbar .dt-width {
+        width: 22px;
+        height: 22px;
+      }
+      .draw-toolbar .dt-btn {
+        font-size: 0.68rem;
+        padding: 2px 6px;
+      }
+    }
   </style>
 </head>
 
@@ -905,6 +1030,7 @@
       <div class="score-display" id="viewSingle">
         <div class="score-page-wrapper" id="wS">
           <canvas id="cS"></canvas>
+          <canvas class="draw-canvas" id="dcS"></canvas>
           <div class="system-overlay" id="oS"></div>
           <div class="sys-active-border" id="bS" style="display:none"></div>
           <div class="sys-progress" id="pS" style="display:none"></div>
@@ -913,6 +1039,7 @@
       <div class="score-dual" id="viewDual" style="display:none">
         <div style="position:relative;display:flex;align-items:center;justify-content:center">
           <div class="score-page-wrapper" id="wDL"><canvas id="cDL"></canvas>
+            <canvas class="draw-canvas" id="dcDL"></canvas>
             <div class="system-overlay" id="oDL"></div>
             <div class="sys-active-border" id="bDL" style="display:none"></div>
             <div class="sys-progress" id="pDL" style="display:none"></div>
@@ -920,6 +1047,7 @@
         </div>
         <div style="position:relative;display:flex;align-items:center;justify-content:center">
           <div class="score-page-wrapper" id="wDR"><canvas id="cDR"></canvas>
+            <canvas class="draw-canvas" id="dcDR"></canvas>
             <div class="system-overlay" id="oDR"></div>
             <div class="sys-active-border" id="bDR" style="display:none"></div>
             <div class="sys-progress" id="pDR" style="display:none"></div>
@@ -950,7 +1078,7 @@
           title="재생 (Space)">▶</button>
       </div>
       <button class="btn btn-ghost btn-icon" id="btnPause" onclick="doPause()" style="display:none"
-        title="일시정지 (Space)">⏸</button>
+        title="일시정지 (Space)"><span style="display:inline-flex;gap:2px;align-items:center"><span style="display:inline-block;width:0.18em;height:0.55em;background:currentColor;border-radius:1px"></span><span style="display:inline-block;width:0.18em;height:0.55em;background:currentColor;border-radius:1px"></span></span></button>
       <button class="btn btn-ghost btn-icon" id="btnResume" onclick="doResume()" style="display:none"
         title="재개 (Space)">▶</button>
       <button class="btn btn-danger btn-icon" id="btnStop" onclick="doStop()" title="정지 (D)"
@@ -981,6 +1109,24 @@
           <input type="range" min="0" max="100" value="0" id="instVolSliderInput" oninput="setInstVolume(this.value)">
         </div>
         <button class="btn btn-ghost" onclick="toggleInst()" id="btnInst" title="inst 음소거 토글 (M)">🔇</button>
+      </div>
+      <div style="position:relative;display:inline-flex">
+        <button class="btn btn-ghost btn-draw" id="btnDraw" onclick="toggleDrawMode()" title="필기 모드 (P)">✏️</button>
+        <div class="draw-toolbar" id="drawToolbar">
+          <div class="dt-color active" style="background:#ef4444" onclick="setDrawColor('#ef4444',this)" title="빨강"></div>
+          <div class="dt-color" style="background:#3b82f6" onclick="setDrawColor('#3b82f6',this)" title="파랑"></div>
+          <div class="dt-color" style="background:#22c55e" onclick="setDrawColor('#22c55e',this)" title="초록"></div>
+          <div class="dt-color" style="background:#000000;border-color:rgba(255,255,255,0.4)" onclick="setDrawColor('#000000',this)" title="검정"></div>
+          <div class="dt-color" style="background:#ffffff" onclick="setDrawColor('#ffffff',this)" title="흰색"></div>
+          <div class="dt-sep"></div>
+          <div class="dt-width active" onclick="setDrawWidth(2,this)" title="얇은"><div class="dot" style="width:4px;height:4px"></div></div>
+          <div class="dt-width" onclick="setDrawWidth(4,this)" title="보통"><div class="dot" style="width:7px;height:7px"></div></div>
+          <div class="dt-width" onclick="setDrawWidth(7,this)" title="굵은"><div class="dot" style="width:10px;height:10px"></div></div>
+          <div class="dt-sep"></div>
+          <button class="dt-btn" id="btnEraser" onclick="toggleEraser()" title="지우개 (E)">🧹</button>
+          <button class="dt-btn" onclick="clearDrawing()" title="전체 지우기">🗑️</button>
+          <button class="dt-btn" onclick="undoDraw()" title="되돌리기 (Ctrl+Z)">↩</button>
+        </div>
       </div>
       <button class="btn btn-ghost" onclick="toggleFullscreen()" title="전체화면 (F)">⛶</button>
       <button class="btn btn-ghost" onclick="toggleSettings()" title="설정 (S)">⚙</button>
@@ -1106,6 +1252,9 @@
 
         <kbd>H</kbd><span>UI 표시/숨김</span>
         <kbd>S</kbd><span>설정 패널</span>
+        <kbd>P</kbd><span>필기 모드 토글</span>
+        <kbd>E</kbd><span>지우개 토글</span>
+        <kbd>Ctrl+Z</kbd><span>되돌리기</span>
         <kbd>1</kbd><span>1벌 보기</span>
         <kbd>2</kbd><span>2벌 보기</span>
         <kbd>3</kbd><span>세로 보기</span>
@@ -1243,6 +1392,14 @@
           applyStyleToUI();
         }
       } catch (e) { }
+
+      // 드로잉 핸들러 등록 (static 캔버스)
+      ['dcS', 'dcDL', 'dcDR'].forEach(id => {
+        const c = document.getElementById(id);
+        if (c && !c._drawAttached) { attachDrawHandlers(c); c._drawAttached = true; }
+      });
+      // 핀치 줌 초기화
+      initPinchZoom();
 
       // inst 음원 로드
       if (song.inst_filename) {
@@ -1432,6 +1589,8 @@
       document.getElementById('viewSingle').style.display = m === 'single' ? 'flex' : 'none';
       document.getElementById('viewDual').style.display = m === 'dual' ? 'grid' : 'none';
       document.getElementById('viewPortrait').style.display = m === 'portrait' ? 'block' : 'none';
+      // 뷰 전환 시 줌 리셋
+      resetZoom();
       if (m === 'portrait') {
         const inner = document.getElementById('ptInner');
         if (inner) inner.style.transform = 'translateY(0)';
@@ -1453,9 +1612,18 @@
         const overlay = document.createElement('div');
         overlay.className = 'system-overlay';
         overlay.id = 'oPT' + pg;
+        const drawCanvas = document.createElement('canvas');
+        drawCanvas.className = 'draw-canvas';
+        drawCanvas.id = 'dcPT' + pg;
         wrap.appendChild(canvas);
+        wrap.appendChild(drawCanvas);
         wrap.appendChild(overlay);
         inner.appendChild(wrap);
+      }
+      // portrait 드로잉 캔버스에 핸들러 등록
+      for (let pg = 1; pg <= totalPages; pg++) {
+        const dc = document.getElementById('dcPT' + pg);
+        if (dc && !dc._drawAttached) { attachDrawHandlers(dc); dc._drawAttached = true; }
       }
       // 활성 시스템 UI 요소를 첫 페이지에 추가
       const border = document.createElement('div');
@@ -1501,6 +1669,8 @@
       }
       document.getElementById('pgInd').textContent = pg + '/' + totalPages;
       if (state === 'idle') clearHL();
+      // 드로잉 렌더링
+      refreshDrawOnViewChange();
     }
 
     function manualNav(dir) {
@@ -2441,6 +2611,12 @@
         return;
       }
 
+      // Ctrl+Z 되돌리기 (switch 전에 처리)
+      if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        undoDraw();
+        return;
+      }
       switch (e.key) {
         case ' ':
           e.preventDefault();
@@ -2450,6 +2626,12 @@
           break;
         case 'd': case 'D':
           doStop();
+          break;
+        case 'p': case 'P':
+          toggleDrawMode();
+          break;
+        case 'e':
+          if (drawMode) toggleEraser();
           break;
         case 'ArrowLeft':
           e.preventDefault();
