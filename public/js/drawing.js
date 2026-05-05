@@ -31,6 +31,8 @@ try {
     if (saved.width) drawWidth = saved.width;
   }
 } catch (e) { }
+// DOM 준비 후 FAB 컬러 링 반영
+document.addEventListener('DOMContentLoaded', () => { updateFabColorRing(); });
 
 /** 현재 입력이 드로잉을 해야 하는지 판단 */
 function shouldDraw(e) {
