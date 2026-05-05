@@ -498,6 +498,19 @@
       position: relative;
       z-index: 1;
     }
+
+    /* ── 곡 제목 마키 (넘칠 때만 좌우 왕복) ── */
+    .song-title-marquee {
+      position: relative;
+    }
+    .song-title-marquee.scrolling h1 {
+      animation: marqueeScroll var(--marquee-duration, 6s) ease-in-out infinite alternate;
+    }
+    @keyframes marqueeScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(var(--marquee-offset, -50px)); }
+    }
+
   </style>
 </head>
 
@@ -528,7 +541,9 @@
       <div class="song-detail-header" style="position:relative;z-index:1">
         <div>
           <button class="btn btn-ghost btn-sm" onclick="showSongList()">← <span class="btn-label">목록</span></button>
-          <h1 id="detailSongName" style="display:inline;margin-left:12px;font-size:1.1rem"></h1>
+          <div class="song-title-marquee" id="songTitleMarquee" style="display:inline-block;margin-left:12px;max-width:calc(100vw - 280px);overflow:hidden;vertical-align:middle">
+            <h1 id="detailSongName" style="display:inline-block;font-size:1.1rem;margin:0;white-space:nowrap"></h1>
+          </div>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-ghost btn-sm" onclick="showEditSongModal()">⚙️ <span
@@ -1368,6 +1383,22 @@
         })();
       }
     }
+
+    // 곡 제목 마키: 넘치면 좌우 스크롤 애니메이션 적용
+    function checkTitleMarquee() {
+      const wrapper = document.getElementById('songTitleMarquee');
+      const h1 = document.getElementById('detailSongName');
+      if (!wrapper || !h1) return;
+      const overflow = h1.scrollWidth - wrapper.clientWidth;
+      if (overflow > 5) {
+        wrapper.style.setProperty('--marquee-offset', '-' + overflow + 'px');
+        wrapper.style.setProperty('--marquee-duration', Math.max(3, overflow / 30) + 's');
+        wrapper.classList.add('scrolling');
+      } else {
+        wrapper.classList.remove('scrolling');
+      }
+    }
+
   </script>
 
   <!-- New Song Modal -->
@@ -1624,6 +1655,7 @@
     function renderSongDetail() {
       const s = currentSong;
       document.getElementById('detailSongName').textContent = s.name;
+      requestAnimationFrame(checkTitleMarquee);
       document.getElementById('detailBpm').textContent = s.bpm;
       document.getElementById('detailTimeSignature').textContent = s.time_signature;
       document.getElementById('detailCountIn').textContent = s.count_in_bars + '마디';
