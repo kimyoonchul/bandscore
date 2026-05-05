@@ -85,7 +85,7 @@ function pinchMid(touches) {
 function initPinchZoom() {
   const area = document.getElementById('canvasArea');
 
-  // 터치 이벤트 (핀치 줌)
+  // 터치 이벤트 (2손가락: 핀치 줌 + 팬)
   area.addEventListener('touchstart', (e) => {
     if (drawMode && e.touches.length === 1) return; // 드로잉 중 1터치는 그리기
     if (e.touches.length === 2) {
@@ -101,8 +101,13 @@ function initPinchZoom() {
       const mid = pinchMid(e.touches);
       pinchMidX = mid.x;
       pinchMidY = mid.y;
+      // 2손가락 팬 시작점도 기록
+      panStartX = mid.x;
+      panStartY = mid.y;
+      panStartZoomX = zoomX;
+      panStartZoomY = zoomY;
     } else if (e.touches.length === 1 && zoomScale > 1 && !drawMode) {
-      // 확대 상태에서 1터치 → 팬
+      // 확대 상태에서 1터치 → 팬 (드로잉 모드 아닐 때)
       isPanning = true;
       panStartX = e.touches[0].clientX;
       panStartY = e.touches[0].clientY;
@@ -114,6 +119,7 @@ function initPinchZoom() {
   area.addEventListener('touchmove', (e) => {
     if (isPinching && e.touches.length === 2) {
       e.preventDefault();
+      // 핀치 줌
       const dist = pinchDist(e.touches);
       const newScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, pinchStartScale * (dist / pinchStartDist)));
       zoomScale = newScale;
@@ -121,6 +127,13 @@ function initPinchZoom() {
         zoomScale = 1;
         zoomX = 0;
         zoomY = 0;
+      } else {
+        // 2손가락 팬: 중심점 이동량 반영
+        const mid = pinchMid(e.touches);
+        const dx = (mid.x - panStartX) / zoomScale;
+        const dy = (mid.y - panStartY) / zoomScale;
+        zoomX = panStartZoomX + dx;
+        zoomY = panStartZoomY + dy;
       }
       applyZoom();
     } else if (isPanning && e.touches.length === 1 && zoomScale > 1) {
