@@ -5,6 +5,7 @@
  * - PointerEvent API 기반 마우스/터치/Apple Pencil 통합 처리
  * - 펜(스타일러스) 자동 감지: 펜으로 터치하면 자동 드로잉
  * - 필압(pressure) 기반 선 굵기 자동 조절
+ * - 플로팅 팔레트: 드래그 가능한 도구 팔레트
  * - 페이지별 스트로크 데이터를 localStorage에 자동 저장
  * - 비율 좌표(0~1)로 저장하여 화면 크기 변경에도 정확히 재현
  * - 지우개, 되돌리기, 전체 지우기 지원
@@ -62,7 +63,6 @@ function renderDrawing(canvasId, pageNum) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const dpr = window.devicePixelRatio || 1;
-  // 캔버스 크기를 부모(악보 캔버스)에 맞춤
   const parent = canvas.parentElement;
   const w = parent.clientWidth;
   const h = parent.clientHeight;
@@ -82,24 +82,21 @@ function renderDrawing(canvasId, pageNum) {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // 필압 데이터가 있으면 구간별 굵기 변경 렌더링
     const hasPressure = stroke.points.some(p => p.pressure !== undefined && p.pressure > 0);
     const pts = stroke.points;
 
     if (hasPressure) {
-      // 필압 기반: 각 세그먼트를 개별 굵기로 렌더
       for (let i = 1; i < pts.length; i++) {
         const prev = pts[i - 1];
         const cur = pts[i];
         const pressure = cur.pressure || 0.5;
         ctx.beginPath();
-        ctx.lineWidth = stroke.width * (0.3 + pressure * 1.4); // 필압 0~1 → 굵기 30%~170%
+        ctx.lineWidth = stroke.width * (0.3 + pressure * 1.4);
         ctx.moveTo(prev.x * w, prev.y * h);
         ctx.lineTo(cur.x * w, cur.y * h);
         ctx.stroke();
       }
     } else {
-      // 균일 굵기
       ctx.beginPath();
       ctx.lineWidth = stroke.width;
       ctx.moveTo(pts[0].x * w, pts[0].y * h);
@@ -132,14 +129,12 @@ function getDrawPageNum(canvasId) {
   if (canvasId === 'dcS') return curDispPage;
   if (canvasId === 'dcDL') return curDispPage;
   if (canvasId === 'dcDR') return curDispPage + 1 <= totalPages ? curDispPage + 1 : curDispPage;
-  // portrait 모드: dcPT{n}
   const m = canvasId.match(/dcPT(\d+)/);
   return m ? parseInt(m[1]) : curDispPage;
 }
 
 /** PointerEvent 핸들러 등록 */
 function attachDrawHandlers(canvas) {
-  // 펜 자동 감지를 위해 draw-canvas는 항상 pointer-events를 받아야 함
   canvas.style.pointerEvents = 'auto';
   canvas.addEventListener('pointerdown', onDrawStart, { passive: false });
   canvas.addEventListener('pointermove', onDrawMove, { passive: false });
@@ -154,15 +149,12 @@ function onDrawStart(e) {
 
   // 그리기 대상이 아니면 이벤트를 아래 레이어로 관통시킴
   if (!canDraw) {
-    // 일시적으로 pointer-events를 비활성화하여 아래 요소가 이벤트를 받도록 함
     const canvas = e.currentTarget;
     canvas.style.pointerEvents = 'none';
-    // 같은 위치에서 클릭 이벤트를 재발행
     const below = document.elementFromPoint(e.clientX, e.clientY);
     if (below && below !== canvas) {
       below.dispatchEvent(new PointerEvent(e.type, e));
     }
-    // 다음 프레임에 pointer-events 복원
     requestAnimationFrame(() => { canvas.style.pointerEvents = 'auto'; });
     return;
   }
@@ -173,11 +165,10 @@ function onDrawStart(e) {
   const pos = getDrawPos(e, canvas);
   const pageNum = getDrawPageNum(canvas.id);
 
-  // 펜 자동 감지 시 툴바 표시
+  // 펜 자동 감지 시 팔레트 표시
   if (isPen && !drawMode) {
     isPenDrawing = true;
-    document.getElementById('drawToolbar').classList.add('open');
-    document.getElementById('btnDraw').classList.add('active');
+    showPalette(true);
   }
 
   if (eraserMode) {
@@ -211,7 +202,6 @@ function onDrawMove(e) {
 
   if (!isDrawing || !currentStroke) return;
   currentStroke.points.push(pos);
-  // 실시간 미리보기: 마지막 두 점 그리기
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
   const w = canvas.clientWidth;
@@ -224,7 +214,6 @@ function onDrawMove(e) {
     const pressure = cur.pressure || 0.5;
     ctx.beginPath();
     ctx.strokeStyle = currentStroke.color;
-    // 필압 기반 굵기 (펜 입력일 때)
     ctx.lineWidth = (e.pointerType === 'pen')
       ? currentStroke.width * (0.3 + pressure * 1.4)
       : currentStroke.width;
@@ -237,15 +226,16 @@ function onDrawMove(e) {
 }
 
 function onDrawEnd(e) {
-  // 펜 자동 감지로 그렸다면 툴바 숨기기
+  // 펜 자동 감지로 그렸다면 팔레트 페이드
   if (isPenDrawing && e.pointerType === 'pen') {
     isPenDrawing = false;
-    // 수동 drawMode가 아니면 툴바를 잠시 후 숨김
     if (!drawMode) {
-      setTimeout(() => {
+      // 3초 후 팔레트 반투명화
+      clearTimeout(paletteFadeTimer);
+      paletteFadeTimer = setTimeout(() => {
         if (!isPenDrawing && !drawMode) {
-          document.getElementById('drawToolbar').classList.remove('open');
-          document.getElementById('btnDraw').classList.remove('active');
+          const palette = document.getElementById('drawPalette');
+          palette.classList.add('faded');
         }
       }, 3000);
     }
@@ -254,7 +244,6 @@ function onDrawEnd(e) {
   if (!isDrawing || !currentStroke) { isDrawing = false; return; }
   const canvas = e.currentTarget;
   const pageNum = getDrawPageNum(canvas.id);
-  // 점이 1개 이상이면 저장
   if (currentStroke.points.length >= 1) {
     loadDrawing(pageNum);
     drawingStrokes[pageNum].push(currentStroke);
@@ -262,14 +251,13 @@ function onDrawEnd(e) {
   }
   currentStroke = null;
   isDrawing = false;
-  // 깔끔하게 다시 렌더
   renderDrawing(canvas.id, pageNum);
 }
 
 /** 지우개: 특정 위치 근처 스트로크 제거 */
 function eraseAt(pageNum, pos, canvasId) {
   const strokes = loadDrawing(pageNum);
-  const threshold = 0.025; // 비율 좌표 기준 반경
+  const threshold = 0.025;
   let changed = false;
   drawingStrokes[pageNum] = strokes.filter(stroke => {
     for (const pt of stroke.points) {
@@ -290,24 +278,42 @@ function eraseAt(pageNum, pos, canvasId) {
 
 // ── UI 제어 함수 ──
 
+let paletteFadeTimer = null;  // 팔레트 자동 페이드 타이머
+
+/** 팔레트 표시 + 페이드 타이머 관리 */
+function showPalette(autoFade) {
+  const palette = document.getElementById('drawPalette');
+  palette.classList.add('visible');
+  palette.classList.remove('faded');
+  clearTimeout(paletteFadeTimer);
+  if (autoFade) {
+    paletteFadeTimer = setTimeout(() => {
+      if (!drawMode) palette.classList.add('faded');
+    }, 3000);
+  }
+}
+
+function hidePalette() {
+  const palette = document.getElementById('drawPalette');
+  palette.classList.remove('visible', 'faded');
+  clearTimeout(paletteFadeTimer);
+}
+
 /** 드로잉 모드 토글 (수동) */
 function toggleDrawMode() {
   drawMode = !drawMode;
   const btn = document.getElementById('btnDraw');
-  const toolbar = document.getElementById('drawToolbar');
   const area = document.getElementById('canvasArea');
   btn.classList.toggle('active', drawMode);
-  toolbar.classList.toggle('open', drawMode);
   area.classList.toggle('draw-active', drawMode);
-  if (!drawMode) {
+  if (drawMode) {
+    showPalette(false);
+    area.removeAttribute('onclick');
+  } else {
+    hidePalette();
     eraserMode = false;
     document.getElementById('btnEraser').classList.remove('active');
     document.querySelectorAll('.draw-canvas').forEach(c => c.classList.remove('eraser-mode'));
-  }
-  // 드로잉 모드 진입 시 기존 canvasArea onclick 방지
-  if (drawMode) {
-    area.removeAttribute('onclick');
-  } else {
     area.setAttribute('onclick', 'onCanvasTap()');
   }
 }
@@ -315,9 +321,8 @@ function toggleDrawMode() {
 /** 펜 색상 변경 */
 function setDrawColor(color, el) {
   drawColor = color;
-  document.querySelectorAll('.draw-toolbar .dt-color').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.draw-palette .dt-color').forEach(c => c.classList.remove('active'));
   if (el) el.classList.add('active');
-  // 지우개 해제
   eraserMode = false;
   document.getElementById('btnEraser').classList.remove('active');
   document.querySelectorAll('.draw-canvas').forEach(c => c.classList.remove('eraser-mode'));
@@ -326,7 +331,7 @@ function setDrawColor(color, el) {
 /** 펜 굵기 변경 */
 function setDrawWidth(w, el) {
   drawWidth = w;
-  document.querySelectorAll('.draw-toolbar .dt-width').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.draw-palette .dt-width').forEach(c => c.classList.remove('active'));
   if (el) el.classList.add('active');
 }
 
@@ -374,9 +379,7 @@ function refreshAllDrawCanvases() {
 
 /** showView 확장: 뷰 전환 시 드로잉도 함께 렌더링 */
 function refreshDrawOnViewChange() {
-  // requestAnimationFrame으로 캔버스 크기가 확정된 뒤 렌더
   requestAnimationFrame(() => {
-    // static 캔버스에 핸들러 재연결
     ['dcS', 'dcDL', 'dcDR'].forEach(id => {
       const c = document.getElementById(id);
       if (c && !c._drawAttached) {
@@ -385,5 +388,51 @@ function refreshDrawOnViewChange() {
       }
     });
     refreshAllDrawCanvases();
+  });
+}
+
+/** 플로팅 팔레트 드래그 초기화 */
+function initPaletteDrag() {
+  const palette = document.getElementById('drawPalette');
+  const handle = document.getElementById('dpHandle');
+  if (!handle || !palette) return;
+
+  let isDragging = false;
+  let startX, startY, origX, origY;
+
+  handle.addEventListener('pointerdown', (e) => {
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    const rect = palette.getBoundingClientRect();
+    origX = rect.left;
+    origY = rect.top;
+    handle.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+
+  handle.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    let newX = origX + dx;
+    let newY = origY + dy;
+    // 화면 밖으로 나가지 않도록 클램핑
+    const pw = palette.offsetWidth;
+    const ph = palette.offsetHeight;
+    newX = Math.max(0, Math.min(window.innerWidth - pw, newX));
+    newY = Math.max(0, Math.min(window.innerHeight - ph, newY));
+    palette.style.left = newX + 'px';
+    palette.style.top = newY + 'px';
+    palette.style.right = 'auto';
+  });
+
+  handle.addEventListener('pointerup', () => { isDragging = false; });
+  handle.addEventListener('pointercancel', () => { isDragging = false; });
+
+  // 팔레트 터치 시 페이드 해제
+  palette.addEventListener('pointerdown', () => {
+    palette.classList.remove('faded');
+    clearTimeout(paletteFadeTimer);
   });
 }

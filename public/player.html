@@ -893,46 +893,55 @@
       pointer-events: none;
     }
 
-    /* ── 드로잉 미니 툴바 ── */
-    .draw-toolbar {
-      position: absolute;
-      bottom: calc(100% + 8px);
-      left: 50%;
-      transform: translateX(-50%);
+    /* ── 플로팅 드로잉 팔레트 ── */
+    .draw-palette {
+      position: fixed;
+      z-index: 55;
       display: none;
+      flex-direction: column;
       align-items: center;
-      gap: 6px;
-      background: rgba(17, 24, 39, 0.96);
+      gap: 5px;
+      background: rgba(17, 24, 39, 0.92);
       backdrop-filter: blur(16px);
       border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 0.75rem;
-      padding: 6px 10px;
-      z-index: 60;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+      border-radius: 1rem;
+      padding: 10px 8px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+      touch-action: none;
+      user-select: none;
+      transition: opacity 0.3s;
     }
-    .draw-toolbar.open {
+    .draw-palette.visible { display: flex; }
+    .draw-palette.faded { opacity: 0.4; }
+    .draw-palette .dp-handle {
+      width: 32px;
+      height: 5px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.25);
+      cursor: grab;
+      margin-bottom: 2px;
+      flex-shrink: 0;
+    }
+    .draw-palette .dp-handle:active { cursor: grabbing; }
+    .draw-palette .dp-row {
       display: flex;
+      gap: 4px;
+      align-items: center;
     }
-    .draw-toolbar .dt-color {
-      width: 22px;
-      height: 22px;
+    .draw-palette .dt-color {
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
       border: 2px solid rgba(255,255,255,0.2);
       cursor: pointer;
       transition: transform 0.15s, border-color 0.15s;
       flex-shrink: 0;
     }
-    .draw-toolbar .dt-color:hover { transform: scale(1.15); }
-    .draw-toolbar .dt-color.active { border-color: #fff; transform: scale(1.15); }
-    .draw-toolbar .dt-sep {
-      width: 1px;
-      height: 18px;
-      background: rgba(255,255,255,0.15);
-      flex-shrink: 0;
-    }
-    .draw-toolbar .dt-width {
-      width: 26px;
-      height: 26px;
+    .draw-palette .dt-color:hover { transform: scale(1.15); }
+    .draw-palette .dt-color.active { border-color: #fff; transform: scale(1.15); }
+    .draw-palette .dt-width {
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       border: 1px solid rgba(255,255,255,0.15);
       background: none;
@@ -943,26 +952,34 @@
       transition: background 0.15s;
       flex-shrink: 0;
     }
-    .draw-toolbar .dt-width:hover { background: rgba(255,255,255,0.08); }
-    .draw-toolbar .dt-width.active { background: rgba(255,255,255,0.15); border-color: #fff; }
-    .draw-toolbar .dt-width .dot {
+    .draw-palette .dt-width:hover { background: rgba(255,255,255,0.08); }
+    .draw-palette .dt-width.active { background: rgba(255,255,255,0.15); border-color: #fff; }
+    .draw-palette .dt-width .dot {
       border-radius: 50%;
       background: #fff;
     }
-    .draw-toolbar .dt-btn {
+    .draw-palette .dp-sep {
+      width: 80%;
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+    }
+    .draw-palette .dp-btn {
+      width: 30px;
+      height: 30px;
       background: none;
       border: 1px solid rgba(255,255,255,0.15);
       color: #ccc;
-      font-size: 0.78rem;
-      padding: 3px 8px;
-      border-radius: 6px;
+      font-size: 0.85rem;
+      border-radius: 8px;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: background 0.15s;
-      white-space: nowrap;
       flex-shrink: 0;
     }
-    .draw-toolbar .dt-btn:hover { background: rgba(255,255,255,0.08); }
-    .draw-toolbar .dt-btn.active { background: rgba(239,68,68,0.25); border-color: #ef4444; color: #ef4444; }
+    .draw-palette .dp-btn:hover { background: rgba(255,255,255,0.08); }
+    .draw-palette .dp-btn.active { background: rgba(239,68,68,0.25); border-color: #ef4444; color: #ef4444; }
     .btn-draw.active {
       background: rgba(59, 130, 246, 0.3) !important;
       border-color: #3b82f6 !important;
@@ -974,22 +991,13 @@
       transform-origin: 0 0;
     }
     @media (max-width: 768px) {
-      .draw-toolbar {
+      .draw-palette {
+        padding: 7px 6px;
         gap: 4px;
-        padding: 5px 7px;
       }
-      .draw-toolbar .dt-color {
-        width: 18px;
-        height: 18px;
-      }
-      .draw-toolbar .dt-width {
-        width: 22px;
-        height: 22px;
-      }
-      .draw-toolbar .dt-btn {
-        font-size: 0.68rem;
-        padding: 2px 6px;
-      }
+      .draw-palette .dt-color { width: 18px; height: 18px; }
+      .draw-palette .dt-width { width: 20px; height: 20px; }
+      .draw-palette .dp-btn { width: 26px; height: 26px; font-size: 0.75rem; }
     }
   </style>
 </head>
@@ -1062,6 +1070,32 @@
     </div>
 
 
+    <!-- 플로팅 드로잉 팔레트 -->
+    <div class="draw-palette" id="drawPalette" style="top:100px;right:16px">
+      <div class="dp-handle" id="dpHandle"></div>
+      <div class="dp-row">
+        <div class="dt-color active" style="background:#ef4444" onclick="setDrawColor('#ef4444',this)" title="빨강"></div>
+        <div class="dt-color" style="background:#3b82f6" onclick="setDrawColor('#3b82f6',this)" title="파랑"></div>
+        <div class="dt-color" style="background:#22c55e" onclick="setDrawColor('#22c55e',this)" title="초록"></div>
+      </div>
+      <div class="dp-row">
+        <div class="dt-color" style="background:#000000;border-color:rgba(255,255,255,0.4)" onclick="setDrawColor('#000000',this)" title="검정"></div>
+        <div class="dt-color" style="background:#ffffff" onclick="setDrawColor('#ffffff',this)" title="흰색"></div>
+      </div>
+      <div class="dp-sep"></div>
+      <div class="dp-row">
+        <div class="dt-width active" onclick="setDrawWidth(0.8,this)" title="얇은"><div class="dot" style="width:3px;height:3px"></div></div>
+        <div class="dt-width" onclick="setDrawWidth(1.5,this)" title="보통"><div class="dot" style="width:5px;height:5px"></div></div>
+        <div class="dt-width" onclick="setDrawWidth(3,this)" title="굵은"><div class="dot" style="width:8px;height:8px"></div></div>
+      </div>
+      <div class="dp-sep"></div>
+      <div class="dp-row">
+        <button class="dp-btn" id="btnEraser" onclick="toggleEraser()" title="지우개 (E)">🧹</button>
+        <button class="dp-btn" onclick="undoDraw()" title="되돌리기 (Ctrl+Z)">↩</button>
+        <button class="dp-btn" onclick="clearDrawing()" title="전체 지우기">🗑️</button>
+      </div>
+    </div>
+
     <div class="player-controls" id="ctrlBar">
       <div class="seekbar-wrap" id="seekBarWrap">
         <div class="seekbar-track" id="seekTrack">
@@ -1110,24 +1144,7 @@
         </div>
         <button class="btn btn-ghost" onclick="toggleInst()" id="btnInst" title="inst 음소거 토글 (M)">🔇</button>
       </div>
-      <div style="position:relative;display:inline-flex">
-        <button class="btn btn-ghost btn-draw" id="btnDraw" onclick="toggleDrawMode()" title="필기 모드 (P)">✏️</button>
-        <div class="draw-toolbar" id="drawToolbar">
-          <div class="dt-color active" style="background:#ef4444" onclick="setDrawColor('#ef4444',this)" title="빨강"></div>
-          <div class="dt-color" style="background:#3b82f6" onclick="setDrawColor('#3b82f6',this)" title="파랑"></div>
-          <div class="dt-color" style="background:#22c55e" onclick="setDrawColor('#22c55e',this)" title="초록"></div>
-          <div class="dt-color" style="background:#000000;border-color:rgba(255,255,255,0.4)" onclick="setDrawColor('#000000',this)" title="검정"></div>
-          <div class="dt-color" style="background:#ffffff" onclick="setDrawColor('#ffffff',this)" title="흰색"></div>
-          <div class="dt-sep"></div>
-          <div class="dt-width active" onclick="setDrawWidth(0.8,this)" title="얇은"><div class="dot" style="width:3px;height:3px"></div></div>
-          <div class="dt-width" onclick="setDrawWidth(1.5,this)" title="보통"><div class="dot" style="width:5px;height:5px"></div></div>
-          <div class="dt-width" onclick="setDrawWidth(3,this)" title="굵은"><div class="dot" style="width:8px;height:8px"></div></div>
-          <div class="dt-sep"></div>
-          <button class="dt-btn" id="btnEraser" onclick="toggleEraser()" title="지우개 (E)">🧹</button>
-          <button class="dt-btn" onclick="clearDrawing()" title="전체 지우기">🗑️</button>
-          <button class="dt-btn" onclick="undoDraw()" title="되돌리기 (Ctrl+Z)">↩</button>
-        </div>
-      </div>
+      <button class="btn btn-ghost btn-draw" id="btnDraw" onclick="toggleDrawMode()" title="필기 모드 (P)">✏️</button>
       <button class="btn btn-ghost" onclick="toggleFullscreen()" title="전체화면 (F)">⛶</button>
       <button class="btn btn-ghost" onclick="toggleSettings()" title="설정 (S)">⚙</button>
       <button class="btn btn-ghost" onclick="toggleShortcutHelp()" title="단축키 도움말 (F1)">❓</button>
@@ -1400,6 +1417,8 @@
       });
       // 핀치 줌 초기화
       initPinchZoom();
+      // 플로팅 팔레트 드래그 초기화
+      initPaletteDrag();
 
       // inst 음원 로드
       if (song.inst_filename) {
