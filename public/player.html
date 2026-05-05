@@ -228,15 +228,15 @@
     .score-portrait {
       position: absolute;
       inset: 0;
-      overflow-y: auto;
-      overflow-x: hidden;
+      overflow: auto;
       -webkit-overflow-scrolling: touch
     }
 
     .score-portrait-inner {
       display: flex;
       flex-direction: column;
-      align-items: center
+      align-items: center;
+      transform-origin: 0 0
     }
 
     .score-portrait .score-page-wrapper {
@@ -1216,6 +1216,7 @@
         <div class="score-portrait-inner" id="ptInner">
           <!-- 모든 페이지가 동적으로 생성됨 -->
         </div>
+        <div id="ptSpacer" style="width:1px;pointer-events:none"></div>
       </div>
     </div>
 
@@ -1939,7 +1940,7 @@
 
         const portEl = document.getElementById('viewPortrait');
         const areaH = portEl.clientHeight;
-        const sysMidAbs = absTop + sH / 2;
+        const sysMidAbs = (absTop + sH / 2) * (zoomScale || 1);
         const targetScroll = Math.max(0, sysMidAbs - areaH * 0.3);
         portEl.scrollTo({ top: targetScroll, behavior: 'smooth' });
 
