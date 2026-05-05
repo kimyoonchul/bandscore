@@ -503,14 +503,20 @@
     .song-title-marquee {
       position: relative;
     }
+
     .song-title-marquee.scrolling h1 {
       animation: marqueeScroll var(--marquee-duration, 6s) ease-in-out infinite alternate;
     }
-    @keyframes marqueeScroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(var(--marquee-offset, -50px)); }
-    }
 
+    @keyframes marqueeScroll {
+      0% {
+        transform: translateX(0);
+      }
+
+      100% {
+        transform: translateX(var(--marquee-offset, -50px));
+      }
+    }
   </style>
 </head>
 
@@ -538,14 +544,15 @@
     <div id="songDetailView" style="display:none">
       <!-- 앨범 커버 배경 -->
       <div class="detail-cover-bg" id="detailCoverBg"></div>
-      <div class="song-detail-header" style="position:relative;z-index:1">
-        <div>
-          <button class="btn btn-ghost btn-sm" onclick="showSongList()">← <span class="btn-label">목록</span></button>
-          <div class="song-title-marquee" id="songTitleMarquee" style="display:inline-block;margin-left:12px;max-width:calc(100vw - 280px);overflow:hidden;vertical-align:middle">
+      <div class="song-detail-header" style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div style="display:flex;align-items:center;min-width:0;flex:1">
+          <button class="btn btn-ghost btn-sm" onclick="showSongList()" style="flex-shrink:0">← <span class="btn-label">목록</span></button>
+          <div class="song-title-marquee" id="songTitleMarquee"
+            style="margin-left:12px;overflow:hidden;flex:1;min-width:0">
             <h1 id="detailSongName" style="display:inline-block;font-size:1.1rem;margin:0;white-space:nowrap"></h1>
           </div>
         </div>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;flex-shrink:0">
           <button class="btn btn-ghost btn-sm" onclick="showEditSongModal()">⚙️ <span
               class="btn-label">설정</span></button>
           <button class="btn btn-danger btn-sm" onclick="deleteSong()">🗑️ <span class="btn-label">삭제</span></button>
@@ -1389,6 +1396,7 @@
       const wrapper = document.getElementById('songTitleMarquee');
       const h1 = document.getElementById('detailSongName');
       if (!wrapper || !h1) return;
+      h1.title = h1.textContent;
       const overflow = h1.scrollWidth - wrapper.clientWidth;
       if (overflow > 5) {
         wrapper.style.setProperty('--marquee-offset', '-' + overflow + 'px');
