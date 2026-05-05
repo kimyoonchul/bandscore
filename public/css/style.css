@@ -75,6 +75,10 @@ html, body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
+body {
+  display: flex;
+  flex-direction: column;
+}
 
 body::before {
   content: '';
