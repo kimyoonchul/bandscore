@@ -880,13 +880,16 @@
       pointer-events: auto;
       touch-action: none;
     }
+
     .draw-active .draw-canvas {
       pointer-events: auto;
       cursor: crosshair;
     }
+
     .draw-active .draw-canvas.eraser-mode {
       cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="none" stroke="white" stroke-width="2"/></svg>') 10 10, crosshair;
     }
+
     .draw-active .system-overlay,
     .draw-active .sys-active-border,
     .draw-active .sys-progress {
@@ -901,14 +904,15 @@
       touch-action: none;
       user-select: none;
     }
+
     .fab-collapsed {
       width: 48px;
       height: 48px;
       border-radius: 50%;
       background: rgba(17, 24, 39, 0.92);
       backdrop-filter: blur(16px);
-      border: 2px solid rgba(255,255,255,0.15);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -916,9 +920,21 @@
       position: relative;
       transition: transform 0.15s, box-shadow 0.15s;
     }
-    .fab-collapsed:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(0,0,0,0.6); }
-    .fab-collapsed:active { transform: scale(0.95); }
-    .fab-icon { font-size: 1.2rem; z-index: 1; }
+
+    .fab-collapsed:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 28px rgba(0, 0, 0, 0.6);
+    }
+
+    .fab-collapsed:active {
+      transform: scale(0.95);
+    }
+
+    .fab-icon {
+      font-size: 1.2rem;
+      z-index: 1;
+    }
+
     .fab-color-ring {
       position: absolute;
       width: 42px;
@@ -927,6 +943,7 @@
       border: 3px solid #ef4444;
       transition: border-color 0.2s;
     }
+
     .fab-expanded {
       display: flex;
       flex-direction: column;
@@ -934,47 +951,69 @@
       gap: 5px;
       background: rgba(17, 24, 39, 0.92);
       backdrop-filter: blur(16px);
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 1rem;
       padding: 10px 8px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
       animation: fabExpand 0.2s ease-out;
     }
+
     @keyframes fabExpand {
-      from { opacity: 0; transform: scale(0.85); }
-      to { opacity: 1; transform: scale(1); }
+      from {
+        opacity: 0;
+        transform: scale(0.85);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
+
     .draw-fab .dp-handle {
-      width: 32px;
+      width: 50px;
       height: 5px;
       border-radius: 3px;
-      background: rgba(255,255,255,0.25);
+      background: rgba(255, 255, 255, 0.25);
       cursor: grab;
       margin-bottom: 2px;
       flex-shrink: 0;
     }
-    .draw-fab .dp-handle:active { cursor: grabbing; }
+
+    .draw-fab .dp-handle:active {
+      cursor: grabbing;
+    }
+
     .draw-fab .dp-row {
       display: flex;
       gap: 4px;
       align-items: center;
     }
+
     .draw-fab .dt-color {
       width: 20px;
       height: 20px;
       border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.2);
+      border: 2px solid rgba(255, 255, 255, 0.2);
       cursor: pointer;
       transition: transform 0.15s, border-color 0.15s;
       flex-shrink: 0;
     }
-    .draw-fab .dt-color:hover { transform: scale(1.15); }
-    .draw-fab .dt-color.active { border-color: #fff; transform: scale(1.15); }
+
+    .draw-fab .dt-color:hover {
+      transform: scale(1.15);
+    }
+
+    .draw-fab .dt-color.active {
+      border-color: #fff;
+      transform: scale(1.15);
+    }
+
     .draw-fab .dt-width {
       width: 24px;
       height: 24px;
       border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.15);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       background: none;
       cursor: pointer;
       display: flex;
@@ -983,22 +1022,32 @@
       transition: background 0.15s;
       flex-shrink: 0;
     }
-    .draw-fab .dt-width:hover { background: rgba(255,255,255,0.08); }
-    .draw-fab .dt-width.active { background: rgba(255,255,255,0.15); border-color: #fff; }
+
+    .draw-fab .dt-width:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .draw-fab .dt-width.active {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: #fff;
+    }
+
     .draw-fab .dt-width .dot {
       border-radius: 50%;
       background: #fff;
     }
+
     .draw-fab .dp-sep {
       width: 80%;
       height: 1px;
-      background: rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.1);
     }
+
     .draw-fab .dp-btn {
       width: 30px;
       height: 30px;
       background: none;
-      border: 1px solid rgba(255,255,255,0.15);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       color: #ccc;
       font-size: 0.85rem;
       border-radius: 8px;
@@ -1009,8 +1058,17 @@
       transition: background 0.15s;
       flex-shrink: 0;
     }
-    .draw-fab .dp-btn:hover { background: rgba(255,255,255,0.08); }
-    .draw-fab .dp-btn.active { background: rgba(239,68,68,0.25); border-color: #ef4444; color: #ef4444; }
+
+    .draw-fab .dp-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .draw-fab .dp-btn.active {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+
     .draw-fab .dp-close {
       width: 100%;
       border-radius: 8px;
@@ -1022,13 +1080,38 @@
     .score-page-wrapper {
       transform-origin: 0 0;
     }
+
     @media (max-width: 768px) {
-      .fab-collapsed { width: 42px; height: 42px; }
-      .fab-color-ring { width: 36px; height: 36px; }
-      .fab-expanded { padding: 7px 6px; gap: 4px; }
-      .draw-fab .dt-color { width: 18px; height: 18px; }
-      .draw-fab .dt-width { width: 20px; height: 20px; }
-      .draw-fab .dp-btn { width: 26px; height: 26px; font-size: 0.75rem; }
+      .fab-collapsed {
+        width: 42px;
+        height: 42px;
+      }
+
+      .fab-color-ring {
+        width: 36px;
+        height: 36px;
+      }
+
+      .fab-expanded {
+        padding: 7px 6px;
+        gap: 4px;
+      }
+
+      .draw-fab .dt-color {
+        width: 18px;
+        height: 18px;
+      }
+
+      .draw-fab .dt-width {
+        width: 20px;
+        height: 20px;
+      }
+
+      .draw-fab .dp-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 0.75rem;
+      }
     }
   </style>
 </head>
@@ -1112,19 +1195,27 @@
       <div class="fab-expanded" id="fabExpanded" style="display:none">
         <div class="dp-handle" id="dpHandle"></div>
         <div class="dp-row">
-          <div class="dt-color active" style="background:#ef4444" onclick="setDrawColor('#ef4444',this)" title="빨강"></div>
+          <div class="dt-color active" style="background:#ef4444" onclick="setDrawColor('#ef4444',this)" title="빨강">
+          </div>
           <div class="dt-color" style="background:#3b82f6" onclick="setDrawColor('#3b82f6',this)" title="파랑"></div>
           <div class="dt-color" style="background:#22c55e" onclick="setDrawColor('#22c55e',this)" title="초록"></div>
         </div>
         <div class="dp-row">
-          <div class="dt-color" style="background:#000000;border-color:rgba(255,255,255,0.4)" onclick="setDrawColor('#000000',this)" title="검정"></div>
+          <div class="dt-color" style="background:#000000;border-color:rgba(255,255,255,0.4)"
+            onclick="setDrawColor('#000000',this)" title="검정"></div>
           <div class="dt-color" style="background:#ffffff" onclick="setDrawColor('#ffffff',this)" title="흰색"></div>
         </div>
         <div class="dp-sep"></div>
         <div class="dp-row">
-          <div class="dt-width active" onclick="setDrawWidth(0.8,this)" title="얇은"><div class="dot" style="width:3px;height:3px"></div></div>
-          <div class="dt-width" onclick="setDrawWidth(1.5,this)" title="보통"><div class="dot" style="width:5px;height:5px"></div></div>
-          <div class="dt-width" onclick="setDrawWidth(3,this)" title="굵은"><div class="dot" style="width:8px;height:8px"></div></div>
+          <div class="dt-width active" onclick="setDrawWidth(0.8,this)" title="얇은">
+            <div class="dot" style="width:3px;height:3px"></div>
+          </div>
+          <div class="dt-width" onclick="setDrawWidth(1.5,this)" title="보통">
+            <div class="dot" style="width:5px;height:5px"></div>
+          </div>
+          <div class="dt-width" onclick="setDrawWidth(3,this)" title="굵은">
+            <div class="dot" style="width:8px;height:8px"></div>
+          </div>
         </div>
         <div class="dp-sep"></div>
         <div class="dp-row">
@@ -1153,7 +1244,9 @@
           title="재생 (Space)">▶</button>
       </div>
       <button class="btn btn-ghost btn-icon" id="btnPause" onclick="doPause()" style="display:none"
-        title="일시정지 (Space)"><span style="display:inline-flex;gap:2px;align-items:center"><span style="display:inline-block;width:0.18em;height:0.55em;background:currentColor;border-radius:1px"></span><span style="display:inline-block;width:0.18em;height:0.55em;background:currentColor;border-radius:1px"></span></span></button>
+        title="일시정지 (Space)"><span style="display:inline-flex;gap:2px;align-items:center"><span
+            style="display:inline-block;width:0.18em;height:0.55em;background:currentColor;border-radius:1px"></span><span
+            style="display:inline-block;width:0.18em;height:0.55em;background:currentColor;border-radius:1px"></span></span></button>
       <button class="btn btn-ghost btn-icon" id="btnResume" onclick="doResume()" style="display:none"
         title="재개 (Space)">▶</button>
       <button class="btn btn-danger btn-icon" id="btnStop" onclick="doStop()" title="정지 (D)"
