@@ -24,6 +24,8 @@ let isPenDrawing = false;    // 펜 자동 감지로 그리는 중인지
 
 /** 현재 입력이 드로잉을 해야 하는지 판단 */
 function shouldDraw(e) {
+  // 핀치 줌 중이면 드로잉 금지
+  if (isPinching) return false;
   // 수동 드로잉 모드가 켜져 있으면 모든 입력으로 그리기
   if (drawMode) return true;
   // 펜 자동 감지: pointerType이 'pen'이면 자동으로 그리기

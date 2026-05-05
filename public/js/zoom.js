@@ -91,6 +91,11 @@ function initPinchZoom() {
     if (e.touches.length === 2) {
       e.preventDefault();
       isPinching = true;
+      // 진행 중인 드로잉 스트로크 취소
+      if (isDrawing) {
+        currentStroke = null;
+        isDrawing = false;
+      }
       pinchStartDist = pinchDist(e.touches);
       pinchStartScale = zoomScale;
       const mid = pinchMid(e.touches);
