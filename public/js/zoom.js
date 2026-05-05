@@ -91,10 +91,11 @@ function initPinchZoom() {
     if (e.touches.length === 2) {
       e.preventDefault();
       isPinching = true;
-      // 진행 중인 드로잉 스트로크 취소
+      // 진행 중인 드로잉 스트로크 취소 + 잔여 점 제거
       if (isDrawing) {
         currentStroke = null;
         isDrawing = false;
+        refreshAllDrawCanvases();
       }
       pinchStartDist = pinchDist(e.touches);
       pinchStartScale = zoomScale;
