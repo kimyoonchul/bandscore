@@ -28,6 +28,10 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 const PORT = process.env.PORT || 3001;
+// 프로세스 안정화: 미처리 예외/거부 시 로그만 남기고 프로세스 유지
+process.on('uncaughtException', err => console.error('⚠️ Uncaught:', err.message));
+process.on('unhandledRejection', err => console.error('⚠️ Unhandled:', err));
+process.on('SIGTERM', () => { console.log('🛑 SIGTERM received, shutting down...'); process.exit(0); });
 
 // Directories
 const dataDir = path.join(__dirname, 'data');
