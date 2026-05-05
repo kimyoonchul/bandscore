@@ -1597,24 +1597,6 @@
         }
       } catch (e) { }
 
-      // 드로잉 핸들러 등록 (static 캔버스)
-      ['dcS', 'dcDL', 'dcDR'].forEach(id => {
-        const c = document.getElementById(id);
-        if (c && !c._drawAttached) { attachDrawHandlers(c); c._drawAttached = true; }
-      });
-      // 핀치 줌 초기화
-      initPinchZoom();
-      // 플로팅 팔레트 드래그 초기화
-      initPaletteDrag();
-
-      // 설정 패널: 슬라이더 조작 중 패널 투명화
-      const sp = document.getElementById('settingsPanel');
-      sp.querySelectorAll('input[type="range"]').forEach(slider => {
-        slider.addEventListener('pointerdown', () => { sp.style.opacity = '0.2'; });
-        slider.addEventListener('pointerup', () => { sp.style.opacity = ''; });
-        slider.addEventListener('pointercancel', () => { sp.style.opacity = ''; });
-      });
-
       // inst 음원 로드
       if (song.inst_filename) {
         instAudio = new Audio(`/uploads/${song.inst_filename}`);
