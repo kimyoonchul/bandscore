@@ -23,6 +23,15 @@ let isDrawing = false;       // 드로잉 진행 중 플래그
 let isPenDrawing = false;    // 펜 자동 감지로 그리는 중인지
 let paletteFadeTimer = null; // 팔레트 자동 접힘 타이머
 
+// 저장된 펜 설정 복원
+try {
+  const saved = JSON.parse(localStorage.getItem('drawPrefs'));
+  if (saved) {
+    if (saved.color) drawColor = saved.color;
+    if (saved.width) drawWidth = saved.width;
+  }
+} catch (e) { }
+
 /** 현재 입력이 드로잉을 해야 하는지 판단 */
 function shouldDraw(e) {
   if (isPinching) return false;
@@ -288,6 +297,7 @@ function expandDrawFab() {
   document.getElementById('fabExpanded').style.display = 'flex';
   clearTimeout(paletteFadeTimer);
   updateFabColorRing();
+  syncPaletteUI(); // 저장된 색상/굵기로 active 동기화
 }
 
 /** FAB 접기 (drawMode OFF) */
@@ -330,6 +340,21 @@ function updateFabColorRing() {
   if (ring) ring.style.borderColor = drawColor;
 }
 
+/** 팔레트 UI를 현재 drawColor/drawWidth에 맞게 active 동기화 */
+function syncPaletteUI() {
+  // 색상 active
+  document.querySelectorAll('.draw-fab .dt-color').forEach(el => {
+    const bg = el.style.background || el.style.backgroundColor;
+    el.classList.toggle('active', bg === drawColor);
+  });
+  // 굵기 active
+  const widthMap = { 0.8: 0, 1.5: 1, 3: 2 };
+  const idx = widthMap[drawWidth] ?? -1;
+  document.querySelectorAll('.draw-fab .dt-width').forEach((el, i) => {
+    el.classList.toggle('active', i === idx);
+  });
+}
+
 /** 펜 색상 변경 */
 function setDrawColor(color, el) {
   drawColor = color;
@@ -340,6 +365,7 @@ function setDrawColor(color, el) {
   if (btnEraser) btnEraser.classList.remove('active');
   document.querySelectorAll('.draw-canvas').forEach(c => c.classList.remove('eraser-mode'));
   updateFabColorRing();
+  saveDrawPrefs();
 }
 
 /** 펜 굵기 변경 */
@@ -347,6 +373,12 @@ function setDrawWidth(w, el) {
   drawWidth = w;
   document.querySelectorAll('.draw-fab .dt-width').forEach(c => c.classList.remove('active'));
   if (el) el.classList.add('active');
+  saveDrawPrefs();
+}
+
+/** 펜 설정 localStorage 저장 */
+function saveDrawPrefs() {
+  try { localStorage.setItem('drawPrefs', JSON.stringify({ color: drawColor, width: drawWidth })); } catch (e) { }
 }
 
 /** 지우개 토글 */
