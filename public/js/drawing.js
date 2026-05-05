@@ -279,6 +279,11 @@ function expandDrawFab() {
   area.classList.add('draw-active');
   area.removeAttribute('onclick');
 
+  // 필기 모드: 헤더/푸터 숨김 (화살표는 유지)
+  document.getElementById('topBar').classList.add('hidden');
+  document.getElementById('ctrlBar').classList.add('hidden');
+  showView(); // 악보 영역 재계산
+
   document.getElementById('fabCollapsed').style.display = 'none';
   document.getElementById('fabExpanded').style.display = 'flex';
   clearTimeout(paletteFadeTimer);
@@ -296,6 +301,13 @@ function collapseDrawFab() {
   const btnEraser = document.getElementById('btnEraser');
   if (btnEraser) btnEraser.classList.remove('active');
   document.querySelectorAll('.draw-canvas').forEach(c => c.classList.remove('eraser-mode'));
+
+  // 필기 모드 해제: 헤더/푸터 복원
+  uiVisible = true;
+  document.getElementById('topBar').classList.remove('hidden');
+  document.getElementById('ctrlBar').classList.remove('hidden');
+  updateNavArrows();
+  showView(); // 악보 영역 재계산
 
   document.getElementById('fabCollapsed').style.display = 'flex';
   document.getElementById('fabExpanded').style.display = 'none';
