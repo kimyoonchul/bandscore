@@ -119,21 +119,29 @@ function initPinchZoom() {
   area.addEventListener('touchmove', (e) => {
     if (isPinching && e.touches.length === 2) {
       e.preventDefault();
-      // 핀치 줌
+      // 핀치 줌 (포인트 기준)
       const dist = pinchDist(e.touches);
       const newScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, pinchStartScale * (dist / pinchStartDist)));
+      const oldScale = zoomScale;
       zoomScale = newScale;
       if (zoomScale <= 1.05) {
         zoomScale = 1;
         zoomX = 0;
         zoomY = 0;
       } else {
-        // 2손가락 팬: 중심점 이동량 반영
+        // 핀치 중심점 기준 줌 보정
+        const areaRect = area.getBoundingClientRect();
         const mid = pinchMid(e.touches);
+        const px = mid.x - areaRect.left;
+        const py = mid.y - areaRect.top;
+        // 포인트 기준 줌: 해당 점이 화면상 고정되도록 오프셋 계산
+        zoomX = panStartZoomX + px * (1/zoomScale - 1/pinchStartScale);
+        zoomY = panStartZoomY + py * (1/zoomScale - 1/pinchStartScale);
+        // 2손가락 팬: 중심점 이동량도 반영
         const dx = (mid.x - panStartX) / zoomScale;
         const dy = (mid.y - panStartY) / zoomScale;
-        zoomX = panStartZoomX + dx;
-        zoomY = panStartZoomY + dy;
+        zoomX += dx;
+        zoomY += dy;
       }
       applyZoom();
     } else if (isPanning && e.touches.length === 1 && zoomScale > 1) {
@@ -151,17 +159,24 @@ function initPinchZoom() {
     if (e.touches.length === 0) isPanning = false;
   });
 
-  // 마우스 휠 줌 (Ctrl + 휠 또는 일반 휠)
+  // 마우스 휠 줌 (커서 위치 기준 확대)
   area.addEventListener('wheel', (e) => {
     if (drawMode) return; // 드로잉 모드에서는 휠 줌 비활성
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.15 : 0.15;
+    const oldScale = zoomScale;
     const newScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoomScale + delta));
     if (newScale <= 1.05) {
       zoomScale = 1;
       zoomX = 0;
       zoomY = 0;
     } else {
+      // 커서 위치 기준 줌 보정
+      const areaRect = area.getBoundingClientRect();
+      const px = e.clientX - areaRect.left;
+      const py = e.clientY - areaRect.top;
+      zoomX += px * (1/newScale - 1/oldScale);
+      zoomY += py * (1/newScale - 1/oldScale);
       zoomScale = newScale;
     }
     applyZoom();
