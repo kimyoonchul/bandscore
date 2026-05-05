@@ -149,7 +149,10 @@
       inset: 0;
       overflow: hidden;
       background: #1a1a1a;
-      cursor: pointer
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none
     }
 
     .score-display {
@@ -248,7 +251,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      transform-origin: 0 0
+      transform-origin: 0 0;
+      padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px))
     }
 
     .score-portrait .score-page-wrapper {
@@ -464,6 +468,7 @@
       backdrop-filter: blur(20px);
       border-left: 1px solid rgba(255, 255, 255, 0.1);
       padding: 3.5rem 1rem 2rem;
+      padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
       overflow-y: auto;
       transition: right 0.3s ease;
       font-size: 0.85rem;
@@ -852,6 +857,7 @@
         right: -16.875rem;
         font-size: 0.78rem;
         padding: 3rem 0.75rem 1.5rem;
+        padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
       }
 
       .settings-panel h3 {
@@ -919,6 +925,14 @@
     .draw-active .sys-active-border,
     .draw-active .sys-progress {
       pointer-events: none;
+    }
+
+    /* 필기모드: 텍스트 선택 완전 차단 (펜 꾹 누르기 방지) */
+    .draw-active {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: none;
     }
 
 
@@ -1904,12 +1918,14 @@
     }
 
 
-    /** 화살표 버튼 조건부 표시: UI숨김→전부 숨김, 세로→전부 숨김, 첫페이지→왼쪽 숨김, 마지막→오른쪽 숨김 */
+    /** 화살표 버튼 조건부 표시: UI숨김→전부 숨김(단, 필기모드면 표시), 세로→전부 숨김, 첫페이지→왼쪽 숨김, 마지막→오른쪽 숨김 */
     function updateNavArrows() {
       const leftBtn = document.querySelector('.nav-arrow.left');
       const rightBtn = document.querySelector('.nav-arrow.right');
       if (!leftBtn || !rightBtn) return;
-      if (!uiVisible || viewMode === 'portrait') {
+      // 필기모드에서는 항상 화살표 표시 (세로모드 제외)
+      const effectiveVisible = uiVisible || drawMode;
+      if (!effectiveVisible || viewMode === 'portrait') {
         leftBtn.style.display = 'none';
         rightBtn.style.display = 'none';
         return;
@@ -1948,7 +1964,7 @@
         const sH = botPx - topPx;
 
         // 모든 페이지 오버레이 초기화: 비활성 페이지는 전체 음영
-        const dimBg = `rgba(0,0,0,${(styleSettings.dimOpacity || 35) / 100})`;
+        const dimBg = `rgba(0,0,0,${(styleSettings.dimOpacity ?? 35) / 100})`;
         for (let pg = 1; pg <= totalPages; pg++) {
           const ov = document.getElementById('oPT' + pg);
           if (!ov) continue;
@@ -2015,7 +2031,7 @@
         const topPx = Math.max(0, (e.topPct / 100) * cH - stp);
         const botPx = Math.min(cH, (e.bottomPct / 100) * cH + sbp);
         const sH = botPx - topPx;
-        const dimBg = `rgba(0,0,0,${(styleSettings.dimOpacity || 35) / 100})`;
+        const dimBg = `rgba(0,0,0,${(styleSettings.dimOpacity ?? 35) / 100})`;
 
         // 활성 쪽 음영
         const activeOv = document.getElementById(isLeft ? 'oDL' : 'oDR');
@@ -2085,7 +2101,7 @@
       const botPx = Math.min(cH, (e.bottomPct / 100) * cH + sbp);
       const sH = botPx - topPx;
       const ov = document.getElementById('oS'); ov.innerHTML = '';
-      const dimBg = `rgba(0,0,0,${(styleSettings.dimOpacity || 35) / 100})`;
+      const dimBg = `rgba(0,0,0,${(styleSettings.dimOpacity ?? 35) / 100})`;
       if (topPx > 0) { const d = document.createElement('div'); d.className = 'system-dim'; d.style.top = '0'; d.style.height = topPx + 'px'; d.style.background = dimBg; ov.appendChild(d) }
       if (botPx < cH) { const d = document.createElement('div'); d.className = 'system-dim'; d.style.top = botPx + 'px'; d.style.height = (cH - botPx) + 'px'; d.style.background = dimBg; ov.appendChild(d) }
       const b = document.getElementById('bS'); b.style.display = styleSettings.showBorder !== false ? 'block' : 'none'; b.style.top = topPx + 'px'; b.style.height = sH + 'px';

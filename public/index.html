@@ -769,6 +769,7 @@
       justify-content: center;
       gap: 12px;
       padding: 14px 20px;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
       cursor: pointer;
       background: linear-gradient(135deg, #0a0a1a, #1a1035);
       border-top: 1px solid rgba(139, 92, 246, 0.15);
@@ -824,6 +825,7 @@
       max-width: 900px;
       margin: 0 auto;
       padding: 30px 20px;
+      padding-bottom: calc(30px + env(safe-area-inset-bottom, 0px));
     }
 
     .footer-title-wrap {
@@ -1291,6 +1293,7 @@
 
       .footer-trigger {
         padding: 10px 14px;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
         gap: 8px;
       }
 

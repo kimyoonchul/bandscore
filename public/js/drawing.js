@@ -293,7 +293,9 @@ function expandDrawFab() {
   // 필기 모드: 헤더/푸터 숨김 (화살표는 유지)
   document.getElementById('topBar').classList.add('hidden');
   document.getElementById('ctrlBar').classList.add('hidden');
-  showView(); // 악보 영역 재계산
+  // 화살표는 필기모드에서 항상 표시
+  document.querySelectorAll('.nav-arrow').forEach(a => a.classList.remove('hidden'));
+  showView(); // 악보 영역 재계산 + updateNavArrows
 
   document.getElementById('fabCollapsed').style.display = 'none';
   document.getElementById('fabExpanded').style.display = 'flex';
