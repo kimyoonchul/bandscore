@@ -217,7 +217,7 @@
       position: absolute;
       inset: 0;
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 2px;
       transform-origin: 0 0;
       overflow: hidden
@@ -225,8 +225,13 @@
 
     .score-dual .score-page-wrapper {
       margin: auto;
-      max-width: 100%;
+      width: 100%;
       overflow: hidden
+    }
+
+    .score-dual .score-page-wrapper canvas {
+      width: 100% !important;
+      height: auto !important
     }
 
     .score-portrait {
@@ -1569,6 +1574,7 @@
       initPinchZoom();
       // 플로팅 팔레트 드래그 초기화
       initPaletteDrag();
+      initSwipeNav();
 
       // 설정 패널: 슬라이더 조작 중 패널 투명화
       const sp = document.getElementById('settingsPanel');
@@ -1773,9 +1779,9 @@
       if (viewMode === 'portrait') {
         w = area.clientWidth; h = w / r;
       } else if (viewMode === 'dual') {
-        // 듀얼: 그리드 전체 폭의 절반을 기준으로 사이징
+        // 듀얼: 그리드 셀 너비에 맞춤 (CSS가 canvas width:100% 처리)
         const dualEl = document.getElementById('viewDual');
-        w = Math.floor(dualEl.clientWidth / 2) - 4; h = w / r;
+        w = Math.floor(dualEl.clientWidth / 2) - 2; h = w / r;
       } else {
         // 싱글: 가로/세로 fit
         const wrap = tgt.parentElement, cont = wrap.parentElement;
@@ -1882,7 +1888,8 @@
     }
 
     function manualNav(dir) {
-      const np = curDispPage + dir;
+      const step = (viewMode === 'dual') ? 2 : 1;
+      const np = curDispPage + dir * step;
       if (np < 1 || np > totalPages) return;
       curDispPage = np; showView();
     }
