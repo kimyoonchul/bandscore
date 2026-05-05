@@ -27,7 +27,7 @@ let isPanning = false;
 let panStartX = 0, panStartY = 0;
 let panStartZoomX = 0, panStartZoomY = 0;
 
-/** 줌/팬 적용 (CSS transform) */
+/** 줌/팬 적용 (CSS transform) + 팬 범위 제한 */
 function applyZoom() {
   const containers = [];
   if (viewMode === 'single') {
@@ -38,6 +38,24 @@ function applyZoom() {
   } else if (viewMode === 'portrait') {
     containers.push(document.getElementById('ptInner'));
   }
+
+  // 팬 범위 제한: 악보가 뷰포트 바깥으로 나가지 않도록
+  if (zoomScale > 1 && containers.length > 0) {
+    const area = document.getElementById('canvasArea');
+    if (area) {
+      const aW = area.clientWidth;
+      const aH = area.clientHeight;
+      const el = containers[0];
+      const elW = el.offsetWidth || aW;
+      const elH = el.offsetHeight || aH;
+      // tx 범위: aW/S - elW <= tx <= 0
+      const minX = aW / zoomScale - elW;
+      const minY = aH / zoomScale - elH;
+      zoomX = Math.max(minX, Math.min(0, zoomX));
+      zoomY = Math.max(minY, Math.min(0, zoomY));
+    }
+  }
+
   containers.forEach(el => {
     if (!el) return;
     if (zoomScale <= 1) {
@@ -47,7 +65,6 @@ function applyZoom() {
       return;
     }
     if (viewMode === 'portrait') {
-      // portrait 모드: 기존 translateY + 줌
       const currentTransform = el.style.transform || '';
       const tyMatch = currentTransform.match(/translateY\(([^)]+)\)/);
       const ty = tyMatch ? tyMatch[1] : '0px';
