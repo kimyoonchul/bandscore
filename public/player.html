@@ -1770,7 +1770,12 @@
       let w, h;
       if (viewMode === 'portrait') {
         w = area.clientWidth; h = w / r;
+      } else if (viewMode === 'dual') {
+        // 듀얼: 각 셀의 가로 100%를 우선 채움
+        const wrap = tgt.parentElement, cont = wrap.parentElement;
+        w = cont.clientWidth - 4; h = w / r;
       } else {
+        // 싱글: 가로/세로 fit
         const wrap = tgt.parentElement, cont = wrap.parentElement;
         const aW = cont.clientWidth - 4, aH = cont.clientHeight - 4;
         if (aW / aH > r) { h = aH; w = h * r } else { w = aW; h = w / r }
