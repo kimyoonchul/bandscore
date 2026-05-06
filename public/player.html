@@ -222,15 +222,16 @@
     .score-dual {
       position: absolute;
       inset: 0;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      display: flex;
+      justify-content: center;
+      align-items: center;
       gap: 2px;
       transform-origin: 0 0;
       overflow: hidden
     }
 
     .score-dual .score-page-wrapper {
-      margin: auto;
+      position: relative;
       overflow: hidden;
       display: flex;
       align-items: center;
@@ -1859,7 +1860,7 @@
       document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
       if (btn) btn.classList.add('active');
       document.getElementById('viewSingle').style.display = m === 'single' ? 'flex' : 'none';
-      document.getElementById('viewDual').style.display = m === 'dual' ? 'grid' : 'none';
+      document.getElementById('viewDual').style.display = m === 'dual' ? 'flex' : 'none';
       document.getElementById('viewPortrait').style.display = m === 'portrait' ? 'block' : 'none';
       // 뷰 전환 시 줌 리셋
       resetZoom();
