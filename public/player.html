@@ -1552,6 +1552,27 @@
     let lastBeatIndex = -1;       // 마지막 재생한 비트 인덱스 (중복 방지)
     const socket = io();
 
+    // 오디오 설정 localStorage 저장/복원
+    function saveAudioPrefs() {
+      try {
+        localStorage.setItem('asp_audioPrefs', JSON.stringify({
+          instMuted, instVolume: instSavedVolume,
+          metroMuted, metroVolume: metroSavedVolume
+        }));
+      } catch(e) {}
+    }
+    function loadAudioPrefs() {
+      try {
+        const s = localStorage.getItem('asp_audioPrefs');
+        if (!s) return;
+        const p = JSON.parse(s);
+        if (typeof p.instMuted === 'boolean') instMuted = p.instMuted;
+        if (typeof p.instVolume === 'number' && p.instVolume > 0) instSavedVolume = p.instVolume;
+        if (typeof p.metroMuted === 'boolean') metroMuted = p.metroMuted;
+        if (typeof p.metroVolume === 'number' && p.metroVolume > 0) metroSavedVolume = p.metroVolume;
+      } catch(e) {}
+    }
+
     /** 초기화: API에서 곡/파트 로드 → PDF 렌더 → 타임라인 빌드 → 소켓 연결 */
     async function init() {
       if (!songId || !partId) {
@@ -1646,6 +1667,13 @@
         instAudio.volume = 0;
         document.getElementById('instVolWrap').style.display = 'inline-flex';
       }
+
+      // 저장된 오디오 설정 복원 (메트로놈/inst 볼륨·음소거)
+      loadAudioPrefs();
+      if (instAudio) {
+        updateInstUI();
+      }
+      updateMetroUI();
     }
 
     function applyStyleToUI() {
@@ -2325,6 +2353,7 @@
         }
       }
       updateInstUI();
+      saveAudioPrefs();
       if (!soloMode) socket.emit('inst-state-changed', { muted: instMuted });
       renderMemberList();
     }
@@ -2355,6 +2384,7 @@
         if (!soloMode) socket.emit('inst-state-changed', { muted: instMuted });
         renderMemberList();
       }
+      saveAudioPrefs();
     }
     /**
      * inst 음원을 재생 경과시간(ms)에 맞춰 동기화
@@ -2425,6 +2455,7 @@
       }
       lastBeatIndex = -1;
       updateMetroUI();
+      saveAudioPrefs();
     }
     /** 메트로놈 슬라이더: 0이면 자동 OFF, 0보다 크면 자동 ON */
     function setMetroVolume(val) {
@@ -2443,6 +2474,7 @@
         if (audioCtx.state === 'suspended') audioCtx.resume();
       }
       lastBeatIndex = -1;
+      saveAudioPrefs();
     }
 
 
