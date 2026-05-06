@@ -1646,8 +1646,13 @@
         }
       }
       buildTimeline();
+      // 저장된 뷰 모드 복원
+      const savedView = localStorage.getItem('asp_viewMode');
+      if (savedView && ['single','dual','portrait'].includes(savedView)) {
+        viewMode = savedView;
+      }
       // 레이아웃 계산 완료 후 첫 렌더링 (캔버스 크기 0 방지)
-      requestAnimationFrame(() => { showView(); });
+      requestAnimationFrame(() => { setView(viewMode, document.querySelector(`.view-toggle button[onclick*="'${viewMode}'"]`)); });
       if (!soloMode) socket.emit('join-room', { songId, partId, partName: currentPartName });
       applyModeUI();
       // 저장된 스타일 설정 로드
@@ -1857,6 +1862,7 @@
     /** 뷰 모드 변경: single(1벌) / dual(2벌) / portrait(세로 연속 스크롤) */
     function setView(m, btn) {
       viewMode = m;
+      try { localStorage.setItem('asp_viewMode', m); } catch(e) {}
       document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
       if (btn) btn.classList.add('active');
       document.getElementById('viewSingle').style.display = m === 'single' ? 'flex' : 'none';
