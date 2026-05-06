@@ -231,13 +231,10 @@
 
     .score-dual .score-page-wrapper {
       margin: auto;
-      width: 100%;
-      overflow: hidden
-    }
-
-    .score-dual .score-page-wrapper canvas {
-      width: 100% !important;
-      height: auto !important
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .score-portrait {
@@ -1810,9 +1807,11 @@
       if (viewMode === 'portrait') {
         w = area.clientWidth; h = w / r;
       } else if (viewMode === 'dual') {
-        // 듀얼: 그리드 셀 너비에 맞춤 (CSS가 canvas width:100% 처리)
+        // 듀얼: 각 그리드 셀 내에서 contain-fit (PC: 높이 기준, 태블릿: 너비 기준)
         const dualEl = document.getElementById('viewDual');
-        w = Math.floor(dualEl.clientWidth / 2) - 2; h = w / r;
+        const cellW = Math.floor(dualEl.clientWidth / 2) - 2;
+        const cellH = dualEl.clientHeight - 4;
+        if (cellW / cellH > r) { h = cellH; w = h * r; } else { w = cellW; h = w / r; }
       } else {
         // 싱글: 가로/세로 fit
         const wrap = tgt.parentElement, cont = wrap.parentElement;
