@@ -2057,6 +2057,14 @@
       sysEditorState.currentPage = 1;
       sysEditorState.activeLineIdx = -1;
       sysEditorState.detectMode = true; // 감지 모드 플래그
+      sysEditorState.manualPatterns = {}; // 패턴 초기화
+      sysEditorState.staveCache = {};     // 오선 캐시 초기화
+
+      // threshold 슬라이더를 기본값 30%로 리셋
+      const thresholdSlider = document.getElementById('staveThreshold');
+      if (thresholdSlider) { thresholdSlider.value = 30; }
+      const thresholdLabel = document.getElementById('thresholdVal');
+      if (thresholdLabel) { thresholdLabel.textContent = '30%'; }
 
       sysEditorState.pdf = await pdfjsLib.getDocument(`/uploads/${part.pdf_filename}`).promise;
       sysEditorState.totalPages = sysEditorState.pdf.numPages;
@@ -2371,10 +2379,15 @@
       }).join('');
     }
 
-    // 감도 슬라이더 변경 → 현재 페이지 재분석
+    // 감도 슬라이더 변경 → 현재 페이지 재분석 + 다른 페이지 캐시 무효화
     async function onThresholdChange(val) {
       document.getElementById('thresholdVal').textContent = val + '%';
-      await reAnalyzePage(sysEditorState.currentPage, parseInt(val));
+      // 다른 페이지 캐시 무효화 (새 threshold로 재분석 필요)
+      const curPage = sysEditorState.currentPage;
+      for (const key of Object.keys(sysEditorState.staveCache)) {
+        if (parseInt(key) !== curPage) delete sysEditorState.staveCache[key];
+      }
+      await reAnalyzePage(curPage, parseInt(val));
       updateStaveCountDisplay();
       previewManualPattern();
     }
@@ -2463,6 +2476,9 @@
 
       // 패턴 합이 오선 수와 일치 → 자동 페이지 넘김
       if (patternSum === staves.length && pattern.length > 0) {
+        // 즉시 입력창 비우기 (다음 페이지로 넘어가기 전에 이전 값이 보이지 않도록)
+        const inputEl = document.getElementById('manualPatternInput');
+        if (inputEl) inputEl.value = '';
         setTimeout(() => {
           if (sysEditorState.currentPage < sysEditorState.totalPages) {
             sysEditorState.currentPage++;
@@ -2477,9 +2493,14 @@
       }
     }
 
-    function loadManualPattern() {
+    async function loadManualPattern() {
       const input = document.getElementById('manualPatternInput');
       if (input) input.value = sysEditorState.manualPatterns[sysEditorState.currentPage] || '';
+      // 캐시 miss 시 현재 threshold로 재분석
+      if (!sysEditorState.staveCache[sysEditorState.currentPage] && sysEditorState.pdf) {
+        const thresholdPct = parseInt(document.getElementById('staveThreshold')?.value || 30);
+        await reAnalyzePage(sysEditorState.currentPage, thresholdPct);
+      }
       updateStaveCountDisplay();
     }
 
