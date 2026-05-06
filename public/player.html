@@ -193,6 +193,16 @@
       transition: all 0.35s ease
     }
 
+    .system-dim.dim-top {
+      -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+      mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    }
+
+    .system-dim.dim-bottom {
+      -webkit-mask-image: linear-gradient(to top, black 60%, transparent 100%);
+      mask-image: linear-gradient(to top, black 60%, transparent 100%);
+    }
+
     .sys-active-border {
       position: absolute;
       left: 0;
@@ -2012,8 +2022,8 @@
             d.style.background = dimBg;
             ov.appendChild(d);
           } else {
-            if (topPx > 0) { const d = document.createElement('div'); d.className = 'system-dim'; d.style.top = '0'; d.style.height = topPx + 'px'; d.style.background = dimBg; ov.appendChild(d) }
-            if (botPx < cH) { const d = document.createElement('div'); d.className = 'system-dim'; d.style.top = botPx + 'px'; d.style.height = (cH - botPx) + 'px'; d.style.background = dimBg; ov.appendChild(d) }
+            if (topPx > 0) { const d = document.createElement('div'); d.className = 'system-dim dim-top'; d.style.top = '0'; d.style.height = topPx + 'px'; d.style.background = dimBg; ov.appendChild(d) }
+            if (botPx < cH) { const d = document.createElement('div'); d.className = 'system-dim dim-bottom'; d.style.top = botPx + 'px'; d.style.height = (cH - botPx) + 'px'; d.style.background = dimBg; ov.appendChild(d) }
           }
         }
 
@@ -2072,8 +2082,8 @@
         // 활성 쪽 음영
         const activeOv = document.getElementById(isLeft ? 'oDL' : 'oDR');
         activeOv.innerHTML = '';
-        if (topPx > 0) { const d = document.createElement('div'); d.className = 'system-dim'; d.style.top = '0'; d.style.height = topPx + 'px'; d.style.background = dimBg; activeOv.appendChild(d) }
-        if (botPx < cH) { const d = document.createElement('div'); d.className = 'system-dim'; d.style.top = botPx + 'px'; d.style.height = (cH - botPx) + 'px'; d.style.background = dimBg; activeOv.appendChild(d) }
+        if (topPx > 0) { const d = document.createElement('div'); d.className = 'system-dim dim-top'; d.style.top = '0'; d.style.height = topPx + 'px'; d.style.background = dimBg; activeOv.appendChild(d) }
+        if (botPx < cH) { const d = document.createElement('div'); d.className = 'system-dim dim-bottom'; d.style.top = botPx + 'px'; d.style.height = (cH - botPx) + 'px'; d.style.background = dimBg; activeOv.appendChild(d) }
 
         // 비활성 쪽 전체 음영
         const inactiveOv = document.getElementById(isLeft ? 'oDR' : 'oDL');
@@ -2138,8 +2148,8 @@
       const sH = botPx - topPx;
       const ov = document.getElementById('oS'); ov.innerHTML = '';
       const dimBg = `rgba(0,0,0,${(styleSettings.dimOpacity ?? 35) / 100})`;
-      if (topPx > 0) { const d = document.createElement('div'); d.className = 'system-dim'; d.style.top = '0'; d.style.height = topPx + 'px'; d.style.background = dimBg; ov.appendChild(d) }
-      if (botPx < cH) { const d = document.createElement('div'); d.className = 'system-dim'; d.style.top = botPx + 'px'; d.style.height = (cH - botPx) + 'px'; d.style.background = dimBg; ov.appendChild(d) }
+      if (topPx > 0) { const d = document.createElement('div'); d.className = 'system-dim dim-top'; d.style.top = '0'; d.style.height = topPx + 'px'; d.style.background = dimBg; ov.appendChild(d) }
+      if (botPx < cH) { const d = document.createElement('div'); d.className = 'system-dim dim-bottom'; d.style.top = botPx + 'px'; d.style.height = (cH - botPx) + 'px'; d.style.background = dimBg; ov.appendChild(d) }
       const b = document.getElementById('bS'); b.style.display = styleSettings.showBorder !== false ? 'block' : 'none'; b.style.top = topPx + 'px'; b.style.height = sH + 'px';
       b.style.borderColor = styleSettings.lineColor || '#c8956c';
       const p = document.getElementById('pS'); p.style.display = 'block'; p.style.top = topPx + 'px'; p.style.height = sH + 'px';
