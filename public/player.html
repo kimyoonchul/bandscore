@@ -194,13 +194,13 @@
     }
 
     .system-dim.dim-top {
-      -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-      mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 40px), transparent 100%);
+      mask-image: linear-gradient(to bottom, black calc(100% - 40px), transparent 100%);
     }
 
     .system-dim.dim-bottom {
-      -webkit-mask-image: linear-gradient(to top, black 60%, transparent 100%);
-      mask-image: linear-gradient(to top, black 60%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to top, black calc(100% - 40px), transparent 100%);
+      mask-image: linear-gradient(to top, black calc(100% - 40px), transparent 100%);
     }
 
     .sys-active-border {
@@ -1438,16 +1438,6 @@
         <div class="setting-row"><input type="range" min="0" max="90" step="5" value="35"
             oninput="updateStyle('dimOpacity',this.value)"><span class="val" id="dimOpacityVal">35%</span></div>
       </div>
-      <div class="setting-group">
-        <label>활성 줄 테두리</label>
-        <div class="setting-row">
-          <label
-            style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.85rem;color:var(--text);text-transform:none;letter-spacing:0">
-            <input type="checkbox" id="showBorderChk" checked onchange="updateStyle('showBorder', this.checked)"
-              style="accent-color:var(--primary);width:1rem;height:1rem">
-            테두리 표시
-          </label>
-        </div>
       </div>
       <div style="margin-top:12px">
         <button class="btn btn-ghost" style="width:100%" onclick="resetStyleDefaults()">↺ 기본값으로 복원</button>
@@ -1548,7 +1538,7 @@
     let memberList = [];         // 현재 접속 멤버 목록
 
     // ── 스타일 기본값 (파트별 DB 저장) ──
-    const STYLE_DEFAULTS = { padL: 7, padR: 3, sysTopPad: 0, sysBotPad: 0, lineColor: '#c8956c', lineWidth: 2, dimOpacity: 35, showBorder: true };
+    const STYLE_DEFAULTS = { padL: 7, padR: 3, sysTopPad: 0, sysBotPad: 0, lineColor: '#c8956c', lineWidth: 2, dimOpacity: 35, showBorder: false };
     const styleSettings = { ...STYLE_DEFAULTS };
     let previewAnim = null;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1706,8 +1696,6 @@
       if (colorValEl) colorValEl.textContent = styleSettings.lineColor || STYLE_DEFAULTS.lineColor;
       const pickerEl = document.getElementById('colorPicker');
       if (pickerEl) pickerEl.value = styleSettings.lineColor || STYLE_DEFAULTS.lineColor;
-      const borderChk = document.getElementById('showBorderChk');
-      if (borderChk) borderChk.checked = styleSettings.showBorder !== false;
     }
 
     /**
@@ -2044,8 +2032,8 @@
         const startFrac = (e.measFrom - 1) / totalM;
         const endFrac = e.measTo / totalM;
         const lineFrac = startFrac + prog * (endFrac - startFrac);
-        const padL = canvas.clientWidth * (styleSettings.padL || 7) / 100;
-        const padR = canvas.clientWidth * (styleSettings.padR || 3) / 100;
+        const padL = canvas.clientWidth * (styleSettings.padL ?? 7) / 100;
+        const padR = canvas.clientWidth * (styleSettings.padR ?? 3) / 100;
         const usableW = canvas.clientWidth - padL - padR;
         p.style.left = (padL + lineFrac * usableW) + 'px';
 
@@ -2126,8 +2114,8 @@
         const startFrac = (e.measFrom - 1) / totalM;
         const endFrac = e.measTo / totalM;
         const lineFrac = startFrac + prog * (endFrac - startFrac);
-        const padL = canvas.clientWidth * (styleSettings.padL || 7) / 100;
-        const padR = canvas.clientWidth * (styleSettings.padR || 3) / 100;
+        const padL = canvas.clientWidth * (styleSettings.padL ?? 7) / 100;
+        const padR = canvas.clientWidth * (styleSettings.padR ?? 3) / 100;
         const usableW = canvas.clientWidth - padL - padR;
         pEl.style.left = (padL + lineFrac * usableW) + 'px';
 
@@ -2164,8 +2152,8 @@
       const startFrac = (e.measFrom - 1) / totalM;
       const endFrac = e.measTo / totalM;
       const lineFrac = startFrac + prog * (endFrac - startFrac);
-      const padL = canvas.clientWidth * (styleSettings.padL || 7) / 100;
-      const padR = canvas.clientWidth * (styleSettings.padR || 3) / 100;
+      const padL = canvas.clientWidth * (styleSettings.padL ?? 7) / 100;
+      const padR = canvas.clientWidth * (styleSettings.padR ?? 3) / 100;
       const usableW = canvas.clientWidth - padL - padR;
       p.style.left = (padL + lineFrac * usableW) + 'px';
     }
@@ -2574,7 +2562,6 @@
       });
       const colorEl = document.querySelector('[oninput*="lineColor"]'); if (colorEl) colorEl.value = STYLE_DEFAULTS.lineColor;
       document.getElementById('lineColorVal').textContent = STYLE_DEFAULTS.lineColor;
-      const borderChk = document.getElementById('showBorderChk'); if (borderChk) borderChk.checked = true;
       showPreviewAt(0.5);
       saveStyleToServer();
     }
