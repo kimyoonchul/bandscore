@@ -148,6 +148,7 @@ async function initDb() {
   // Migration: 기존 DB에 새 컬럼 추가
   try { db.run('ALTER TABLE songs ADD COLUMN cover_filename TEXT'); saveDb(); } catch(e) {}
   try { db.run('ALTER TABLE songs ADD COLUMN inst_filename TEXT'); saveDb(); } catch(e) {}
+  try { db.run('ALTER TABLE songs ADD COLUMN inst_delay_ms INTEGER DEFAULT 0'); saveDb(); } catch(e) {}
   try { db.run('ALTER TABLE parts ADD COLUMN style_settings TEXT'); saveDb(); } catch(e) {}
 }
 
@@ -194,10 +195,10 @@ app.get('/api/songs/:id', (req, res) => {
 app.put('/api/songs/:id', (req, res) => {
   const song = get('SELECT * FROM songs WHERE id = ?', [req.params.id]);
   if (!song) return res.status(404).json({ error: 'Not found' });
-  const { name, bpm, time_signature, count_in_bars } = req.body;
-  run('UPDATE songs SET name=?, bpm=?, time_signature=?, count_in_bars=? WHERE id=?',
+  const { name, bpm, time_signature, count_in_bars, inst_delay_ms } = req.body;
+  run('UPDATE songs SET name=?, bpm=?, time_signature=?, count_in_bars=?, inst_delay_ms=? WHERE id=?',
     [name ?? song.name, bpm ?? song.bpm, time_signature ?? song.time_signature,
-     count_in_bars ?? song.count_in_bars, req.params.id]);
+     count_in_bars ?? song.count_in_bars, inst_delay_ms ?? song.inst_delay_ms ?? 0, req.params.id]);
   if (bpm && bpm !== song.bpm) io.to(req.params.id).emit('tempo-changed', { bpm });
   res.json(get('SELECT * FROM songs WHERE id = ?', [req.params.id]));
 });

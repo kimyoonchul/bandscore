@@ -1548,6 +1548,7 @@
     let instEnabled = false;
     let instMuted = true;         // YouTube 방식 음소거 플래그
     let instSavedVolume = 0.8;    // 음소거 전 기억 볼륨 (기본 80%)
+    let instDelayMs = 0;          // inst 음원 딜레이 (ms). 양수=지연, 음수=스킵
     let pdfUrl = '';
     let metronomeOn = false;      // 메트로놈 활성 여부
     let metroVolume = 0.6;        // 메트로놈 볼륨 (0~1)
@@ -1640,6 +1641,7 @@
       } catch (e) { }
 
       // inst 음원 로드
+      instDelayMs = song.inst_delay_ms || 0;
       if (song.inst_filename) {
         instAudio = new Audio(`/uploads/${song.inst_filename}`);
         instAudio.preload = 'auto';
@@ -2159,6 +2161,13 @@
             playClick(audioCtx.currentTime, isDownbeat ? 1200 : 800, metroVolume);
           }
         }
+        // ── inst 딜레이 대기 후 자동 시작 ──
+        if (instAudio && instEnabled && instDelayMs > 0) {
+          const elMs = elapsedBefore + (Date.now() - playStartTime);
+          if (elMs >= instDelayMs && instAudio.paused) {
+            instSyncToElapsed(elMs);
+          }
+        }
         animFrame = requestAnimationFrame(tick);
       }
       animFrame = requestAnimationFrame(tick);
@@ -2313,9 +2322,7 @@
         // 재생 중이면 동기화
         if (state === 'playing' && playStartTime) {
           const elapsed = Date.now() - playStartTime + (elapsedBefore || 0);
-          instAudio.currentTime = elapsed / 1000;
-          instAudio.playbackRate = bpm / originalBpm;
-          instAudio.play().catch(() => { });
+          instSyncToElapsed(elapsed);
         }
       }
       updateInstUI();
@@ -2342,9 +2349,7 @@
         // 방금 음소거 해제 + 재생 중이면 동기화
         if (!wasEnabled && state === 'playing' && playStartTime && instAudio) {
           const elapsed = Date.now() - playStartTime + (elapsedBefore || 0);
-          instAudio.currentTime = elapsed / 1000;
-          instAudio.playbackRate = bpm / originalBpm;
-          instAudio.play().catch(() => { });
+          instSyncToElapsed(elapsed);
         }
       }
       if (wasEnabled !== instEnabled) {
@@ -2352,11 +2357,27 @@
         renderMemberList();
       }
     }
-    function instPlay() {
+    /**
+     * inst 음원을 재생 경과시간(ms)에 맞춰 동기화
+     * instDelayMs 양수: 재생이 delay보다 작으면 대기, 초과하면 (elapsed-delay)부터 재생
+     * instDelayMs 음수: elapsed=0이어도 |delay|ms부터 재생 (앞부분 스킵)
+     */
+    function instSyncToElapsed(elapsedMs) {
       if (!instAudio || !instEnabled) return;
-      instAudio.currentTime = 0;
+      const adjustedMs = elapsedMs - instDelayMs;
+      if (adjustedMs < 0) {
+        // 아직 딜레이 중 → 음원 일시정지
+        instAudio.pause();
+        instAudio.currentTime = 0;
+        return;
+      }
+      instAudio.currentTime = adjustedMs / 1000;
       instAudio.playbackRate = bpm / originalBpm;
       instAudio.play().catch(() => { });
+    }
+    function instPlay() {
+      if (!instAudio || !instEnabled) return;
+      instSyncToElapsed(0);
     }
     function instPause() {
       if (!instAudio || !instEnabled) return;
@@ -2364,7 +2385,9 @@
     }
     function instResume() {
       if (!instAudio || !instEnabled) return;
-      instAudio.play().catch(() => { });
+      // resume 시 현재 경과시간으로 동기화
+      const elapsed = Date.now() - playStartTime + (elapsedBefore || 0);
+      instSyncToElapsed(elapsed);
     }
     function instStop() {
       if (!instAudio) return;
@@ -2655,9 +2678,7 @@
       // 재생 중이면 동기화
       if (state === 'playing' && playStartTime && instAudio) {
         const elapsed = Date.now() - playStartTime + (elapsedBefore || 0);
-        instAudio.currentTime = elapsed / 1000;
-        instAudio.playbackRate = bpm / originalBpm;
-        instAudio.play().catch(() => { });
+        instSyncToElapsed(elapsed);
       }
       if (!soloMode) socket.emit('inst-state-changed', { muted: false });
       renderMemberList();
@@ -2794,13 +2815,8 @@
         hideTimer = setTimeout(toggleUI, 3000);
       }
       // inst 음원 동기화
-      if (instAudio) {
-        instAudio.currentTime = targetSec / (instAudio.playbackRate || 1);
-        if (instEnabled && state === 'playing') {
-          instAudio.playbackRate = bpm / originalBpm;
-          instAudio.currentTime = targetSec;
-          instAudio.play().catch(() => { });
-        }
+      if (instAudio && instEnabled && state === 'playing') {
+        instSyncToElapsed(targetSec * 1000);
       }
       // 다른 세션에 sync (솔로 모드에서는 로컬만)
       if (!soloMode) socket.emit('seek', { elapsedMs: targetSec * 1000 });

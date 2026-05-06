@@ -1857,6 +1857,13 @@
         <button class="btn btn-ghost" style="font-size:0.72rem;padding:0.15rem 0.4rem;flex-shrink:0" onclick="event.preventDefault();const a=document.createElement('a');a.href='/uploads/${esc(s.inst_filename)}';a.download='${esc(s.name)}_inst${s.inst_filename.substring(s.inst_filename.lastIndexOf('.'))}';a.click()">📥 다운로드</button>
       </div>` : '<p style="color:var(--text-muted);font-size:0.75rem;margin-top:4px">등록된 inst 음원이 없습니다</p>'}
     </div>
+    <div class="form-group" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <label style="display:flex;align-items:center;gap:6px">🎚️ inst 음원 딜레이 (ms)</label>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input class="form-control" id="editInstDelay" type="number" value="${s.inst_delay_ms || 0}" step="100" style="width:120px;font-family:monospace">
+        <span style="color:var(--text-muted);font-size:0.72rem">양수: 음원 시작 지연 / 음수: 앞부분 스킵</span>
+      </div>
+    </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
       <button class="btn btn-ghost" onclick="closeModal('editSongModal')">취소</button>
       <button class="btn btn-primary" onclick="updateSong()">저장</button>
@@ -1878,7 +1885,8 @@
           name: document.getElementById('editSongName').value.trim(),
           bpm: parseInt(document.getElementById('editSongBpm').value),
           time_signature: document.getElementById('editSongTime').value,
-          count_in_bars: parseInt(document.getElementById('editSongCountIn').value)
+          count_in_bars: parseInt(document.getElementById('editSongCountIn').value),
+          inst_delay_ms: parseInt(document.getElementById('editInstDelay').value) || 0
         }
       });
       // Upload cover if selected
