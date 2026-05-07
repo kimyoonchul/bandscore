@@ -70,6 +70,20 @@ function saveDrawing(pageNum) {
 function renderDrawing(canvasId, pageNum) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  // 유효하지 않은 페이지 번호면 캔버스를 클리어만 하고 리턴
+  if (pageNum < 1 || pageNum > totalPages) {
+    const dpr = window.devicePixelRatio || 1;
+    const parent = canvas.parentElement;
+    const w = parent.clientWidth;
+    const h = parent.clientHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    return;
+  }
   const dpr = window.devicePixelRatio || 1;
   const parent = canvas.parentElement;
   const w = parent.clientWidth;
@@ -136,7 +150,7 @@ function getDrawPos(e, canvas) {
 function getDrawPageNum(canvasId) {
   if (canvasId === 'dcS') return curDispPage;
   if (canvasId === 'dcDL') return curDispPage;
-  if (canvasId === 'dcDR') return curDispPage + 1 <= totalPages ? curDispPage + 1 : curDispPage;
+  if (canvasId === 'dcDR') return curDispPage + 1 <= totalPages ? curDispPage + 1 : -1;
   const m = canvasId.match(/dcPT(\d+)/);
   return m ? parseInt(m[1]) : curDispPage;
 }
@@ -249,6 +263,12 @@ function onDrawEnd(e) {
   if (!isDrawing || !currentStroke) { isDrawing = false; return; }
   const canvas = e.currentTarget;
   const pageNum = getDrawPageNum(canvas.id);
+  // 유효하지 않은 페이지(빈 오른쪽 페이지 등)면 저장하지 않음
+  if (pageNum < 1 || pageNum > totalPages) {
+    currentStroke = null;
+    isDrawing = false;
+    return;
+  }
   if (currentStroke.points.length >= 1) {
     loadDrawing(pageNum);
     drawingStrokes[pageNum].push(currentStroke);
@@ -417,9 +437,7 @@ function refreshAllDrawCanvases() {
     renderDrawing('dcS', curDispPage);
   } else if (viewMode === 'dual') {
     renderDrawing('dcDL', curDispPage);
-    if (curDispPage + 1 <= totalPages) {
-      renderDrawing('dcDR', curDispPage + 1);
-    }
+    renderDrawing('dcDR', curDispPage + 1 <= totalPages ? curDispPage + 1 : -1);
   } else if (viewMode === 'portrait') {
     for (let pg = 1; pg <= totalPages; pg++) {
       renderDrawing('dcPT' + pg, pg);
