@@ -730,6 +730,59 @@ app.delete('/api/admin/songs/:id', adminMiddleware, (req, res) => {
   res.json({ ok: true });
 });
 
+// ── Admin 편집 API ──
+
+// 회원 정보 수정 (닉네임, 이메일, 역할, 비밀번호)
+app.put('/api/admin/users/:id', adminMiddleware, async (req, res) => {
+  const { nickname, email, role, password } = req.body;
+  const user = get('SELECT * FROM users WHERE id = ?', [req.params.id]);
+  if (!user) return res.status(404).json({ error: '사용자를 찾을 수 없습니다' });
+  // 이메일 중복 체크 (자신 제외)
+  if (email && email !== user.email) {
+    const dup = get('SELECT id FROM users WHERE email = ? AND id != ?', [email, req.params.id]);
+    if (dup) return res.status(409).json({ error: '이미 사용 중인 이메일입니다' });
+  }
+  if (nickname) run('UPDATE users SET nickname = ? WHERE id = ?', [nickname.trim(), req.params.id]);
+  if (email) run('UPDATE users SET email = ? WHERE id = ?', [email.trim().toLowerCase(), req.params.id]);
+  if (role && ['admin', 'user'].includes(role)) run('UPDATE users SET role = ? WHERE id = ?', [role, req.params.id]);
+  if (password && password.length >= 6) {
+    const hash = await require('bcrypt').hash(password, 10);
+    run('UPDATE users SET password_hash = ? WHERE id = ?', [hash, req.params.id]);
+  }
+  saveDb();
+  const updated = get('SELECT id, email, nickname, role, created_at, last_login FROM users WHERE id = ?', [req.params.id]);
+  res.json(updated);
+});
+
+// Stage 정보 수정 (이름, 설명, 초대코드 재발급)
+app.put('/api/admin/stages/:id', adminMiddleware, (req, res) => {
+  const { name, description, regenerateInvite } = req.body;
+  const stage = get('SELECT * FROM stages WHERE id = ?', [req.params.id]);
+  if (!stage) return res.status(404).json({ error: 'Stage를 찾을 수 없습니다' });
+  if (name) run('UPDATE stages SET name = ? WHERE id = ?', [name.trim(), req.params.id]);
+  if (description !== undefined) run('UPDATE stages SET description = ? WHERE id = ?', [(description||'').trim(), req.params.id]);
+  if (regenerateInvite) {
+    const newCode = require('crypto').randomBytes(4).toString('hex').toUpperCase();
+    run('UPDATE stages SET invite_code = ? WHERE id = ?', [newCode, req.params.id]);
+  }
+  saveDb();
+  const updated = get('SELECT * FROM stages WHERE id = ?', [req.params.id]);
+  res.json(updated);
+});
+
+// 곡 정보 수정 (이름, BPM, 박자, 키)
+app.put('/api/admin/songs/:id', adminMiddleware, (req, res) => {
+  const { name, bpm, time_signature } = req.body;
+  const song = get('SELECT * FROM songs WHERE id = ?', [req.params.id]);
+  if (!song) return res.status(404).json({ error: '곡을 찾을 수 없습니다' });
+  if (name) run('UPDATE songs SET name = ? WHERE id = ?', [name.trim(), req.params.id]);
+  if (bpm) run('UPDATE songs SET bpm = ? WHERE id = ?', [parseInt(bpm), req.params.id]);
+  if (time_signature) run('UPDATE songs SET time_signature = ? WHERE id = ?', [time_signature, req.params.id]);
+  saveDb();
+  const updated = get('SELECT * FROM songs WHERE id = ?', [req.params.id]);
+  res.json(updated);
+});
+
 // 곡 수정 권한 체크 헬퍼 (editor 이상만 허용)
 function checkSongEditPermission(req, res, songOrStageId, isStageId = false) {
   const userId = req.user ? req.user.id : null;

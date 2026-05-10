@@ -233,6 +233,53 @@
       cursor: pointer; font-family: inherit; transition: all 0.2s; margin-right: 0.3rem;
     }
     .btn-dm-sm:hover { background: rgba(244,63,94,0.18); }
+    .btn-edit-sm {
+      background: rgba(251,191,36,0.08); color: #fbbf24;
+      border: 1px solid rgba(251,191,36,0.2); border-radius: 0.375rem;
+      padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: all 0.2s; margin-right: 0.3rem;
+    }
+    .btn-edit-sm:hover { background: rgba(251,191,36,0.18); }
+    /* ── Edit Modal ── */
+    .edit-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7); z-index: 600;
+      align-items: center; justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .edit-overlay.open { display: flex; }
+    .edit-modal {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 1.5rem;
+      width: 100%; max-width: 420px; margin: 1rem;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+    }
+    .edit-modal h3 { font-size: 1rem; font-weight: 800; margin-bottom: 1.25rem; }
+    .edit-field { margin-bottom: 1rem; }
+    .edit-field label { display: block; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.375rem; }
+    .edit-field input, .edit-field select {
+      width: 100%; background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 0.5rem; color: var(--text); padding: 0.5rem 0.875rem;
+      font-size: 0.85rem; font-family: inherit; outline: none; transition: border-color 0.2s;
+    }
+    .edit-field input:focus, .edit-field select:focus { border-color: rgba(251,191,36,0.5); }
+    .edit-field input::placeholder { color: var(--text-muted); }
+    .edit-hint { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .edit-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.25rem; }
+    .btn-cancel {
+      background: none; border: 1px solid var(--border); color: var(--text-muted);
+      padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer;
+      font-size: 0.82rem; font-family: inherit; transition: all 0.2s;
+    }
+    .btn-cancel:hover { border-color: var(--text-muted); color: var(--text); }
+    .btn-save {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000;
+      border: none; padding: 0.5rem 1.25rem; border-radius: 0.5rem;
+      cursor: pointer; font-size: 0.82rem; font-weight: 700; font-family: inherit;
+      transition: all 0.2s;
+    }
+    .btn-save:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(251,191,36,0.3); }
+    .edit-divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
@@ -340,6 +387,18 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- 편집 모달 -->
+<div class="edit-overlay" id="editOverlay" onclick="if(event.target===this)closeEditModal()">
+  <div class="edit-modal">
+    <h3 id="editModalTitle">✅ 정보 수정</h3>
+    <div id="editModalBody"></div>
+    <div class="edit-actions">
+      <button class="btn-cancel" onclick="closeEditModal()">취소</button>
+      <button class="btn-save" id="editSaveBtn">&#128190; 저장</button>
+    </div>
   </div>
 </div>
 
@@ -483,6 +542,7 @@
         <td class="text-small text-muted">${fmtDate(u.created_at)}</td>
         <td class="text-small text-muted">${u.last_login ? fmtDate(u.last_login) : '-'}</td>
         <td>
+          <button class="btn-edit-sm" onclick="editUser(${JSON.stringify(JSON.stringify(u))})">&#9998; 편집</button>
           ${u.email !== ADMIN_EMAIL ? `<button class="btn-dm-sm" onclick="openDmPanel('${u.id}','${esc(u.nickname||u.email)}','${esc(u.email)}')">💬 DM</button><button class="btn-danger-sm" onclick="deleteUser('${u.id}','${esc(u.nickname||u.email)}')">🗑 삭제</button>` : '<span class="text-muted text-small">보호됨</span>'}
         </td>
       </tr>
@@ -492,6 +552,135 @@
   function filterUsers() {
     const q = document.getElementById('userSearch').value.toLowerCase();
     renderUsers(allUsers.filter(u => (u.email+u.nickname).toLowerCase().includes(q)));
+  }
+
+  // ── 편집 모달 ──
+  function closeEditModal() {
+    document.getElementById('editOverlay').classList.remove('open');
+  }
+
+  function editUser(jsonStr) {
+    const u = JSON.parse(jsonStr);
+    document.getElementById('editModalTitle').textContent = '회원 정보 수정: ' + (u.nickname || u.email);
+    document.getElementById('editModalBody').innerHTML = `
+      <div class="edit-field">
+        <label>닉네임</label>
+        <input id="ef_nickname" value="${esc(u.nickname||'')}" placeholder="닉네임">
+      </div>
+      <div class="edit-field">
+        <label>이메일</label>
+        <input id="ef_email" type="email" value="${esc(u.email||'')}" placeholder="이메일">
+        <p class="edit-hint">⚠️ 이메일은 로그인 ID입니다. 신중하게 변경하세요.</p>
+      </div>
+      <div class="edit-field">
+        <label>역할</label>
+        <select id="ef_role">
+          <option value="user" ${u.role!=='admin'?'selected':''}>&#128101; 일반</option>
+          <option value="admin" ${u.role==='admin'?'selected':''}>⭐ 관리자</option>
+        </select>
+      </div>
+      <hr class="edit-divider">
+      <div class="edit-field">
+        <label>비밀번호 재설정 <span style="color:var(--text-muted);font-weight:400">(6자 이상, 비워두면 변경 안함)</span></label>
+        <input id="ef_password" type="password" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022 (6자 이상)">
+      </div>
+    `;
+    document.getElementById('editSaveBtn').onclick = () => saveUser(u.id);
+    document.getElementById('editOverlay').classList.add('open');
+    document.getElementById('ef_nickname').focus();
+  }
+
+  async function saveUser(id) {
+    const nickname = document.getElementById('ef_nickname').value.trim();
+    const email = document.getElementById('ef_email').value.trim();
+    const role = document.getElementById('ef_role').value;
+    const password = document.getElementById('ef_password').value;
+    if (!nickname) { alert('닉네임을 입력하세요'); return; }
+    if (!email) { alert('이메일을 입력하세요'); return; }
+    const body = { nickname, email, role };
+    if (password) body.password = password;
+    try {
+      const res = await fetch(`/api/admin/users/${id}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(body) });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || '저장 실패'); return; }
+      closeEditModal();
+      loadUsers();
+    } catch(e) { alert('오류 발생'); }
+  }
+
+  function editStage(jsonStr) {
+    const s = JSON.parse(jsonStr);
+    document.getElementById('editModalTitle').textContent = 'Stage 수정: ' + s.name;
+    document.getElementById('editModalBody').innerHTML = `
+      <div class="edit-field">
+        <label>Stage 이름</label>
+        <input id="ef_sname" value="${esc(s.name||'')}" placeholder="Stage 이름" maxlength="30">
+      </div>
+      <div class="edit-field">
+        <label>설명</label>
+        <input id="ef_sdesc" value="${esc(s.description||'')}" placeholder="내용 없음">
+      </div>
+      <div class="edit-field">
+        <label>을(invite code)</label>
+        <input value="${esc(s.invite_code||'')}" readonly style="opacity:0.5;cursor:not-allowed">
+        <p class="edit-hint">저장시 자동으로 유지됩니다. &nbsp; <label style="cursor:pointer"><input type="checkbox" id="ef_reginvite"> ✔ 새 코드로 재발급</label></p>
+      </div>
+    `;
+    document.getElementById('editSaveBtn').onclick = () => saveStage(s.id);
+    document.getElementById('editOverlay').classList.add('open');
+    document.getElementById('ef_sname').focus();
+  }
+
+  async function saveStage(id) {
+    const name = document.getElementById('ef_sname').value.trim();
+    const description = document.getElementById('ef_sdesc').value.trim();
+    const regenerateInvite = document.getElementById('ef_reginvite').checked;
+    if (!name) { alert('Stage 이름을 입력하세요'); return; }
+    try {
+      const res = await fetch(`/api/admin/stages/${id}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ name, description, regenerateInvite }) });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || '저장 실패'); return; }
+      closeEditModal();
+      loadStages();
+    } catch(e) { alert('오류 발생'); }
+  }
+
+  function editSong(jsonStr) {
+    const s = JSON.parse(jsonStr);
+    document.getElementById('editModalTitle').textContent = '곳 수정: ' + s.name;
+    document.getElementById('editModalBody').innerHTML = `
+      <div class="edit-field">
+        <label>곳 이름</label>
+        <input id="ef_songname" value="${esc(s.name||'')}" placeholder="곳 이름">
+      </div>
+      <div class="edit-field">
+        <label>BPM</label>
+        <input id="ef_bpm" type="number" min="20" max="400" value="${s.bpm||120}">
+      </div>
+      <div class="edit-field">
+        <label>박자 (Time Signature)</label>
+        <select id="ef_timesig">
+          ${['2/4','3/4','4/4','6/8','12/8'].map(t => `<option value="${t}" ${s.time_signature===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+    `;
+    document.getElementById('editSaveBtn').onclick = () => saveSong(s.id);
+    document.getElementById('editOverlay').classList.add('open');
+    document.getElementById('ef_songname').focus();
+  }
+
+  async function saveSong(id) {
+    const name = document.getElementById('ef_songname').value.trim();
+    const bpm = document.getElementById('ef_bpm').value;
+    const time_signature = document.getElementById('ef_timesig').value;
+    if (!name) { alert('곳 이름을 입력하세요'); return; }
+    try {
+      const res = await fetch(`/api/admin/songs/${id}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify({ name, bpm, time_signature }) });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || '저장 실패'); return; }
+      closeEditModal();
+      loadSongs();
+    } catch(e) { alert('오류 발생'); }
   }
 
   async function deleteUser(id, name) {
@@ -524,7 +713,7 @@
         <td class="text-muted">${s.msg_count}개</td>
         <td><code style="font-size:0.72rem;color:var(--accent2);background:rgba(251,191,36,0.08);padding:0.15rem 0.4rem;border-radius:0.25rem">${s.invite_code}</code></td>
         <td class="text-small text-muted">${fmtDate(s.created_at)}</td>
-        <td><button class="btn-danger-sm" onclick="deleteStage('${s.id}','${esc(s.name)}')">🗑 삭제</button></td>
+        <td><button class="btn-edit-sm" onclick="editStage(${JSON.stringify(JSON.stringify(s))})">&#9998; 편집</button><button class="btn-danger-sm" onclick="deleteStage('${s.id}','${esc(s.name)}')">🗑 삭제</button></td>
       </tr>
     `).join('');
   }
@@ -567,7 +756,7 @@
           <span class="size-pill" style="color:${s.total_size > 5*1024*1024 ? '#f43f5e' : s.total_size > 1*1024*1024 ? '#fbbf24' : 'var(--text-muted)'}">${fmtSize(s.total_size)}</span>
         </td>
         <td class="text-small text-muted">${fmtDate(s.created_at)}</td>
-        <td><button class="btn-danger-sm" onclick="deleteSong('${s.id}','${esc(s.name)}')">🗑 삭제</button></td>
+        <td><button class="btn-edit-sm" onclick="editSong(${JSON.stringify(JSON.stringify(s))})">&#9998; 편집</button><button class="btn-danger-sm" onclick="deleteSong('${s.id}','${esc(s.name)}')">🗑 삭제</button></td>
       </tr>
     `).join('');
   }
