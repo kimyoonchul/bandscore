@@ -586,7 +586,7 @@
     <!-- ═══ RIGHT CONTENT PANEL ═══ -->
     <main class="content-panel" id="contentPanel">
       <!-- Welcome State (아무것도 선택 안 됨) -->
-      <div id="welcomePanel" class="welcome-panel">
+      <div id="welcomePanel" class="welcome-panel" style="flex:1;overflow-y:auto;min-height:0">
         <div class="icon">🎭</div>
         <h2>Backstage에 오신 걸 환영합니다</h2>
         <p>좌측에서 Stage나 곡을 선택하세요.<br>새 Stage를 만들거나 초대코드로 참가할 수도 있어요.</p>
@@ -597,7 +597,7 @@
       </div>
 
       <!-- Stage Dashboard + Song List View -->
-      <div id="songListView" style="display:none;flex-direction:column;height:100%">
+      <div id="songListView" style="display:none;flex-direction:column;flex:1;min-height:0">
         <div class="stage-info-bar">
           <h2 id="currentStageName"></h2>
           <div id="stageActionBtns" style="display:flex;gap:0.5rem">
@@ -634,7 +634,7 @@
         </div>
 
         <!-- 곡 목록 패널 -->
-        <div id="songsPanel">
+        <div id="songsPanel" style="flex:1;overflow-y:auto;min-height:0">
           <div id="songGrid" class="song-grid"></div>
           <div id="emptyState" class="empty-state" style="display:none">
             <div class="icon">🎸</div>
@@ -658,7 +658,7 @@
       </div>
 
       <!-- DM 패널 -->
-      <div id="dmPanel" style="display:none;flex-direction:column;height:100%">
+      <div id="dmPanel" style="display:none;flex-direction:column;flex:1;min-height:0">
         <!-- DM 헤더 -->
         <div class="stage-info-bar">
           <h2 id="dmPanelTitle">📩 메시지</h2>
@@ -1941,10 +1941,8 @@
       if (tab === 'chat') {
         if (!chatLoaded) loadChatMessages();
         document.getElementById('chatUnreadBadge').style.display = 'none';
-        // 채팅 패널 높이 동적 계산
-        const panel = document.getElementById('chatPanel');
-        const rect = panel.getBoundingClientRect();
-        panel.style.height = (window.innerHeight - rect.top - 40) + 'px';
+        // CSS flex로 레이아웃이 관리되므로 JS 높이 계산 제거
+        scrollChatBottom();
         scrollChatBottom();
         document.getElementById('chatInput').focus();
       }
@@ -1987,18 +1985,32 @@
 
     async function sendChatMessage() {
       const input = document.getElementById('chatInput');
-      const msg = input.value.trim();
-      if (!msg || !currentStageId) return;
+      const text = input.value;
+      if (!text.trim() || !currentStageId) return;
       input.value = '';
+
+      const myUser = JSON.parse(localStorage.getItem('backstage_user') || '{}');
+      
+      // 즉시 로컬 UI 렌더링 (Optimistic Update)
+      const tempMsg = {
+        id: 'temp_' + Date.now(),
+        stage_id: currentStageId,
+        user_id: myUser.id,
+        message: text.trim(),
+        created_at: new Date().toISOString(),
+        nickname: myUser.nickname,
+        email: myUser.email
+      };
+      appendChatMessage(tempMsg);
+      scrollChatBottom();
+
       try {
         const res = await fetch(`/api/stages/${currentStageId}/messages`, {
           method: 'POST', headers: getAuthHeaders(),
-          body: JSON.stringify({ message: msg })
+          body: JSON.stringify({ message: text })
         });
-        if (res.ok) {
-          const data = await res.json();
-          appendChatMessage(data);
-          scrollChatBottom();
+        if (!res.ok) {
+          console.error('메시지 전송 실패');
         }
       } catch (e) { alert('메시지 전송 실패'); }
     }
@@ -2108,10 +2120,7 @@
       document.getElementById('dmConversationList').style.display = 'none';
       document.getElementById('dmChatView').style.display = 'flex';
       showPanel('dm');
-      // 높이 동적 계산
-      const panel = document.getElementById('dmChatView');
-      const rect = panel.getBoundingClientRect();
-      panel.style.height = (window.innerHeight - rect.top - 40) + 'px';
+      // CSS flex로 높이 계산되므로 삭제
       try {
         const res = await fetch('/api/dm/' + userId, { headers: getAuthHeaders() });
         const msgs = await res.json();
