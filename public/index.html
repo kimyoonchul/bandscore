@@ -1865,6 +1865,10 @@
         if (!chatLoaded) loadChatMessages();
         document.getElementById('chatUnreadBadge').style.display = 'none';
         document.getElementById('sidebarChatBadge').style.display = 'none';
+        // 채팅 패널 높이 동적 계산
+        const panel = document.getElementById('chatPanel');
+        const rect = panel.getBoundingClientRect();
+        panel.style.height = (window.innerHeight - rect.top - 20) + 'px';
         scrollChatBottom();
         document.getElementById('chatInput').focus();
       }
