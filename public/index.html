@@ -552,17 +552,6 @@
       <div class="sidebar-scroll" id="sidebarTree">
         <!-- 트리 노드 JS로 렌더링 -->
       </div>
-      <!-- 사이드바 하단 고정 바 -->
-      <div style="border-top:1px solid var(--border);padding:0.5rem;display:flex;gap:0.375rem">
-        <button class="btn btn-ghost btn-sm" id="sidebarChatBtn" onclick="openStageChat()" style="flex:1;font-size:0.72rem;padding:0.4rem;position:relative">
-          💬 채팅
-          <span id="sidebarChatBadge" style="display:none;position:absolute;top:2px;right:6px;background:var(--accent);color:#fff;border-radius:50%;width:1rem;height:1rem;font-size:0.55rem;font-weight:900;line-height:1rem;text-align:center">0</span>
-        </button>
-        <button class="btn btn-ghost btn-sm" id="sidebarDmBtn" onclick="openDmList()" style="flex:1;font-size:0.72rem;padding:0.4rem;position:relative">
-          📩 DM
-          <span id="sidebarDmBadge" style="display:none;position:absolute;top:2px;right:6px;background:var(--accent);color:#fff;border-radius:50%;width:1rem;height:1rem;font-size:0.55rem;font-weight:900;line-height:1rem;text-align:center">0</span>
-        </button>
-      </div>
     </aside>
 
     <!-- ═══ RIGHT CONTENT PANEL ═══ -->
@@ -621,6 +610,25 @@
           <div style="display:flex;gap:0.5rem;padding:0.5rem 0 0">
             <input type="text" id="chatInput" placeholder="메시지 입력..." style="flex:1;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--bg-elevated);color:var(--text);font-size:0.82rem;outline:none" onkeydown="if(event.key==='Enter')sendChatMessage()">
             <button class="btn btn-primary btn-sm" onclick="sendChatMessage()" style="font-size:0.8rem;padding:0.5rem 1rem">전송</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DM 패널 -->
+      <div id="dmPanel" style="display:none;flex-direction:column;height:100%">
+        <!-- DM 헤더 -->
+        <div class="stage-info-bar">
+          <h2 id="dmPanelTitle">📩 메시지</h2>
+          <button class="btn btn-ghost btn-sm" id="dmBackBtn" onclick="closeDm()" style="font-size:0.75rem;display:none">← 목록</button>
+        </div>
+        <!-- DM 대화 목록 -->
+        <div id="dmConversationList" style="flex:1;overflow-y:auto;padding:0.5rem"></div>
+        <!-- DM 채팅 화면 -->
+        <div id="dmChatView" style="display:none;flex-direction:column;flex:1;min-height:0">
+          <div id="dmMessages" style="flex:1;overflow-y:auto;padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem"></div>
+          <div style="display:flex;gap:0.5rem;padding:0.5rem 0 0">
+            <input type="text" id="dmInput" placeholder="메시지 입력..." style="flex:1;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--bg-elevated);color:var(--text);font-size:0.82rem;outline:none" onkeydown="if(event.key==='Enter')sendDm()">
+            <button class="btn btn-primary btn-sm" onclick="sendDm()" style="font-size:0.8rem;padding:0.5rem 1rem">전송</button>
           </div>
         </div>
       </div>
@@ -1628,10 +1636,14 @@
         const res = await fetch('/api/songs?stage_id=' + stageId, { headers: getAuthHeaders() });
         if (!res.ok) return;
         const songs = await res.json();
+        const chatBtn = `<div class="tree-node-header" onclick="openStageChat()" style="opacity:0.85">
+          <span class="tree-node-icon" style="font-size:0.75rem">💬</span>
+          <span class="tree-node-label">채팅</span>
+        </div>`;
         if (songs.length === 0) {
-          container.innerHTML = '<div style="padding:0.25rem 0.75rem;color:var(--text-muted);font-size:0.72rem;font-style:italic">곡 없음</div>';
+          container.innerHTML = chatBtn + '<div style="padding:0.25rem 0.75rem;color:var(--text-muted);font-size:0.72rem;font-style:italic">곡 없음</div>';
         } else {
-          container.innerHTML = songs.map(song => `
+          container.innerHTML = chatBtn + songs.map(song => `
             <div class="tree-node-header" onclick="selectSong('${song.id}', event)" data-song-id="${song.id}">
               <span class="tree-node-icon" style="font-size:0.75rem">🎵</span>
               <span class="tree-node-label">${song.name}</span>
@@ -1702,6 +1714,7 @@
       document.getElementById('welcomePanel').style.display = panel === 'welcome' ? '' : 'none';
       document.getElementById('songListView').style.display = panel === 'songList' ? 'flex' : 'none';
       document.getElementById('songDetailView').style.display = panel === 'songDetail' ? '' : 'none';
+      document.getElementById('dmPanel').style.display = panel === 'dm' ? 'flex' : 'none';
     }
 
     // 기존 enterStage (하위 호환)
@@ -1797,7 +1810,8 @@
             </select>
             <button onclick="kickMember('${m.id}','${(m.nickname||m.email).replace(/'/g,"\\'")}')" style="background:none;border:none;cursor:pointer;font-size:0.6rem;opacity:0.5;padding:0" title="강퇴">✕</button>
           ` : `<span style="font-size:0.6rem">${roleIcon}</span>`;
-          return `<div style="display:flex;align-items:center;gap:0.3rem;background:var(--bg-elevated);padding:0.25rem 0.5rem;border-radius:1rem;font-size:0.72rem;font-weight:600;color:var(--text-secondary)" title="${m.nickname} (${m.email}) — ${m.role}">
+          const dmClick = !isMe ? `onclick="openDmChat('${m.id}','${(m.nickname||m.email.split('@')[0]).replace(/'/g,"\\\\'")}')" style="cursor:pointer"` : '';
+          return `<div ${dmClick} style="display:flex;align-items:center;gap:0.3rem;background:var(--bg-elevated);padding:0.25rem 0.5rem;border-radius:1rem;font-size:0.72rem;font-weight:600;color:var(--text-secondary);${!isMe?'cursor:pointer':''}" title="${!isMe ? 'DM 보내기 - ' : ''}${m.nickname} (${m.email}) — ${m.role}">
             <span style="width:1.2rem;height:1.2rem;border-radius:50%;background:var(--wood-gradient);display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:800;color:#000">${initial}</span>
             ${m.nickname || m.email.split('@')[0]}${isMe ? ' (나)' : ''}
             ${manageHtml}
@@ -1864,7 +1878,6 @@
       if (tab === 'chat') {
         if (!chatLoaded) loadChatMessages();
         document.getElementById('chatUnreadBadge').style.display = 'none';
-        document.getElementById('sidebarChatBadge').style.display = 'none';
         // 채팅 패널 높이 동적 계산
         const panel = document.getElementById('chatPanel');
         const rect = panel.getBoundingClientRect();
@@ -1897,7 +1910,7 @@
       const el = document.createElement('div');
       el.style.cssText = `display:flex;flex-direction:column;${isMe ? 'align-items:flex-end' : 'align-items:flex-start'}`;
       el.innerHTML = `
-        ${!isMe ? `<span style="font-size:0.65rem;font-weight:700;color:var(--text-muted);margin-bottom:0.1rem">${name}</span>` : ''}
+        ${!isMe ? `<span onclick="openDmChat('${m.user_id}','${name}')" style="font-size:0.65rem;font-weight:700;color:var(--text-muted);margin-bottom:0.1rem;cursor:pointer" title="DM 보내기">${name}</span>` : ''}
         <div style="max-width:80%;padding:0.4rem 0.7rem;border-radius:${isMe ? '0.8rem 0.8rem 0.2rem 0.8rem' : '0.8rem 0.8rem 0.8rem 0.2rem'};background:${isMe ? 'var(--primary)' : 'var(--bg-elevated)'};color:${isMe ? '#fff' : 'var(--text)'};font-size:0.8rem;line-height:1.4;word-break:break-word">${m.message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
         <span style="font-size:0.58rem;color:var(--text-muted);margin-top:0.1rem">${time}</span>
       `;
@@ -1925,6 +1938,9 @@
     function initChatSocket() {
       if (!window.io) return;
       chatSocket = io();
+      // 내 DM 룸 join
+      const myUser = JSON.parse(localStorage.getItem('backstage_user') || '{}');
+      if (myUser.id) chatSocket.emit('join-dm', myUser.id);
       chatSocket.on('stage-message', (msg) => {
         appendChatMessage(msg);
         if (currentChatTab === 'chat') {
@@ -1935,10 +1951,23 @@
           const n = parseInt(badge.textContent || '0') + 1;
           badge.textContent = n;
           badge.style.display = '';
-          // 사이드바 뱃지
-          const sbBadge = document.getElementById('sidebarChatBadge');
-          sbBadge.textContent = n;
-          sbBadge.style.display = '';
+        }
+      });
+      // DM 실시간 수신
+      chatSocket.on('dm-message', (msg) => {
+        if (currentDmUserId && (msg.sender_id === currentDmUserId || msg.receiver_id === currentDmUserId)) {
+          const currentUserId = myUser.id;
+          const isMe = msg.sender_id === currentUserId;
+          const container = document.getElementById('dmMessages');
+          const el = document.createElement('div');
+          el.style.cssText = `display:flex;flex-direction:column;${isMe ? 'align-items:flex-end' : 'align-items:flex-start'}`;
+          const time = msg.created_at ? new Date(msg.created_at + 'Z').toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+          el.innerHTML = `
+            <div style="max-width:80%;padding:0.4rem 0.7rem;border-radius:${isMe ? '0.8rem 0.8rem 0.2rem 0.8rem' : '0.8rem 0.8rem 0.8rem 0.2rem'};background:${isMe ? 'var(--primary)' : 'var(--bg-elevated)'};color:${isMe ? '#fff' : 'var(--text)'};font-size:0.8rem;line-height:1.4;word-break:break-word">${msg.message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+            <span style="font-size:0.58rem;color:var(--text-muted);margin-top:0.1rem">${time}</span>
+          `;
+          container.appendChild(el);
+          setTimeout(() => container.scrollTop = container.scrollHeight, 50);
         }
       });
     }
@@ -1952,9 +1981,97 @@
       if (window.innerWidth < 1024) closeSidebar();
     }
 
-    // DM 열기 (추후 구현)
+    // DM 열기
+    let currentDmUserId = null;
     function openDmList() {
-      alert('DM 기능은 준비 중입니다');
+      showPanel('dm');
+      document.getElementById('dmPanelTitle').textContent = '📩 메시지';
+      document.getElementById('dmBackBtn').style.display = 'none';
+      document.getElementById('dmConversationList').style.display = '';
+      document.getElementById('dmChatView').style.display = 'none';
+      loadDmConversations();
+      if (window.innerWidth < 1024) closeSidebar();
+    }
+
+    async function loadDmConversations() {
+      try {
+        const res = await fetch('/api/dm/conversations', { headers: getAuthHeaders() });
+        const convos = await res.json();
+        const container = document.getElementById('dmConversationList');
+        if (!convos.length) {
+          container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:0.8rem">아직 대화가 없습니다.<br>멤버 이름을 클릭해 DM을 시작하세요.</div>';
+          return;
+        }
+        container.innerHTML = convos.map(c => {
+          const name = c.nickname || c.email.split('@')[0];
+          const time = c.last_at ? new Date(c.last_at + 'Z').toLocaleDateString('ko-KR') : '';
+          const unread = c.unread > 0 ? `<span style="background:var(--accent);color:#fff;border-radius:50%;padding:0.1rem 0.35rem;font-size:0.6rem;font-weight:900">${c.unread}</span>` : '';
+          return `<div onclick="openDmChat('${c.user_id}','${name}')" style="display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0.5rem;border-radius:var(--radius);cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">
+            <div style="width:2rem;height:2rem;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:900;flex-shrink:0">${name[0]}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:0.8rem;font-weight:700">${name} ${unread}</div>
+              <div style="font-size:0.68rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.last_message || ''}</div>
+            </div>
+            <span style="font-size:0.6rem;color:var(--text-muted)">${time}</span>
+          </div>`;
+        }).join('');
+      } catch(e) { console.error('DM 목록 로드 실패:', e); }
+    }
+
+    async function openDmChat(userId, name) {
+      currentDmUserId = userId;
+      document.getElementById('dmPanelTitle').textContent = '📩 ' + name;
+      document.getElementById('dmBackBtn').style.display = '';
+      document.getElementById('dmConversationList').style.display = 'none';
+      document.getElementById('dmChatView').style.display = 'flex';
+      showPanel('dm');
+      // 높이 동적 계산
+      const panel = document.getElementById('dmChatView');
+      const rect = panel.getBoundingClientRect();
+      panel.style.height = (window.innerHeight - rect.top - 20) + 'px';
+      try {
+        const res = await fetch('/api/dm/' + userId, { headers: getAuthHeaders() });
+        const msgs = await res.json();
+        const container = document.getElementById('dmMessages');
+        container.innerHTML = '';
+        const currentUserId = JSON.parse(localStorage.getItem('backstage_user') || '{}').id;
+        msgs.forEach(m => {
+          const isMe = m.sender_id === currentUserId;
+          const el = document.createElement('div');
+          el.style.cssText = `display:flex;flex-direction:column;${isMe ? 'align-items:flex-end' : 'align-items:flex-start'}`;
+          const time = m.created_at ? new Date(m.created_at + 'Z').toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+          el.innerHTML = `
+            <div style="max-width:80%;padding:0.4rem 0.7rem;border-radius:${isMe ? '0.8rem 0.8rem 0.2rem 0.8rem' : '0.8rem 0.8rem 0.8rem 0.2rem'};background:${isMe ? 'var(--primary)' : 'var(--bg-elevated)'};color:${isMe ? '#fff' : 'var(--text)'};font-size:0.8rem;line-height:1.4;word-break:break-word">${m.message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+            <span style="font-size:0.58rem;color:var(--text-muted);margin-top:0.1rem">${time}</span>
+          `;
+          container.appendChild(el);
+        });
+        setTimeout(() => container.scrollTop = container.scrollHeight, 50);
+      } catch(e) { console.error('DM 로드 실패:', e); }
+      document.getElementById('dmInput').focus();
+      if (window.innerWidth < 1024) closeSidebar();
+    }
+
+    function closeDm() {
+      currentDmUserId = null;
+      document.getElementById('dmPanelTitle').textContent = '📩 메시지';
+      document.getElementById('dmBackBtn').style.display = 'none';
+      document.getElementById('dmConversationList').style.display = '';
+      document.getElementById('dmChatView').style.display = 'none';
+      loadDmConversations();
+    }
+
+    async function sendDm() {
+      const input = document.getElementById('dmInput');
+      const msg = input.value.trim();
+      if (!msg || !currentDmUserId) return;
+      input.value = '';
+      try {
+        await fetch('/api/dm/' + currentDmUserId, {
+          method: 'POST', headers: getAuthHeaders(),
+          body: JSON.stringify({ message: msg })
+        });
+      } catch(e) { alert('DM 전송 실패'); }
     }
 
     async function leaveStage() {

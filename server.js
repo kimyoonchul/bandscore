@@ -220,6 +220,17 @@ async function initDb() {
     FOREIGN KEY (stage_id) REFERENCES stages(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   )`);
+  // ── DM 테이블 ──
+  db.run(`CREATE TABLE IF NOT EXISTS direct_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sender_id TEXT NOT NULL,
+    receiver_id TEXT NOT NULL,
+    message TEXT NOT NULL,
+    is_read INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
+  )`);
   saveDb();
   // Migration: 기존 DB에 새 컬럼 추가
   try { db.run('ALTER TABLE songs ADD COLUMN cover_filename TEXT'); saveDb(); } catch(e) {}
@@ -533,6 +544,51 @@ app.post('/api/stages/:stageId/messages', authMiddleware, (req, res) => {
   res.json(msg);
 });
 
+// ── DM API ──
+// 내 DM 대화 목록
+app.get('/api/dm/conversations', authMiddleware, (req, res) => {
+  const conversations = query(`
+    SELECT u.id as user_id, u.nickname, u.email,
+      (SELECT message FROM direct_messages WHERE (sender_id = ? AND receiver_id = u.id) OR (sender_id = u.id AND receiver_id = ?) ORDER BY id DESC LIMIT 1) as last_message,
+      (SELECT created_at FROM direct_messages WHERE (sender_id = ? AND receiver_id = u.id) OR (sender_id = u.id AND receiver_id = ?) ORDER BY id DESC LIMIT 1) as last_at,
+      (SELECT COUNT(*) FROM direct_messages WHERE sender_id = u.id AND receiver_id = ? AND is_read = 0) as unread
+    FROM users u
+    WHERE u.id != ? AND (
+      u.id IN (SELECT sender_id FROM direct_messages WHERE receiver_id = ?)
+      OR u.id IN (SELECT receiver_id FROM direct_messages WHERE sender_id = ?)
+    )
+    ORDER BY last_at DESC
+  `, [req.user.id, req.user.id, req.user.id, req.user.id, req.user.id, req.user.id, req.user.id, req.user.id]);
+  res.json(conversations);
+});
+
+// 특정 유저와의 DM 메시지
+app.get('/api/dm/:userId', authMiddleware, (req, res) => {
+  const msgs = query(`SELECT d.*, u.nickname, u.email FROM direct_messages d
+    LEFT JOIN users u ON d.sender_id = u.id
+    WHERE (d.sender_id = ? AND d.receiver_id = ?) OR (d.sender_id = ? AND d.receiver_id = ?)
+    ORDER BY d.id DESC LIMIT 50`,
+    [req.user.id, req.params.userId, req.params.userId, req.user.id]);
+  // 읽음 처리
+  run('UPDATE direct_messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ? AND is_read = 0',
+    [req.params.userId, req.user.id]);
+  saveDb();
+  res.json(msgs.reverse());
+});
+
+// DM 전송
+app.post('/api/dm/:userId', authMiddleware, (req, res) => {
+  const { message } = req.body;
+  if (!message || !message.trim()) return res.status(400).json({ error: '메시지를 입력하세요' });
+  run('INSERT INTO direct_messages (sender_id, receiver_id, message) VALUES (?,?,?)',
+    [req.user.id, req.params.userId, message.trim()]);
+  saveDb();
+  const msg = get(`SELECT d.*, u.nickname, u.email FROM direct_messages d
+    LEFT JOIN users u ON d.sender_id = u.id WHERE d.id = last_insert_rowid()`);
+  io.to('dm_' + req.params.userId).emit('dm-message', msg);
+  io.to('dm_' + req.user.id).emit('dm-message', msg);
+  res.json(msg);
+});
 
 // 곡 수정 권한 체크 헬퍼 (editor 이상만 허용)
 function checkSongEditPermission(req, res, songOrStageId, isStageId = false) {
@@ -782,6 +838,11 @@ io.on('connection', (socket) => {
     if (socket.stageRoom) socket.leave(socket.stageRoom);
     socket.stageRoom = 'stage_' + stageId;
     socket.join(socket.stageRoom);
+  });
+
+  // DM 개인 룸 참가
+  socket.on('join-dm', (userId) => {
+    socket.join('dm_' + userId);
   });
 
   socket.on('join-room', ({ songId, partId, partName }) => {
