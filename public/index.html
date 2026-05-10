@@ -571,9 +571,9 @@
       <div id="songListView" style="display:none">
         <div class="stage-info-bar">
           <h2 id="currentStageName"></h2>
-          <div style="display:flex;gap:0.5rem">
-            <button class="btn btn-primary btn-sm" onclick="showNewSongModal()" style="font-size:0.78rem">＋ 새 곡</button>
-            <button class="btn btn-ghost btn-sm" onclick="showInviteModal()" style="font-size:0.75rem">🔗 초대</button>
+          <div id="stageActionBtns" style="display:flex;gap:0.5rem">
+            <button class="btn btn-primary btn-sm" id="btnNewSong" onclick="showNewSongModal()" style="font-size:0.78rem">＋ 새 곡</button>
+            <button class="btn btn-ghost btn-sm" id="btnInvite" onclick="showInviteModal()" style="font-size:0.75rem">🔗 초대</button>
             <button class="btn btn-ghost btn-sm" id="stageSettingsBtn" onclick="showStageSettings()" style="font-size:0.75rem;display:none">⚙️</button>
           </div>
         </div>
@@ -1524,6 +1524,7 @@
 
     // ── Stage / Sidebar Functions ──
     let currentStageId = null;
+    let currentStageRole = null;
     let stagesCache = [];
 
     function getAuthHeaders() {
@@ -1718,6 +1719,7 @@
     }
 
     async function showInviteModal() {
+      if (currentStageRole === 'viewer') return alert('초대 권한이 없습니다. Stage 관리자에게 권한을 요청하세요.');
       try {
         const res = await fetch(`/api/stages/${currentStageId}/invite`, { headers: getAuthHeaders() });
         const data = await res.json();
@@ -1773,6 +1775,8 @@
         const created = data.created_at ? new Date(data.created_at).toLocaleDateString('ko-KR') : '';
         document.getElementById('stageCreatedAt').textContent = created ? `📅 ${created}` : '';
 
+        // 현재 역할 저장
+        currentStageRole = data.my_role;
         // 설정 버튼 (admin만)
         const settingsBtn = document.getElementById('stageSettingsBtn');
         if (settingsBtn) settingsBtn.style.display = data.my_role === 'admin' ? '' : 'none';
@@ -2088,6 +2092,7 @@
 
     // ── New Song ──
     function showNewSongModal() {
+      if (currentStageRole === 'viewer') return alert('편집 권한이 없습니다. Stage 관리자에게 권한을 요청하세요.');
       document.getElementById('newSongName').value = '';
       document.getElementById('newSongBpm').value = '120';
       document.getElementById('newSongTime').value = '4/4';
