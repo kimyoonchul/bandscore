@@ -397,10 +397,11 @@
       { id: 48, title: '초대 URL 가입 자동 참가', desc: '/invite/:code URL로 접속 → 로그인/가입 → 자동 Stage 참가. 초대 모달에서 URL 형태로 표시. 링크 복사 버튼.', tags: ['group', 'social'], phase: '3', status: 'done', priority: 'critical' },
 
       // ═══ Phase 4: 관리자 & 확장 ═══
-      { id: 30, title: '/admin 관리자 페이지 — 대시보드', desc: '전체 사용자 수, Stage 수, 곡 수 통계. 최근 가입자, 활성 사용자 차트. 서버 상태 모니터링.', tags: ['admin', 'ui'], phase: '4', status: 'todo', priority: 'critical' },
-      { id: 31, title: '/admin 회원 관리', desc: '회원 목록 조회, 검색, 필터. 회원 상세 (가입일, 소속 Stage, 활동). 계정 비활성화/삭제.', tags: ['admin'], phase: '4', status: 'todo', priority: 'critical' },
-      { id: 32, title: '/admin Stage 관리', desc: '전체 Stage 목록. Stage별 멤버 수, 곡 수 통계. 문제 Stage 강제 삭제/비활성화.', tags: ['admin', 'group'], phase: '4', status: 'todo', priority: 'high' },
-      { id: 33, title: '/admin 곡 관리', desc: '전체 곡 목록. 용량 큰 파일 확인. 미사용 업로드 파일 정리 도구.', tags: ['admin', 'song'], phase: '4', status: 'todo', priority: 'high' },
+      { id: 30, title: '/admin 관리자 페이지 — 대시보드', desc: '전체 사용자 수, Stage 수, 곡 수 통계. 최근 가입자, 활성 사용자 차트. 서버 상태 모니터링.', tags: ['admin', 'ui'], phase: '4', status: 'done', priority: 'critical' },
+      { id: 31, title: '/admin 회원 관리', desc: '회원 목록 조회, 검색, 필터. 회원 상세 (가입일, 소속 Stage, 활동). 계정 비활성화/삭제.', tags: ['admin'], phase: '4', status: 'done', priority: 'critical' },
+      { id: 32, title: '/admin Stage 관리', desc: '전체 Stage 목록. Stage별 멤버 수, 곡 수 통계. 문제 Stage 강제 삭제/비활성화.', tags: ['admin', 'group'], phase: '4', status: 'done', priority: 'high' },
+      { id: 33, title: '/admin 곡 관리', desc: '전체 곡 목록. 용량 큰 파일 확인. 미사용 업로드 파일 정리 도구.', tags: ['admin', 'song'], phase: '4', status: 'done', priority: 'high' },
+      { id: 49, title: '관리자-회원 DM', desc: 'admin 페이지에서 특정 회원에게 DM 전송. 기존 DM API/Socket.IO 재사용. 회원 목록에서 DM 버튼 → 우측 슬라이드 채팅 패널.', tags: ['admin', 'social'], phase: '4', status: 'done', priority: 'high' },
       { id: 34, title: '알림 시스템', desc: 'Stage 초대, 새 곡 추가, 연습 시작 등 알림. 인앱 알림 + 이메일 알림 (선택).', tags: ['social', 'infra'], phase: '4', status: 'todo', priority: 'medium' },
       { id: 35, title: '배포 & 인프라', desc: 'Docker 컨테이너화. nginx 리버스 프록시. SSL 인증서. 자동 백업 스크립트. CI/CD 파이프라인.', tags: ['infra'], phase: '4', status: 'todo', priority: 'high' },
       { id: 36, title: 'PWA & 오프라인 지원', desc: 'Service Worker로 악보 캐싱. 오프라인에서도 마지막 본 악보 조회 가능. 앱 설치 배너.', tags: ['infra', 'ui'], phase: '4', status: 'todo', priority: 'low' },
