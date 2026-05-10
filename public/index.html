@@ -578,26 +578,10 @@
           </div>
         </div>
 
-        <!-- Stage Dashboard Cards -->
-        <div id="stageDashboard" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;margin-bottom:1.5rem">
-          <!-- 멤버 카드 -->
-          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem">
-            <div style="font-size:0.7rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.625rem">👥 멤버</div>
-            <div id="stageMemberList" style="display:flex;flex-wrap:wrap;gap:0.375rem"></div>
-          </div>
-          <!-- 초대코드 카드 -->
-          <div id="inviteCodeCard" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;display:none">
-            <div style="font-size:0.7rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.625rem">🔗 초대코드</div>
-            <div style="display:flex;align-items:center;gap:0.5rem">
-              <code id="dashInviteCode" style="flex:1;background:var(--bg-elevated);padding:0.4rem 0.625rem;border-radius:0.375rem;font-size:0.85rem;font-weight:700;color:var(--primary-light);letter-spacing:0.1em"></code>
-              <button class="btn btn-ghost btn-sm" onclick="copyDashInviteCode()" style="font-size:0.7rem;padding:0.25rem 0.5rem">📋</button>
-            </div>
-          </div>
-          <!-- Stage 정보 카드 -->
-          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem">
-            <div style="font-size:0.7rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.625rem">📊 정보</div>
-            <div id="stageStats" style="font-size:0.78rem;color:var(--text-secondary);line-height:1.6"></div>
-          </div>
+        <!-- Stage Dashboard (간결) -->
+        <div id="stageDashboard" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:0.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+          <div id="stageMemberList" style="display:flex;flex-wrap:wrap;gap:0.3rem;flex:1;min-width:0"></div>
+          <span id="stageCreatedAt" style="font-size:0.68rem;color:var(--text-muted);white-space:nowrap"></span>
         </div>
         <!-- Stage 탈퇴 -->
         <div style="text-align:right;margin-bottom:1rem">
@@ -1784,26 +1768,13 @@
           </div>`;
         }).join('');
 
-        // 초대코드 (admin/editor만)
-        const inviteCard = document.getElementById('inviteCodeCard');
-        if (data.my_role === 'admin' || data.my_role === 'editor') {
-          inviteCard.style.display = '';
-          document.getElementById('dashInviteCode').textContent = data.invite_code || '-';
-          const settingsBtn = document.getElementById('stageSettingsBtn');
-          if (settingsBtn) settingsBtn.style.display = data.my_role === 'admin' ? '' : 'none';
-        } else {
-          inviteCard.style.display = 'none';
-        }
+        // 생성일
+        const created = data.created_at ? new Date(data.created_at).toLocaleDateString('ko-KR') : '';
+        document.getElementById('stageCreatedAt').textContent = created ? `📅 ${created}` : '';
 
-        // 통계
-        const stats = document.getElementById('stageStats');
-        const created = data.created_at ? new Date(data.created_at).toLocaleDateString('ko-KR') : '-';
-        stats.innerHTML = `
-          <div>🎵 곡 <strong>${data.songs ? data.songs.length : 0}</strong>개</div>
-          <div>👥 멤버 <strong>${data.members ? data.members.length : 0}</strong>명</div>
-          <div>📅 생성일 ${created}</div>
-          ${data.description ? `<div style="margin-top:0.25rem;color:var(--text-muted);font-size:0.72rem">${data.description}</div>` : ''}
-        `;
+        // 설정 버튼 (admin만)
+        const settingsBtn = document.getElementById('stageSettingsBtn');
+        if (settingsBtn) settingsBtn.style.display = data.my_role === 'admin' ? '' : 'none';
       } catch(e) { console.error('Stage 대시보드 로드 실패:', e); }
     }
 
@@ -1834,15 +1805,6 @@
       } catch(e) { alert('강퇴 실패'); }
     }
 
-    function copyDashInviteCode() {
-      const code = document.getElementById('dashInviteCode').textContent;
-      navigator.clipboard.writeText(code).then(() => {
-        const el = document.getElementById('dashInviteCode');
-        const orig = el.textContent;
-        el.textContent = '✅ 복사됨!';
-        setTimeout(() => el.textContent = orig, 1500);
-      });
-    }
 
     function showStageSettings() {
       alert('Stage 설정 기능은 준비 중입니다');
