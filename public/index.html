@@ -526,11 +526,9 @@
     <div class="app-logo" onclick="showSongList()" style="cursor:pointer"><img src="/favicon.svg" alt="Backstage" style="width:1.4em;height:1.4em;vertical-align:-0.25em;margin-right:0.25em;border-radius:0.25em"> <span style="background:linear-gradient(135deg,#f43f5e,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:900">Backstage</span>
     </div>
     <div style="display:flex;align-items:center;gap:0.5rem">
-      <button class="btn btn-primary" id="btnNewSong" onclick="showNewSongModal()">＋ <span class="btn-label">새
-          곡</span></button>
       <div id="authArea" style="display:flex;align-items:center;gap:0.5rem">
         <div id="userInfo" style="display:none;align-items:center;gap:0.5rem">
-          <span id="userNickname" style="color:var(--primary-light);font-size:0.82rem;font-weight:600"></span>
+          <span id="userNickname" style="color:var(--primary-light);font-size:0.82rem;font-weight:600;cursor:pointer" onclick="location.href='/profile.html'"></span>
           <button class="btn btn-ghost btn-sm" onclick="logout()" style="font-size:0.75rem;padding:0.25rem 0.5rem">로그아웃</button>
         </div>
       </div>
@@ -800,7 +798,7 @@
 
       </div>
     </div>
-  </footer>
+  </div>
 
   <style>
     .band-footer {
@@ -1539,7 +1537,6 @@
       document.getElementById('stageListView').style.display = 'none';
       document.getElementById('songListView').style.display = '';
       document.getElementById('currentStageName').textContent = stageName;
-      document.getElementById('btnNewSong').style.display = '';
       loadSongs();
     }
 
@@ -1548,7 +1545,6 @@
       document.getElementById('songListView').style.display = 'none';
       document.getElementById('songDetailView').style.display = 'none';
       document.getElementById('stageListView').style.display = '';
-      document.getElementById('btnNewSong').style.display = 'none';
       loadStages();
     }
 
@@ -1610,11 +1606,7 @@
       });
     }
 
-    // 초기 상태: 새 곡 버튼 숨기기 (Stage 선택 전)
-    document.addEventListener('DOMContentLoaded', () => {
-      const btn = document.getElementById('btnNewSong');
-      if (btn) btn.style.display = 'none';
-    });
+
 
   </script>
 

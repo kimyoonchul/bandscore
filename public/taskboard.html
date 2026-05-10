@@ -380,7 +380,8 @@
       { id: 14, title: 'Stage 내 곡 만들기 & 관리', desc: '곡 CRUD를 Stage 컨텍스트로 확장 완료. stage_id FK 추가. Stage별 곡 필터링.', tags: ['group', 'song'], phase: '2', status: 'done', priority: 'critical' },
       { id: 15, title: 'Stage 멤버 온라인 상태', desc: 'Socket.IO로 Stage 멤버 온/오프라인 실시간 표시. 현재 어떤 곡을 보고 있는지 표시.', tags: ['group', 'social'], phase: '2', status: 'todo', priority: 'low' },
       { id: 16, title: '멤버 강퇴 & Stage 탈퇴', desc: 'admin이 멤버 강퇴 가능. 본인 탈퇴 기능. 마지막 admin 탈퇴 시 경고.', tags: ['group'], phase: '2', status: 'todo', priority: 'medium' },
-      { id: 17, title: '기존 곡 데이터 이관 (Stage 매핑)', desc: '기존 5곡 + 업로드 14개 파일을 기본 Stage에 자동 매핑. 이관 스크립트 작성. 데이터 무손실 보장.', tags: ['infra', 'song'], phase: '2', status: 'todo', priority: 'critical' },
+      { id: 17, title: '기존 곡 데이터 이관 (Stage 매핑)', desc: 'chuli8944@gmail.com 계정의 "성수역 6번출구" Stage에 기존 곡 자동 매핑. 서버 initDb에서 stage_id=NULL인 곡을 자동 이관.', tags: ['infra', 'song'], phase: '2', status: 'done', priority: 'critical' },
+      { id: 18, title: '프로필 편집 페이지 (profile.html)', desc: '우측상단 닉네임 클릭 → /profile.html 이동. 닉네임 수정, 비밀번호 변경, 이메일 표시. API: PUT /api/auth/me, PUT /api/auth/password.', tags: ['auth', 'ui'], phase: '2', status: 'todo', priority: 'high' },
 
       // ═══ Phase 3: 플레이어 & 악보 고도화 ═══
       { id: 20, title: '악보 업로드 권한 분리', desc: 'editor 이상만 PDF 업로드/수정 가능. viewer는 악보 조회/재생만 가능.', tags: ['song', 'auth'], phase: '3', status: 'todo', priority: 'high' },
@@ -388,6 +389,7 @@
       { id: 22, title: '메모 / 주석 기능', desc: '악보 위에 개인 메모 남기기 (포스트잇 스타일). 다른 멤버 메모는 비공개.', tags: ['player', 'ui'], phase: '3', status: 'todo', priority: 'medium' },
       { id: 23, title: '셋리스트 (Set List) 기능', desc: '공연/연습용 곡 순서 세트 구성. 셋리스트 순서대로 자동 곡 전환. 저장 & 공유.', tags: ['song', 'group'], phase: '3', status: 'todo', priority: 'medium' },
       { id: 24, title: '사용 가이드 페이지', desc: 'guide.html 완성. 7개 섹션 (소개/시작하기/곡관리/악보/플레이어/합주/FAQ). 좌측 TOC.', tags: ['ui'], phase: '3', status: 'done', priority: 'high' },
+      { id: 25, title: '가이드 문서 스크린샷 업데이트', desc: '최종 UI 확정 후 guide.html 내 모든 가이드 이미지를 실제 스크린샷으로 교체. Stage 생성/초대/곡관리/플레이어 플로우 스크린샷 첨부.', tags: ['ui'], phase: '3', status: 'todo', priority: 'high' },
 
       // ═══ Phase 4: 관리자 & 확장 ═══
       { id: 30, title: '/admin 관리자 페이지 — 대시보드', desc: '전체 사용자 수, Stage 수, 곡 수 통계. 최근 가입자, 활성 사용자 차트. 서버 상태 모니터링.', tags: ['admin', 'ui'], phase: '4', status: 'todo', priority: 'critical' },

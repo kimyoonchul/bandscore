@@ -206,6 +206,38 @@ async function initDb() {
   try { db.run('ALTER TABLE users ADD COLUMN last_login TEXT'); saveDb(); } catch(e) {}
   // songs에 stage_id 추가 (기존 곡은 NULL → 나중에 이관)
   try { db.run('ALTER TABLE songs ADD COLUMN stage_id TEXT'); saveDb(); } catch(e) {}
+
+  // ── 기존 곡 데이터 이관: stage_id가 NULL인 곡 → '성수역 6번출구' Stage ──
+  const orphanSongs = query("SELECT id FROM songs WHERE stage_id IS NULL");
+  if (orphanSongs.length > 0) {
+    console.log(`📦 기존 곡 ${orphanSongs.length}개 이관 시작...`);
+    // admin 계정 확인/생성
+    let adminUser = get("SELECT id FROM users WHERE email = ?", [ADMIN_EMAIL]);
+    if (!adminUser) {
+      const adminId = uuidv4();
+      const hash = bcrypt.hashSync('admin1234', 10);
+      db.run("INSERT INTO users (id, email, password_hash, nickname, role) VALUES (?, ?, ?, ?, 'admin')",
+        [adminId, ADMIN_EMAIL, hash, 'chuli']);
+      adminUser = { id: adminId };
+      console.log('  → admin 계정 자동 생성');
+    }
+    // '성수역 6번출구' Stage 확인/생성
+    let defaultStage = get("SELECT id FROM stages WHERE name = '성수역 6번출구' AND created_by = ?", [adminUser.id]);
+    if (!defaultStage) {
+      const stageId = uuidv4();
+      const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+      db.run("INSERT INTO stages (id, name, description, created_by, invite_code) VALUES (?, ?, ?, ?, ?)",
+        [stageId, '성수역 6번출구', '어썸 성수점 밴드', adminUser.id, inviteCode]);
+      db.run("INSERT INTO stage_members (stage_id, user_id, role) VALUES (?, ?, 'admin')",
+        [stageId, adminUser.id]);
+      defaultStage = { id: stageId };
+      console.log('  → "성수역 6번출구" Stage 자동 생성');
+    }
+    // 이관 실행
+    db.run("UPDATE songs SET stage_id = ? WHERE stage_id IS NULL", [defaultStage.id]);
+    saveDb();
+    console.log(`  ✅ ${orphanSongs.length}개 곡 → "성수역 6번출구" 이관 완료`);
+  }
 }
 
 // ── Auth Middleware ──
