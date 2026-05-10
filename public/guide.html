@@ -76,7 +76,27 @@
 <body>
 
 <div class="header">
-  <a class="logo" href="/"><span>🎵</span> <span class="logo-text">Backstage</span></a>
+  <a class="logo" href="/">
+    <svg style="width: 1.8rem; height: 1.8rem; border-radius: 0.3rem;" viewBox="0 0 100 100">
+      <defs>
+        <linearGradient id="doorGlowGuide" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#f43f5e" stop-opacity="1"/>
+          <stop offset="100%" stop-color="#fbbf24" stop-opacity="0.3"/>
+        </linearGradient>
+      </defs>
+      <rect width="100" height="100" rx="24" fill="#1e1b4b"/>
+      <polygon points="40,20 80,5 80,95 40,80" fill="url(#doorGlowGuide)"/>
+      <polygon points="40,20 60,25 60,75 40,80" fill="#312e81"/>
+      <circle cx="45" cy="50" r="2" fill="#475569"/>
+      <g transform="translate(65, 35) rotate(15)" fill="#fff">
+        <circle cx="5" cy="20" r="6"/><circle cx="25" cy="15" r="6"/>
+        <rect x="9" y="4" width="3" height="16"/><rect x="29" y="-1" width="3" height="16"/>
+        <polygon points="9,4 32,-1 32,5 12,10"/>
+      </g>
+      <path d="M 85,20 L 87,25 L 92,27 L 87,29 L 85,34 L 83,29 L 78,27 L 83,25 Z" fill="#fbbf24"/>
+    </svg>
+    <span class="logo-text">Backstage</span>
+  </a>
   <a class="back-btn" href="/">← 메인으로</a>
 </div>
 
