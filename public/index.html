@@ -526,11 +526,21 @@
     <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="메뉴">☰</button>
     <div class="app-logo" onclick="showSongList()" style="cursor:pointer"><img src="/favicon.svg" alt="Backstage" style="width:1.4em;height:1.4em;vertical-align:-0.25em;margin-right:0.25em;border-radius:0.25em"> <span style="background:linear-gradient(135deg,#f43f5e,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:900">Backstage</span>
     </div>
-    <div style="display:flex;align-items:center;gap:0.5rem">
+    <div style="display:flex;align-items:center;gap:0.75rem">
+      <!-- DM 종이비행기 아이콘 -->
+      <button id="dmIconBtn" onclick="openDmList()" style="background:none;border:none;cursor:pointer;position:relative;padding:0.25rem" title="메시지">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+        <span id="dmRedDot" style="display:none;position:absolute;top:0;right:0;width:8px;height:8px;background:#f43f5e;border-radius:50%;border:2px solid var(--bg-surface)"></span>
+      </button>
+      <!-- 유저 메뉴 -->
       <div id="authArea" style="display:flex;align-items:center;gap:0.5rem">
-        <div id="userInfo" style="display:none;align-items:center;gap:0.5rem">
-          <span id="userNickname" style="color:var(--primary-light);font-size:0.82rem;font-weight:600;cursor:pointer" onclick="location.href='/profile'"></span>
-          <button class="btn btn-ghost btn-sm" onclick="logout()" style="font-size:0.75rem;padding:0.25rem 0.5rem">로그아웃</button>
+        <div id="userInfo" style="display:none;align-items:center;gap:0.5rem;position:relative">
+          <span id="userNickname" onclick="toggleUserMenu()" style="color:var(--primary-light);font-size:0.82rem;font-weight:600;cursor:pointer;user-select:none"></span>
+          <div id="userDropdown" style="display:none;position:absolute;top:100%;right:0;margin-top:0.5rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:0 8px 24px rgba(0,0,0,0.3);min-width:140px;z-index:999;overflow:hidden">
+            <a href="/profile" style="display:block;padding:0.6rem 1rem;font-size:0.78rem;color:var(--text);text-decoration:none;transition:background 0.15s" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">👤 프로필</a>
+            <div style="border-top:1px solid var(--border)"></div>
+            <button onclick="logout()" style="display:block;width:100%;text-align:left;padding:0.6rem 1rem;font-size:0.78rem;color:var(--accent);background:none;border:none;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">🚪 로그아웃</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1552,11 +1562,20 @@
       localStorage.removeItem('backstage_user');
       window.location.href = '/login';
     }
+    function toggleUserMenu() {
+      const dd = document.getElementById('userDropdown');
+      dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+    }
     // 페이지 로드 시 인증 상태 확인 → 사이드바 트리 로드
     document.addEventListener('DOMContentLoaded', () => {
       checkAuthState();
       loadSidebarTree();
       initChatSocket();
+      // 외부 클릭 시 드롭다운 닫기
+      document.addEventListener('click', (e) => {
+        const dd = document.getElementById('userDropdown');
+        if (dd && !e.target.closest('#userInfo')) dd.style.display = 'none';
+      });
     });
 
     // ── Stage / Sidebar Functions ──
@@ -1955,9 +1974,10 @@
       });
       // DM 실시간 수신
       chatSocket.on('dm-message', (msg) => {
+        const currentUserId = myUser.id;
+        const isMe = msg.sender_id === currentUserId;
+        // 현재 이 상대와 DM 채팅 중이면 메시지 추가
         if (currentDmUserId && (msg.sender_id === currentDmUserId || msg.receiver_id === currentDmUserId)) {
-          const currentUserId = myUser.id;
-          const isMe = msg.sender_id === currentUserId;
           const container = document.getElementById('dmMessages');
           const el = document.createElement('div');
           el.style.cssText = `display:flex;flex-direction:column;${isMe ? 'align-items:flex-end' : 'align-items:flex-start'}`;
@@ -1968,6 +1988,9 @@
           `;
           container.appendChild(el);
           setTimeout(() => container.scrollTop = container.scrollHeight, 50);
+        } else if (!isMe) {
+          // DM 패널이 아닐 때 → red dot 표시
+          document.getElementById('dmRedDot').style.display = '';
         }
       });
     }
@@ -1985,6 +2008,7 @@
     let currentDmUserId = null;
     function openDmList() {
       showPanel('dm');
+      document.getElementById('dmRedDot').style.display = 'none';
       document.getElementById('dmPanelTitle').textContent = '📩 메시지';
       document.getElementById('dmBackBtn').style.display = 'none';
       document.getElementById('dmConversationList').style.display = '';
