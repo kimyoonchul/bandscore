@@ -388,7 +388,7 @@
 
       // ═══ Phase 3: 플레이어 & 악보 고도화 ═══
       { id: 20, title: '악보 업로드 권한 분리', desc: 'editor 이상만 곡 생성/수정/삭제/업로드 가능. viewer는 조회/재생만. checkSongEditPermission 헬퍼로 서버 일괄 적용.', tags: ['song', 'auth'], phase: '3', status: 'done', priority: 'high' },
-      { id: 21, title: '연습 기록 저장', desc: '곡별 연습 시간, 횟수 기록. 개인별 연습 통계 대시보드. Stage 전체 연습 현황 공유.', tags: ['player', 'song'], phase: '3', status: 'todo', priority: 'medium' },
+      { id: 21, title: '연습 기록 저장', desc: '플레이어 진입/이탈 시 자동 기록. DB: practice_logs. API: POST /api/practice, GET /api/practice/song/:id, GET /api/practice/me. 5초 미만 무시.', tags: ['player', 'song'], phase: '3', status: 'done', priority: 'medium' },
       { id: 22, title: '메모 / 주석 기능', desc: '악보 위에 개인 메모 남기기 (포스트잇 스타일). 다른 멤버 메모는 비공개.', tags: ['player', 'ui'], phase: '3', status: 'todo', priority: 'medium' },
       { id: 23, title: '셋리스트 (Set List) 기능', desc: '공연/연습용 곡 순서 세트 구성. 셋리스트 순서대로 자동 곡 전환. 저장 & 공유.', tags: ['song', 'group'], phase: '3', status: 'todo', priority: 'medium' },
       { id: 24, title: '사용 가이드 페이지', desc: 'guide.html 완성. 7개 섹션 (소개/시작하기/곡관리/악보/플레이어/합주/FAQ). 좌측 TOC.', tags: ['ui'], phase: '3', status: 'done', priority: 'high' },

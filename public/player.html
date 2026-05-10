@@ -1512,7 +1512,27 @@
     // ── URL 파라미터 ──
     const P = new URLSearchParams(location.search), songId = P.get('songId'), partId = P.get('partId');
 
-    function goBack(e) { e.preventDefault(); window.location.href = '/#song/' + songId; }
+    // ── 연습 기록 자동 추적 ──
+    const practiceStartTime = Date.now();
+    function savePracticeLog() {
+      const sec = Math.floor((Date.now() - practiceStartTime) / 1000);
+      if (sec < 5 || !songId) return;
+      const token = localStorage.getItem('backstage_token');
+      if (!token) return;
+      try {
+        fetch('/api/practice', {
+          method: 'POST', keepalive: true,
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ song_id: songId, stage_id: song ? song.stage_id : null, duration_sec: sec })
+        });
+      } catch(e) {}
+    }
+    window.addEventListener('beforeunload', savePracticeLog);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') savePracticeLog();
+    });
+
+    function goBack(e) { e.preventDefault(); savePracticeLog(); window.location.href = '/#song/' + songId; }
 
     // ── 핵심 상태 ──
     let song, part, pdfDoc;
