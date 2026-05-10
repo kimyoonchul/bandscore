@@ -563,10 +563,9 @@
     </div>
   </header>
 
-  <!-- Sidebar Overlay (모바일/태블릿) -->
-  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-
   <div class="main-layout" id="mainLayout">
+    <!-- Sidebar Overlay (모바일/태블릿) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
     <!-- ═══ LEFT SIDEBAR — Tree Navigation ═══ -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
@@ -616,11 +615,7 @@
           <div id="stageMemberList" style="display:flex;flex-wrap:wrap;gap:0.3rem;flex:1;min-width:0"></div>
           <span id="stageCreatedAt" style="font-size:0.68rem;color:var(--text-muted);white-space:nowrap"></span>
         </div>
-        <!-- Stage 탈퇴 -->
-        <div style="text-align:right;margin-bottom:1rem">
-          <button class="btn btn-ghost btn-sm" onclick="leaveStage()"
-            style="font-size:0.7rem;color:var(--text-muted);opacity:0.6">🚪 Stage 탈퇴</button>
-        </div>
+
 
         <!-- 탭 전환: 곡 / 채팅 -->
         <div style="display:flex;gap:0;margin-bottom:0.75rem;border-bottom:2px solid var(--border)">
@@ -1868,6 +1863,9 @@
               <option value="viewer" ${m.role === 'viewer' ? 'selected' : ''}>👁️ 뷰어</option>
             </select>
             <button onclick="kickMember('${m.id}','${(m.nickname || m.email).replace(/'/g, "\\'")}')" style="background:none;border:none;cursor:pointer;font-size:0.6rem;opacity:0.5;padding:0;margin-left:0.1rem" title="강퇴" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'">✕</button>
+          ` : isMe ? `
+            <span style="font-size:0.6rem">${roleIcon}</span>
+            <button onclick="leaveStage()" style="background:var(--bg-surface);border:1px solid var(--border);border-radius:0.25rem;cursor:pointer;font-size:0.6rem;opacity:0.8;padding:0.1rem 0.3rem;margin-left:0.3rem" title="Stage 탈퇴" onmouseover="this.style.opacity='1';this.style.borderColor='var(--primary)'" onmouseout="this.style.opacity='0.8';this.style.borderColor='var(--border)'">🚪 탈퇴</button>
           ` : `<span style="font-size:0.6rem">${roleIcon}</span>`;
           const dmClick = !isMe ? `onclick="openDmChat('${m.id}','${(m.nickname || m.email.split('@')[0]).replace(/'/g, "\\\\'")}')"` : '';
           return `<div style="display:flex;align-items:center;gap:0.4rem;background:var(--bg-elevated);padding:0.3rem 0.5rem;border-radius:1rem;font-size:0.72rem;font-weight:600;color:var(--text-secondary);">
@@ -2494,8 +2492,7 @@
     }
 
     function showSongList() {
-      document.getElementById('songListView').style.display = 'block';
-      document.getElementById('songDetailView').style.display = 'none';
+      showPanel('songList');
       window.location.hash = '';
       loadSongs();
     }

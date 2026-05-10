@@ -68,11 +68,12 @@ html, body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg-deep);
   color: var(--text);
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   user-select: none;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 body {
@@ -261,12 +262,12 @@ body::before {
   display: none;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border: none;
   background: none;
   color: var(--text-secondary);
-  font-size: 1.1rem;
+  font-size: 1.4rem;
   cursor: pointer;
   border-radius: var(--radius);
   transition: background 0.15s;
