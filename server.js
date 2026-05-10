@@ -581,9 +581,8 @@ app.post('/api/dm/:userId', authMiddleware, (req, res) => {
   try {
     const { message } = req.body;
     if (!message || !message.trim()) return res.status(400).json({ error: '메시지를 입력하세요' });
-    db.prepare('INSERT INTO direct_messages (sender_id, receiver_id, message) VALUES (?,?,?)').run(
-      req.user.id, req.params.userId, message.trim());
-    saveDb();
+    run('INSERT INTO direct_messages (sender_id, receiver_id, message) VALUES (?,?,?)', 
+      [req.user.id, req.params.userId, message.trim()]);
     const msg = get(`SELECT d.*, u.nickname, u.email FROM direct_messages d
       LEFT JOIN users u ON d.sender_id = u.id
       WHERE d.sender_id = ? AND d.receiver_id = ? ORDER BY d.id DESC LIMIT 1`,

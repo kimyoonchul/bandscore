@@ -1983,7 +1983,11 @@
       chatSocket.on('dm-message', (msg) => {
         const isMe = msg.sender_id === myUser.id;
         if (isMe) return; // 내가 보낸 건 이미 직접 추가됨
-        if (currentDmUserId && msg.sender_id === currentDmUserId) {
+        
+        const isDmPanelVisible = document.getElementById('dmPanel').style.display !== 'none';
+        const isChatViewVisible = document.getElementById('dmChatView').style.display !== 'none';
+
+        if (isDmPanelVisible && isChatViewVisible && currentDmUserId === msg.sender_id) {
           const container = document.getElementById('dmMessages');
           const el = document.createElement('div');
           el.style.cssText = 'display:flex;flex-direction:column;align-items:flex-start';
@@ -1995,8 +1999,12 @@
           container.appendChild(el);
           setTimeout(() => container.scrollTop = container.scrollHeight, 50);
         } else {
-          // DM 패널이 아닐 때 → red dot 표시
+          // 화면에 채팅방이 안 열려있으면 red dot 표시
           document.getElementById('dmRedDot').style.display = '';
+          // DM 목록 화면을 보고 있다면 목록 새로고침
+          if (isDmPanelVisible && !isChatViewVisible) {
+            loadDmConversations();
+          }
         }
       });
     }
@@ -2013,6 +2021,7 @@
     // DM 열기
     let currentDmUserId = null;
     function openDmList() {
+      currentDmUserId = null;
       showPanel('dm');
       document.getElementById('dmRedDot').style.display = 'none';
       document.getElementById('dmPanelTitle').textContent = '📩 메시지';
