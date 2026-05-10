@@ -1606,6 +1606,13 @@
       checkAuthState();
       loadSidebarTree();
       initChatSocket();
+      
+      const params = new URLSearchParams(window.location.search);
+      const songId = params.get('song_id');
+      if (songId) {
+        setTimeout(() => { openSong(songId); }, 300); // 렌더링 안정성을 위해 약간 대기
+      }
+
       // 외부 클릭 시 드롭다운 닫기
       document.addEventListener('click', (e) => {
         const dd = document.getElementById('userDropdown');

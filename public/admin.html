@@ -542,7 +542,7 @@
         <td class="text-small text-muted">${fmtDate(u.created_at)}</td>
         <td class="text-small text-muted">${u.last_login ? fmtDate(u.last_login) : '-'}</td>
         <td>
-          <button class="btn-edit-sm" onclick="editUser(${JSON.stringify(JSON.stringify(u))})">&#9998; 편집</button>
+          <button class="btn-edit-sm" onclick="editUser('${u.id}')">&#9998; 편집</button>
           ${u.email !== ADMIN_EMAIL ? `<button class="btn-dm-sm" onclick="openDmPanel('${u.id}','${esc(u.nickname||u.email)}','${esc(u.email)}')">💬 DM</button><button class="btn-danger-sm" onclick="deleteUser('${u.id}','${esc(u.nickname||u.email)}')">🗑 삭제</button>` : '<span class="text-muted text-small">보호됨</span>'}
         </td>
       </tr>
@@ -559,8 +559,9 @@
     document.getElementById('editOverlay').classList.remove('open');
   }
 
-  function editUser(jsonStr) {
-    const u = JSON.parse(jsonStr);
+  function editUser(id) {
+    const u = allUsers.find(x => x.id === id);
+    if (!u) return;
     document.getElementById('editModalTitle').textContent = '회원 정보 수정: ' + (u.nickname || u.email);
     document.getElementById('editModalBody').innerHTML = `
       <div class="edit-field">
@@ -608,8 +609,9 @@
     } catch(e) { alert('오류 발생'); }
   }
 
-  function editStage(jsonStr) {
-    const s = JSON.parse(jsonStr);
+  function editStage(id) {
+    const s = allStages.find(x => x.id === id);
+    if (!s) return;
     document.getElementById('editModalTitle').textContent = 'Stage 수정: ' + s.name;
     document.getElementById('editModalBody').innerHTML = `
       <div class="edit-field">
@@ -645,9 +647,10 @@
     } catch(e) { alert('오류 발생'); }
   }
 
-  function editSong(jsonStr) {
-    const s = JSON.parse(jsonStr);
-    document.getElementById('editModalTitle').textContent = '곳 수정: ' + s.name;
+  function editSong(id) {
+    const s = allSongs.find(x => x.id === id);
+    if (!s) return;
+    document.getElementById('editModalTitle').textContent = '곡 수정: ' + s.name;
     document.getElementById('editModalBody').innerHTML = `
       <div class="edit-field">
         <label>곳 이름</label>
@@ -713,7 +716,7 @@
         <td class="text-muted">${s.msg_count}개</td>
         <td><code style="font-size:0.72rem;color:var(--accent2);background:rgba(251,191,36,0.08);padding:0.15rem 0.4rem;border-radius:0.25rem">${s.invite_code}</code></td>
         <td class="text-small text-muted">${fmtDate(s.created_at)}</td>
-        <td><button class="btn-edit-sm" onclick="editStage(${JSON.stringify(JSON.stringify(s))})">&#9998; 편집</button><button class="btn-danger-sm" onclick="deleteStage('${s.id}','${esc(s.name)}')">🗑 삭제</button></td>
+        <td><button class="btn-edit-sm" onclick="editStage('${s.id}')">&#9998; 편집</button><button class="btn-danger-sm" onclick="deleteStage('${s.id}','${esc(s.name)}')">🗑 삭제</button></td>
       </tr>
     `).join('');
   }
@@ -756,7 +759,11 @@
           <span class="size-pill" style="color:${s.total_size > 5*1024*1024 ? '#f43f5e' : s.total_size > 1*1024*1024 ? '#fbbf24' : 'var(--text-muted)'}">${fmtSize(s.total_size)}</span>
         </td>
         <td class="text-small text-muted">${fmtDate(s.created_at)}</td>
-        <td><button class="btn-edit-sm" onclick="editSong(${JSON.stringify(JSON.stringify(s))})">&#9998; 편집</button><button class="btn-danger-sm" onclick="deleteSong('${s.id}','${esc(s.name)}')">🗑 삭제</button></td>
+        <td>
+          <button class="btn-edit-sm" onclick="editSong('${s.id}')">&#9998; 편집</button>
+          <a class="btn-edit-sm" style="text-decoration:none;display:inline-block;" href="/?song_id=${s.id}" target="_blank">⚙️ 악보설정</a>
+          <button class="btn-danger-sm" onclick="deleteSong('${s.id}','${esc(s.name)}')">🗑 삭제</button>
+        </td>
       </tr>
     `).join('');
   }
