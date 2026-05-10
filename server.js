@@ -349,6 +349,29 @@ app.put('/api/auth/me', authMiddleware, (req, res) => {
   res.json(user);
 });
 
+// 비밀번호 변경
+app.put('/api/auth/password', authMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: '현재 비밀번호와 새 비밀번호를 모두 입력하세요' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: '새 비밀번호는 6자 이상이어야 합니다' });
+    }
+    const user = get('SELECT password_hash FROM users WHERE id = ?', [req.user.id]);
+    if (!user) return res.status(404).json({ error: '사용자를 찾을 수 없습니다' });
+    const valid = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!valid) return res.status(401).json({ error: '현재 비밀번호가 올바르지 않습니다' });
+    const hash = await bcrypt.hash(newPassword, 10);
+    run('UPDATE users SET password_hash = ? WHERE id = ?', [hash, req.user.id]);
+    res.json({ message: '비밀번호가 변경되었습니다' });
+  } catch (e) {
+    console.error('Password change error:', e);
+    res.status(500).json({ error: '비밀번호 변경 중 오류가 발생했습니다' });
+  }
+});
+
 // ── Stage API Routes ──
 
 // 내 Stage 목록

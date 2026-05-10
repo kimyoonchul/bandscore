@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backstage — 내 프로필</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --accent: #f43f5e; --accent-light: #fbbf24;
+      --bg: #000; --bg-card: #0d0d0d; --bg-elevated: #1a1a1a;
+      --border: rgba(255,255,255,0.08); --text: #f0ece6;
+      --text-secondary: #a1a1aa; --text-muted: #71717a;
+      --gradient: linear-gradient(135deg, #f43f5e 0%, #fbbf24 100%);
+      --radius: 0.75rem; --ease: cubic-bezier(0.4,0,0.2,1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
+      min-height: 100vh; display: flex; flex-direction: column;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: -1;
+      background: radial-gradient(ellipse at 30% 20%, rgba(244,63,94,0.06) 0%, transparent 60%),
+                  radial-gradient(ellipse at 70% 80%, rgba(251,191,36,0.04) 0%, transparent 60%);
+    }
+
+    /* Header */
+    .header {
+      padding: 1rem 1.5rem; display: flex; align-items: center; gap: 0.75rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(24px);
+    }
+    .back-btn {
+      background: none; border: 1px solid var(--border); color: var(--text-secondary);
+      padding: 0.4rem 0.75rem; border-radius: var(--radius); cursor: pointer;
+      font-family: inherit; font-size: 0.82rem; font-weight: 600;
+      transition: all 0.2s var(--ease);
+    }
+    .back-btn:hover { border-color: var(--accent); color: var(--text); }
+    .header-title {
+      font-size: 1rem; font-weight: 800;
+      background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    /* Content */
+    .profile-container {
+      flex: 1; width: 100%; max-width: 480px; margin: 0 auto; padding: 2rem 1.5rem;
+    }
+
+    .profile-avatar {
+      display: flex; flex-direction: column; align-items: center; margin-bottom: 2rem;
+    }
+    .avatar-circle {
+      width: 5rem; height: 5rem; border-radius: 50%;
+      background: var(--gradient); display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 900; color: #000; margin-bottom: 0.75rem;
+      box-shadow: 0 4px 24px rgba(244,63,94,0.3);
+    }
+    .profile-email { color: var(--text-muted); font-size: 0.82rem; }
+    .profile-role {
+      font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.6rem;
+      border-radius: 1rem; margin-top: 0.375rem;
+      background: rgba(244,63,94,0.1); color: var(--accent);
+    }
+
+    /* Cards */
+    .section-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.25rem;
+      transition: border-color 0.2s;
+    }
+    .section-card:hover { border-color: rgba(255,255,255,0.12); }
+    .section-title {
+      font-size: 0.78rem; font-weight: 800; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1rem;
+    }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-group label {
+      display: block; font-size: 0.72rem; font-weight: 600;
+      color: var(--text-muted); margin-bottom: 0.3rem;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .form-input {
+      width: 100%; padding: 0.7rem 0.875rem; background: var(--bg-elevated);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      color: var(--text); font-family: inherit; font-size: 0.9rem;
+      transition: all 0.25s var(--ease); outline: none;
+    }
+    .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(244,63,94,0.15); }
+    .form-input::placeholder { color: var(--text-muted); }
+    .form-input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .save-btn {
+      padding: 0.7rem 1.5rem; border: none; border-radius: var(--radius);
+      background: var(--gradient); color: #000; font-family: inherit;
+      font-size: 0.88rem; font-weight: 800; cursor: pointer;
+      transition: all 0.25s var(--ease); margin-top: 0.25rem;
+      box-shadow: 0 4px 16px rgba(244,63,94,0.2);
+    }
+    .save-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(244,63,94,0.3); }
+    .save-btn:active { transform: scale(0.98); }
+    .save-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .msg {
+      padding: 0.6rem 0.875rem; border-radius: var(--radius);
+      font-size: 0.8rem; font-weight: 600; margin-bottom: 0.875rem; display: none;
+    }
+    .msg-error { background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.2); color: #f87171; }
+    .msg-success { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.2); color: #34d399; }
+
+    .info-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; }
+    .info-value { font-size: 0.82rem; color: var(--text-secondary); font-weight: 500; }
+
+    @media (max-width: 600px) {
+      .profile-container { padding: 1.25rem 1rem; }
+      .section-card { padding: 1.125rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <button class="back-btn" onclick="location.href='/'">← 돌아가기</button>
+  <span class="header-title">내 프로필</span>
+</div>
+
+<div class="profile-container">
+  <!-- 프로필 아바타 -->
+  <div class="profile-avatar">
+    <div class="avatar-circle" id="avatarInitial">?</div>
+    <span class="profile-email" id="profileEmail">-</span>
+    <span class="profile-role" id="profileRole">-</span>
+  </div>
+
+  <!-- 닉네임 수정 -->
+  <div class="section-card">
+    <div class="section-title">닉네임 수정</div>
+    <div id="nickMsg" class="msg"></div>
+    <form onsubmit="updateNickname(event)">
+      <div class="form-group">
+        <label>닉네임</label>
+        <input class="form-input" type="text" id="nicknameInput" placeholder="새 닉네임" required maxlength="20">
+      </div>
+      <button type="submit" class="save-btn" id="nickBtn">저장</button>
+    </form>
+  </div>
+
+  <!-- 비밀번호 변경 -->
+  <div class="section-card">
+    <div class="section-title">비밀번호 변경</div>
+    <div id="pwMsg" class="msg"></div>
+    <form onsubmit="changePassword(event)">
+      <div class="form-group">
+        <label>현재 비밀번호</label>
+        <input class="form-input" type="password" id="currentPw" placeholder="현재 비밀번호" required autocomplete="current-password">
+      </div>
+      <div class="form-group">
+        <label>새 비밀번호</label>
+        <input class="form-input" type="password" id="newPw" placeholder="6자 이상" required minlength="6" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label>새 비밀번호 확인</label>
+        <input class="form-input" type="password" id="newPwConfirm" placeholder="새 비밀번호 다시 입력" required autocomplete="new-password">
+      </div>
+      <button type="submit" class="save-btn" id="pwBtn">비밀번호 변경</button>
+    </form>
+  </div>
+
+  <!-- 계정 정보 -->
+  <div class="section-card">
+    <div class="section-title">계정 정보</div>
+    <div class="info-row">
+      <span class="info-label">가입일</span>
+      <span class="info-value" id="infoCreatedAt">-</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">마지막 로그인</span>
+      <span class="info-value" id="infoLastLogin">-</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">계정 유형</span>
+      <span class="info-value" id="infoProvider">-</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const token = localStorage.getItem('backstage_token');
+  if (!token) { window.location.href = '/login'; }
+
+  function headers() {
+    return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
+  }
+
+  function showMsg(id, msg, type) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = 'msg ' + (type === 'error' ? 'msg-error' : 'msg-success');
+    el.style.display = 'block';
+    if (type === 'success') setTimeout(() => el.style.display = 'none', 3000);
+  }
+
+  async function loadProfile() {
+    try {
+      const res = await fetch('/api/auth/me', { headers: headers() });
+      if (res.status === 401) { localStorage.clear(); window.location.href = '/login'; return; }
+      const user = await res.json();
+
+      // 아바타
+      const initial = (user.nickname || user.email || '?')[0].toUpperCase();
+      document.getElementById('avatarInitial').textContent = initial;
+      document.getElementById('profileEmail').textContent = user.email;
+      document.getElementById('profileRole').textContent = user.role === 'admin' ? '👑 관리자' : '👤 일반 회원';
+
+      // 닉네임
+      document.getElementById('nicknameInput').value = user.nickname || '';
+
+      // 계정 정보
+      document.getElementById('infoCreatedAt').textContent = user.created_at ? new Date(user.created_at).toLocaleDateString('ko-KR') : '-';
+      document.getElementById('infoLastLogin').textContent = user.last_login ? new Date(user.last_login).toLocaleString('ko-KR') : '-';
+      document.getElementById('infoProvider').textContent = user.provider === 'google' ? 'Google' : '이메일';
+    } catch (e) {
+      console.error('프로필 로드 실패:', e);
+    }
+  }
+
+  async function updateNickname(e) {
+    e.preventDefault();
+    const btn = document.getElementById('nickBtn');
+    const nickname = document.getElementById('nicknameInput').value.trim();
+    if (!nickname) return;
+    btn.disabled = true; btn.textContent = '저장 중...';
+    try {
+      const res = await fetch('/api/auth/me', {
+        method: 'PUT', headers: headers(),
+        body: JSON.stringify({ nickname })
+      });
+      const data = await res.json();
+      if (!res.ok) { showMsg('nickMsg', data.error, 'error'); return; }
+      showMsg('nickMsg', '닉네임이 변경되었습니다 ✨', 'success');
+      // 로컬스토리지 업데이트
+      const userStr = localStorage.getItem('backstage_user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        user.nickname = nickname;
+        localStorage.setItem('backstage_user', JSON.stringify(user));
+      }
+    } catch (e) {
+      showMsg('nickMsg', '서버 오류가 발생했습니다', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = '저장';
+    }
+  }
+
+  async function changePassword(e) {
+    e.preventDefault();
+    const btn = document.getElementById('pwBtn');
+    const currentPassword = document.getElementById('currentPw').value;
+    const newPassword = document.getElementById('newPw').value;
+    const confirm = document.getElementById('newPwConfirm').value;
+    if (newPassword !== confirm) { showMsg('pwMsg', '새 비밀번호가 일치하지 않습니다', 'error'); return; }
+    btn.disabled = true; btn.textContent = '변경 중...';
+    try {
+      const res = await fetch('/api/auth/password', {
+        method: 'PUT', headers: headers(),
+        body: JSON.stringify({ currentPassword, newPassword })
+      });
+      const data = await res.json();
+      if (!res.ok) { showMsg('pwMsg', data.error, 'error'); return; }
+      showMsg('pwMsg', '비밀번호가 변경되었습니다 🔒', 'success');
+      document.getElementById('currentPw').value = '';
+      document.getElementById('newPw').value = '';
+      document.getElementById('newPwConfirm').value = '';
+    } catch (e) {
+      showMsg('pwMsg', '서버 오류가 발생했습니다', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = '비밀번호 변경';
+    }
+  }
+
+  loadProfile();
+</script>
+</body>
+</html>
