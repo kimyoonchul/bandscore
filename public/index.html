@@ -588,15 +588,29 @@
           <button class="btn btn-ghost btn-sm" onclick="leaveStage()" style="font-size:0.7rem;color:var(--text-muted);opacity:0.6">🚪 Stage 탈퇴</button>
         </div>
 
-        <!-- 곡 목록 제목 -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
-          <h3 style="font-size:0.88rem;font-weight:800;color:var(--text)">🎵 곡 목록</h3>
+        <!-- 탭 전환: 곡 / 채팅 -->
+        <div style="display:flex;gap:0;margin-bottom:0.75rem;border-bottom:2px solid var(--border)">
+          <button class="btn btn-ghost btn-sm" id="tabSongs" onclick="switchStageTab('songs')" style="font-size:0.8rem;font-weight:800;border-radius:0.5rem 0.5rem 0 0;border-bottom:2px solid var(--primary-light);margin-bottom:-2px;color:var(--primary-light)">🎵 곡 목록</button>
+          <button class="btn btn-ghost btn-sm" id="tabChat" onclick="switchStageTab('chat')" style="font-size:0.8rem;font-weight:800;border-radius:0.5rem 0.5rem 0 0;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--text-muted)">💬 채팅 <span id="chatUnreadBadge" style="display:none;background:var(--accent);color:#fff;border-radius:50%;padding:0 0.35rem;font-size:0.6rem;margin-left:0.25rem;font-weight:900">0</span></button>
         </div>
-        <div id="songGrid" class="song-grid"></div>
-        <div id="emptyState" class="empty-state" style="display:none">
-          <div class="icon">🎸</div>
-          <p>아직 등록된 곡이 없습니다</p>
-          <button class="btn btn-primary btn-lg" onclick="showNewSongModal()">첫 번째 곡 만들기</button>
+
+        <!-- 곡 목록 패널 -->
+        <div id="songsPanel">
+          <div id="songGrid" class="song-grid"></div>
+          <div id="emptyState" class="empty-state" style="display:none">
+            <div class="icon">🎸</div>
+            <p>아직 등록된 곡이 없습니다</p>
+            <button class="btn btn-primary btn-lg" onclick="showNewSongModal()">첫 번째 곡 만들기</button>
+          </div>
+        </div>
+
+        <!-- 채팅 패널 -->
+        <div id="chatPanel" style="display:none;flex-direction:column;height:calc(100vh - 300px);min-height:300px">
+          <div id="chatMessages" style="flex:1;overflow-y:auto;padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem"></div>
+          <div style="display:flex;gap:0.5rem;padding:0.5rem 0 0">
+            <input type="text" id="chatInput" placeholder="메시지 입력..." style="flex:1;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--bg-elevated);color:var(--text);font-size:0.82rem;outline:none" onkeydown="if(event.key==='Enter')sendChatMessage()">
+            <button class="btn btn-primary btn-sm" onclick="sendChatMessage()" style="font-size:0.8rem;padding:0.5rem 1rem">전송</button>
+          </div>
         </div>
       </div>
 
@@ -1494,7 +1508,10 @@
         wrapper.classList.remove('scrolling');
       }
     }
-
+    // ── Socket.IO ──
+    </script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
     // ── Auth State ──
     function checkAuthState() {
       const token = localStorage.getItem('backstage_token');
@@ -1520,6 +1537,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       checkAuthState();
       loadSidebarTree();
+      initChatSocket();
     });
 
     // ── Stage / Sidebar Functions ──
@@ -1644,6 +1662,11 @@
       showPanel('songList');
       loadSongs();
       loadStageDashboard(stageId);
+      // 채팅 초기화
+      chatLoaded = false;
+      switchStageTab('songs');
+      document.getElementById('chatMessages').innerHTML = '';
+      if (chatSocket) chatSocket.emit('join-stage-chat', stageId);
 
       // 모바일에서 자동 닫기
       if (window.innerWidth < 1024) closeSidebar();
@@ -1812,6 +1835,91 @@
 
     function showStageSettings() {
       alert('Stage 설정 기능은 준비 중입니다');
+    }
+
+    // ── Stage 채팅 ──
+    let chatSocket = null;
+    let currentChatTab = 'songs';
+    let chatLoaded = false;
+
+    function switchStageTab(tab) {
+      currentChatTab = tab;
+      document.getElementById('songsPanel').style.display = tab === 'songs' ? '' : 'none';
+      document.getElementById('chatPanel').style.display = tab === 'chat' ? 'flex' : 'none';
+      document.getElementById('tabSongs').style.borderBottomColor = tab === 'songs' ? 'var(--primary-light)' : 'transparent';
+      document.getElementById('tabSongs').style.color = tab === 'songs' ? 'var(--primary-light)' : 'var(--text-muted)';
+      document.getElementById('tabChat').style.borderBottomColor = tab === 'chat' ? 'var(--primary-light)' : 'transparent';
+      document.getElementById('tabChat').style.color = tab === 'chat' ? 'var(--primary-light)' : 'var(--text-muted)';
+      if (tab === 'chat') {
+        if (!chatLoaded) loadChatMessages();
+        document.getElementById('chatUnreadBadge').style.display = 'none';
+        scrollChatBottom();
+        document.getElementById('chatInput').focus();
+      }
+    }
+
+    async function loadChatMessages() {
+      if (!currentStageId) return;
+      try {
+        const res = await fetch(`/api/stages/${currentStageId}/messages`, { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const msgs = await res.json();
+        const container = document.getElementById('chatMessages');
+        container.innerHTML = '';
+        msgs.forEach(m => appendChatMessage(m));
+        chatLoaded = true;
+        scrollChatBottom();
+      } catch(e) { console.error('채팅 로드 실패:', e); }
+    }
+
+    function appendChatMessage(m) {
+      const container = document.getElementById('chatMessages');
+      const currentUserId = JSON.parse(localStorage.getItem('backstage_user') || '{}').id;
+      const isMe = m.user_id === currentUserId;
+      const time = m.created_at ? new Date(m.created_at + 'Z').toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+      const name = m.nickname || (m.email ? m.email.split('@')[0] : '?');
+      const el = document.createElement('div');
+      el.style.cssText = `display:flex;flex-direction:column;${isMe ? 'align-items:flex-end' : 'align-items:flex-start'}`;
+      el.innerHTML = `
+        ${!isMe ? `<span style="font-size:0.65rem;font-weight:700;color:var(--text-muted);margin-bottom:0.1rem">${name}</span>` : ''}
+        <div style="max-width:80%;padding:0.4rem 0.7rem;border-radius:${isMe ? '0.8rem 0.8rem 0.2rem 0.8rem' : '0.8rem 0.8rem 0.8rem 0.2rem'};background:${isMe ? 'var(--primary)' : 'var(--bg-elevated)'};color:${isMe ? '#fff' : 'var(--text)'};font-size:0.8rem;line-height:1.4;word-break:break-word">${m.message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        <span style="font-size:0.58rem;color:var(--text-muted);margin-top:0.1rem">${time}</span>
+      `;
+      container.appendChild(el);
+    }
+
+    function scrollChatBottom() {
+      const c = document.getElementById('chatMessages');
+      setTimeout(() => c.scrollTop = c.scrollHeight, 50);
+    }
+
+    async function sendChatMessage() {
+      const input = document.getElementById('chatInput');
+      const msg = input.value.trim();
+      if (!msg || !currentStageId) return;
+      input.value = '';
+      try {
+        await fetch(`/api/stages/${currentStageId}/messages`, {
+          method: 'POST', headers: getAuthHeaders(),
+          body: JSON.stringify({ message: msg })
+        });
+      } catch(e) { alert('메시지 전송 실패'); }
+    }
+
+    function initChatSocket() {
+      if (!window.io) return;
+      chatSocket = io();
+      chatSocket.on('stage-message', (msg) => {
+        appendChatMessage(msg);
+        if (currentChatTab === 'chat') {
+          scrollChatBottom();
+        } else {
+          const badge = document.getElementById('chatUnreadBadge');
+          const n = parseInt(badge.textContent || '0') + 1;
+          badge.textContent = n;
+          badge.style.display = '';
+        }
+      });
     }
 
     async function leaveStage() {

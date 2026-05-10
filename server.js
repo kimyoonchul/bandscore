@@ -210,6 +210,16 @@ async function initDb() {
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (stage_id) REFERENCES stages(id) ON DELETE CASCADE
   )`);
+  // ── Stage 채팅 메시지 테이블 ──
+  db.run(`CREATE TABLE IF NOT EXISTS stage_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    stage_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    message TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (stage_id) REFERENCES stages(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  )`);
   saveDb();
   // Migration: 기존 DB에 새 컬럼 추가
   try { db.run('ALTER TABLE songs ADD COLUMN cover_filename TEXT'); saveDb(); } catch(e) {}
@@ -489,6 +499,40 @@ app.post('/api/stages/:id/leave', authMiddleware, (req, res) => {
 
 // ── API Routes ──
 
+// ── Stage 채팅 API ──
+app.get('/api/stages/:stageId/messages', authMiddleware, (req, res) => {
+  const { stageId } = req.params;
+  const before = req.query.before; // 페이징용
+  let msgs;
+  if (before) {
+    msgs = query(`SELECT m.id, m.message, m.created_at, m.user_id, u.nickname, u.email
+      FROM stage_messages m LEFT JOIN users u ON m.user_id = u.id
+      WHERE m.stage_id = ? AND m.id < ? ORDER BY m.id DESC LIMIT 50`, [stageId, before]);
+  } else {
+    msgs = query(`SELECT m.id, m.message, m.created_at, m.user_id, u.nickname, u.email
+      FROM stage_messages m LEFT JOIN users u ON m.user_id = u.id
+      WHERE m.stage_id = ? ORDER BY m.id DESC LIMIT 50`, [stageId]);
+  }
+  res.json(msgs.reverse());
+});
+
+app.post('/api/stages/:stageId/messages', authMiddleware, (req, res) => {
+  const { stageId } = req.params;
+  const { message } = req.body;
+  if (!message || !message.trim()) return res.status(400).json({ error: '메시지를 입력하세요' });
+  const membership = get('SELECT role FROM stage_members WHERE stage_id = ? AND user_id = ?', [stageId, req.user.id]);
+  if (!membership) return res.status(403).json({ error: '이 Stage의 멤버가 아닙니다' });
+  run('INSERT INTO stage_messages (stage_id, user_id, message) VALUES (?,?,?)',
+    [stageId, req.user.id, message.trim()]);
+  saveDb();
+  const msg = get(`SELECT m.id, m.message, m.created_at, m.user_id, u.nickname, u.email
+    FROM stage_messages m LEFT JOIN users u ON m.user_id = u.id
+    WHERE m.id = last_insert_rowid()`);
+  // Socket.IO로 실시간 전송
+  io.to('stage_' + stageId).emit('stage-message', msg);
+  res.json(msg);
+});
+
 
 // 곡 수정 권한 체크 헬퍼 (editor 이상만 허용)
 function checkSongEditPermission(req, res, songOrStageId, isStageId = false) {
@@ -732,6 +776,13 @@ function broadcastMembers(songId) {
 
 io.on('connection', (socket) => {
   console.log('🔌 Connected:', socket.id);
+
+  // Stage 채팅방 참가
+  socket.on('join-stage-chat', (stageId) => {
+    if (socket.stageRoom) socket.leave(socket.stageRoom);
+    socket.stageRoom = 'stage_' + stageId;
+    socket.join(socket.stageRoom);
+  });
 
   socket.on('join-room', ({ songId, partId, partName }) => {
     socket.join(songId);
