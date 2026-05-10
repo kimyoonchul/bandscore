@@ -1758,13 +1758,25 @@
 
         // 멤버 목록
         const memberList = document.getElementById('stageMemberList');
+        const isAdmin = data.my_role === 'admin';
+        const currentUserId = JSON.parse(localStorage.getItem('backstage_user') || '{}').id;
         memberList.innerHTML = data.members.map(m => {
           const roleIcon = m.role === 'admin' ? '👑' : m.role === 'editor' ? '✏️' : '👁️';
           const initial = (m.nickname || m.email || '?')[0].toUpperCase();
+          const isMe = m.id === currentUserId;
+          // admin이고 자기자신이 아닌 경우에만 관리 UI 표시
+          const manageHtml = (isAdmin && !isMe) ? `
+            <select onchange="changeMemberRole('${m.id}', this.value)" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text-secondary);font-size:0.62rem;padding:0.1rem 0.2rem;border-radius:0.25rem;cursor:pointer;outline:none">
+              <option value="admin" ${m.role==='admin'?'selected':''}>👑 관리자</option>
+              <option value="editor" ${m.role==='editor'?'selected':''}>✏️ 편집자</option>
+              <option value="viewer" ${m.role==='viewer'?'selected':''}>👁️ 뷰어</option>
+            </select>
+            <button onclick="kickMember('${m.id}','${(m.nickname||m.email).replace(/'/g,"\\'")}')" style="background:none;border:none;cursor:pointer;font-size:0.6rem;opacity:0.5;padding:0" title="강퇴">✕</button>
+          ` : `<span style="font-size:0.6rem">${roleIcon}</span>`;
           return `<div style="display:flex;align-items:center;gap:0.3rem;background:var(--bg-elevated);padding:0.25rem 0.5rem;border-radius:1rem;font-size:0.72rem;font-weight:600;color:var(--text-secondary)" title="${m.nickname} (${m.email}) — ${m.role}">
             <span style="width:1.2rem;height:1.2rem;border-radius:50%;background:var(--wood-gradient);display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:800;color:#000">${initial}</span>
-            ${m.nickname || m.email.split('@')[0]}
-            <span style="font-size:0.6rem">${roleIcon}</span>
+            ${m.nickname || m.email.split('@')[0]}${isMe ? ' (나)' : ''}
+            ${manageHtml}
           </div>`;
         }).join('');
 
@@ -1773,7 +1785,6 @@
         if (data.my_role === 'admin' || data.my_role === 'editor') {
           inviteCard.style.display = '';
           document.getElementById('dashInviteCode').textContent = data.invite_code || '-';
-          // 설정 버튼 (admin만)
           const settingsBtn = document.getElementById('stageSettingsBtn');
           if (settingsBtn) settingsBtn.style.display = data.my_role === 'admin' ? '' : 'none';
         } else {
@@ -1792,6 +1803,33 @@
       } catch(e) { console.error('Stage 대시보드 로드 실패:', e); }
     }
 
+    // ── 멤버 역할 변경 (admin 전용) ──
+    async function changeMemberRole(userId, newRole) {
+      try {
+        const res = await fetch(`/api/stages/${currentStageId}/members/${userId}`, {
+          method: 'PUT', headers: getAuthHeaders(),
+          body: JSON.stringify({ role: newRole })
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.error);
+        loadStageDashboard(currentStageId);
+      } catch(e) { alert('역할 변경 실패'); }
+    }
+
+    // ── 멤버 강퇴 (admin 전용) ──
+    async function kickMember(userId, name) {
+      if (!confirm(`정말 "${name}" 멤버를 강퇴하시겠습니까?`)) return;
+      try {
+        const res = await fetch(`/api/stages/${currentStageId}/members/${userId}`, {
+          method: 'DELETE', headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.error);
+        loadStageDashboard(currentStageId);
+        loadSidebarTree(false);
+      } catch(e) { alert('강퇴 실패'); }
+    }
+
     function copyDashInviteCode() {
       const code = document.getElementById('dashInviteCode').textContent;
       navigator.clipboard.writeText(code).then(() => {
@@ -1803,7 +1841,6 @@
     }
 
     function showStageSettings() {
-      // TODO: Stage 설정 모달 (이름, 설명 수정)
       alert('Stage 설정 기능은 준비 중입니다');
     }
 
