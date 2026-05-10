@@ -29,6 +29,7 @@ const jwt = require('jsonwebtoken');
 // JWT 설정
 const JWT_SECRET = process.env.JWT_SECRET || 'backstage_secret_' + require('crypto').randomBytes(16).toString('hex');
 const JWT_EXPIRES = '7d';
+const ADMIN_EMAIL = 'chuli8944@gmail.com';
 
 const app = express();
 const server = http.createServer(app);
@@ -218,11 +219,12 @@ app.post('/api/auth/register', async (req, res) => {
     }
     const id = uuidv4();
     const passwordHash = await bcrypt.hash(password, 10);
-    run('INSERT INTO users (id, email, password_hash, nickname) VALUES (?,?,?,?)',
-      [id, email, passwordHash, nickname]);
-    const token = jwt.sign({ id, email, nickname, role: 'user' }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+    const role = (email.toLowerCase() === ADMIN_EMAIL) ? 'admin' : 'user';
+    run('INSERT INTO users (id, email, password_hash, nickname, role) VALUES (?,?,?,?,?)',
+      [id, email, passwordHash, nickname, role]);
+    const token = jwt.sign({ id, email, nickname, role }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
     run('UPDATE users SET last_login = datetime(\'now\') WHERE id = ?', [id]);
-    res.json({ token, user: { id, email, nickname, role: 'user' } });
+    res.json({ token, user: { id, email, nickname, role } });
   } catch (e) {
     console.error('Register error:', e);
     res.status(500).json({ error: '회원가입 처리 중 오류가 발생했습니다' });

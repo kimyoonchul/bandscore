@@ -363,12 +363,14 @@
   <script>
     const TASKS = [
       // ═══ Phase 1: MVP — 인증 & 기본 구조 ═══
-      { id: 1, title: 'DB 스키마 설계 (users, stages, members)', desc: 'users, stages, stage_members, invitations 테이블 설계. 기존 songs/parts 테이블에 stage_id FK 추가.', tags: ['infra'], phase: '1', status: 'todo', priority: 'critical' },
-      { id: 2, title: '회원가입 / 로그인 (이메일+비밀번호)', desc: 'bcrypt 해싱, JWT 토큰 발급, 리프레시 토큰 구조. 이메일 인증은 Phase 4로 후순위.', tags: ['auth'], phase: '1', status: 'todo', priority: 'critical' },
+      { id: 1, title: 'DB 스키마 설계 (users 테이블)', desc: 'users 테이블 설계 완료. 기존 songs/parts 테이블 보존. stage_id FK는 Phase 2에서 추가.', tags: ['infra'], phase: '1', status: 'done', priority: 'critical' },
+      { id: 2, title: '회원가입 / 로그인 (이메일+비밀번호)', desc: 'bcrypt 해싱, JWT 토큰 7일 발급. POST /api/auth/register, /api/auth/login 구현.', tags: ['auth'], phase: '1', status: 'done', priority: 'critical' },
       { id: 3, title: 'Google OAuth 2.0 로그인', desc: 'passport-google-oauth20 연동. 최초 로그인 시 자동 회원가입. 프로필 이미지/닉네임 연동.', tags: ['auth'], phase: '1', status: 'todo', priority: 'high' },
-      { id: 4, title: '로그인/회원가입 UI 페이지', desc: '레트로 선셋 테마 적용. 소셜 로그인 버튼, 폼 밸리데이션, 로딩 상태, 에러 피드백.', tags: ['auth', 'ui'], phase: '1', status: 'todo', priority: 'high' },
-      { id: 5, title: 'JWT 미들웨어 & API 보호', desc: 'Express 미들웨어로 인증 필요 API 보호. 토큰 만료 시 리프레시 흐름 구현.', tags: ['auth', 'infra'], phase: '1', status: 'todo', priority: 'critical' },
-      { id: 6, title: '사용자 프로필 편집', desc: '닉네임, 프로필 이미지 변경. 내가 속한 Stage 목록 조회.', tags: ['auth', 'ui'], phase: '1', status: 'todo', priority: 'medium' },
+      { id: 4, title: '로그인/회원가입 UI 페이지', desc: 'login.html 완성. 레트로 선셋 테마, 탭 전환, 비밀번호 강도 표시, 에러/성공 피드백.', tags: ['auth', 'ui'], phase: '1', status: 'done', priority: 'high' },
+      { id: 5, title: 'JWT 미들웨어 & API 보호', desc: 'authMiddleware, optionalAuth 미들웨어 구현. Bearer 토큰 검증, 만료 처리.', tags: ['auth', 'infra'], phase: '1', status: 'done', priority: 'critical' },
+      { id: 6, title: '사용자 프로필 편집', desc: 'GET/PUT /api/auth/me 구현. 닉네임 변경 가능. 프로필 이미지는 Stage와 함께 구현 예정.', tags: ['auth', 'ui'], phase: '1', status: 'done', priority: 'medium' },
+      { id: 7, title: '로그인 필수 리다이렉트', desc: '미로그인 시 /login.html로 자동 이동. 둘러보기 제거. 로그아웃 시 로그인 페이지 이동.', tags: ['auth', 'ui'], phase: '1', status: 'done', priority: 'high' },
+      { id: 8, title: '관리자 계정 설정', desc: 'chuli8944@gmail.com을 유일한 admin 계정으로 설정. 회원가입 시 해당 이메일이면 role=admin 자동 부여.', tags: ['admin', 'auth'], phase: '1', status: 'todo', priority: 'critical' },
 
       // ═══ Phase 2: 그룹(Stage) 시스템 ═══
       { id: 10, title: '내 Stage 만들기', desc: '그룹명, 설명, 커버 이미지 설정. 생성자가 자동으로 admin 역할. Stage 고유 URL 생성.', tags: ['group'], phase: '2', status: 'todo', priority: 'critical' },
@@ -378,13 +380,14 @@
       { id: 14, title: 'Stage 내 곡 만들기 & 관리', desc: '기존 곡 CRUD를 Stage 컨텍스트로 확장. Stage 멤버만 해당 곡 접근 가능. 곡 정렬/검색.', tags: ['group', 'song'], phase: '2', status: 'todo', priority: 'critical' },
       { id: 15, title: 'Stage 멤버 온라인 상태', desc: 'Socket.IO로 Stage 멤버 온/오프라인 실시간 표시. 현재 어떤 곡을 보고 있는지 표시.', tags: ['group', 'social'], phase: '2', status: 'todo', priority: 'low' },
       { id: 16, title: '멤버 강퇴 & Stage 탈퇴', desc: 'admin이 멤버 강퇴 가능. 본인 탈퇴 기능. 마지막 admin 탈퇴 시 경고.', tags: ['group'], phase: '2', status: 'todo', priority: 'medium' },
+      { id: 17, title: '기존 곡 데이터 이관 (Stage 매핑)', desc: '기존 5곡 + 업로드 14개 파일을 기본 Stage에 자동 매핑. 이관 스크립트 작성. 데이터 무손실 보장.', tags: ['infra', 'song'], phase: '2', status: 'todo', priority: 'critical' },
 
       // ═══ Phase 3: 플레이어 & 악보 고도화 ═══
       { id: 20, title: '악보 업로드 권한 분리', desc: 'editor 이상만 PDF 업로드/수정 가능. viewer는 악보 조회/재생만 가능.', tags: ['song', 'auth'], phase: '3', status: 'todo', priority: 'high' },
       { id: 21, title: '연습 기록 저장', desc: '곡별 연습 시간, 횟수 기록. 개인별 연습 통계 대시보드. Stage 전체 연습 현황 공유.', tags: ['player', 'song'], phase: '3', status: 'todo', priority: 'medium' },
       { id: 22, title: '메모 / 주석 기능', desc: '악보 위에 개인 메모 남기기 (포스트잇 스타일). 다른 멤버 메모는 비공개.', tags: ['player', 'ui'], phase: '3', status: 'todo', priority: 'medium' },
       { id: 23, title: '셋리스트 (Set List) 기능', desc: '공연/연습용 곡 순서 세트 구성. 셋리스트 순서대로 자동 곡 전환. 저장 & 공유.', tags: ['song', 'group'], phase: '3', status: 'todo', priority: 'medium' },
-      { id: 24, title: '기존 BandScore → Backstage 브랜딩 전환', desc: '로고, 파비콘(레트로 선셋), 타이틀, 메타태그 전체 교체. PWA manifest 업데이트.', tags: ['ui'], phase: '3', status: 'todo', priority: 'high' },
+      { id: 24, title: '사용 가이드 페이지', desc: 'guide.html 완성. 7개 섹션 (소개/시작하기/곡관리/악보/플레이어/합주/FAQ). 좌측 TOC.', tags: ['ui'], phase: '3', status: 'done', priority: 'high' },
 
       // ═══ Phase 4: 관리자 & 확장 ═══
       { id: 30, title: '/admin 관리자 페이지 — 대시보드', desc: '전체 사용자 수, Stage 수, 곡 수 통계. 최근 가입자, 활성 사용자 차트. 서버 상태 모니터링.', tags: ['admin', 'ui'], phase: '4', status: 'todo', priority: 'critical' },
@@ -394,6 +397,11 @@
       { id: 34, title: '알림 시스템', desc: 'Stage 초대, 새 곡 추가, 연습 시작 등 알림. 인앱 알림 + 이메일 알림 (선택).', tags: ['social', 'infra'], phase: '4', status: 'todo', priority: 'medium' },
       { id: 35, title: '배포 & 인프라', desc: 'Docker 컨테이너화. nginx 리버스 프록시. SSL 인증서. 자동 백업 스크립트. CI/CD 파이프라인.', tags: ['infra'], phase: '4', status: 'todo', priority: 'high' },
       { id: 36, title: 'PWA & 오프라인 지원', desc: 'Service Worker로 악보 캐싱. 오프라인에서도 마지막 본 악보 조회 가능. 앱 설치 배너.', tags: ['infra', 'ui'], phase: '4', status: 'todo', priority: 'low' },
+
+      // ═══ 브랜딩 & UI (완료) ═══
+      { id: 40, title: 'Backstage 브랜딩 전환', desc: 'BandScore → Backstage. 파비콘(레트로 선셋), 타이틀, 메타태그, 헤더 로고 전체 교체.', tags: ['ui'], phase: '1', status: 'done', priority: 'critical' },
+      { id: 41, title: '메인 페이지 UI 리디자인', desc: '레트로 선셋 CSS 토큰, 피치 블랙 배경, 새 서비스 푸터, 밴드 푸터 이스터에그, brandBanner 제거.', tags: ['ui'], phase: '1', status: 'done', priority: 'high' },
+      { id: 42, title: 'Task Board 생성', desc: 'taskboard.html 완성. 25+ 태스크, 4 Phase 칸반 보드, 필터/서머리 카드.', tags: ['ui', 'infra'], phase: '1', status: 'done', priority: 'medium' },
     ];
 
     const STATUS_COLS = [
