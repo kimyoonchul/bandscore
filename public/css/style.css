@@ -440,6 +440,7 @@ body::before {
   grid-template-columns: repeat(auto-fill, minmax(10.625rem, 1fr));
   gap: 1.5rem;
   margin-top: 1.75rem;
+  padding: 0 2px 12px;
 }
 
 .album-card {
@@ -447,7 +448,7 @@ body::before {
   text-align: center;
   transition: var(--transition-slow);
 }
-.album-card:hover { transform: translateY(-8px) scale(1.02); }
+.album-card:hover { transform: translateY(-8px); }
 
 .album-cover {
   position: relative;
