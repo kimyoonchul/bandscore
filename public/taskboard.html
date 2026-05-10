@@ -382,7 +382,7 @@
       { id: 16, title: '멤버 강퇴 & Stage 탈퇴', desc: 'admin이 멤버 강퇴 가능. 본인 탈퇴 기능. 마지막 admin 탈퇴 시 경고.', tags: ['group'], phase: '2', status: 'todo', priority: 'medium' },
       { id: 17, title: '기존 곡 데이터 이관 (Stage 매핑)', desc: 'chuli8944@gmail.com 계정의 "성수역 6번출구" Stage에 기존 곡 자동 매핑. 서버 initDb에서 stage_id=NULL인 곡을 자동 이관.', tags: ['infra', 'song'], phase: '2', status: 'done', priority: 'critical' },
       { id: 18, title: '프로필 편집 페이지 (profile.html)', desc: '우측상단 닉네임 클릭 → /profile 이동. 닉네임 수정, 비밀번호 변경, 이메일 표시. API: PUT /api/auth/me, PUT /api/auth/password.', tags: ['auth', 'ui'], phase: '2', status: 'todo', priority: 'high' },
-      { id: 19, title: '메인 UI 트리 구조 사이드바', desc: '좌측 사이드바에 Stage→PlayList→Song 트리. 우측은 선택항목 컨텐츠 패널. PC(고정)/태블릿(접힘)/모바일(햄버거). Stage 대시보드, 곡 상세 연동.', tags: ['ui', 'group'], phase: '2', status: 'todo', priority: 'critical' },
+      { id: 19, title: '메인 UI 트리 구조 사이드바', desc: '좌측 사이드바에 Stage→Song 트리. 우측은 선택항목 컨텐츠 패널. PC(고정)/태블릿(접힘)/모바일(햄버거). 2패널 레이아웃 완성.', tags: ['ui', 'group'], phase: '2', status: 'done', priority: 'critical' },
       { id: 43, title: 'Clean URL (.html 제거)', desc: '/login, /guide, /player 등 확장자 없이 접근. Express 라우트 추가. 기존 .html 링크 전체 교체.', tags: ['infra'], phase: '1', status: 'done', priority: 'medium' },
 
       // ═══ Phase 3: 플레이어 & 악보 고도화 ═══
