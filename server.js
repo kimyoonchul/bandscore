@@ -578,16 +578,23 @@ app.get('/api/dm/:userId', authMiddleware, (req, res) => {
 
 // DM 전송
 app.post('/api/dm/:userId', authMiddleware, (req, res) => {
-  const { message } = req.body;
-  if (!message || !message.trim()) return res.status(400).json({ error: '메시지를 입력하세요' });
-  run('INSERT INTO direct_messages (sender_id, receiver_id, message) VALUES (?,?,?)',
-    [req.user.id, req.params.userId, message.trim()]);
-  saveDb();
-  const msg = get(`SELECT d.*, u.nickname, u.email FROM direct_messages d
-    LEFT JOIN users u ON d.sender_id = u.id WHERE d.id = last_insert_rowid()`);
-  io.to('dm_' + req.params.userId).emit('dm-message', msg);
-  io.to('dm_' + req.user.id).emit('dm-message', msg);
-  res.json(msg);
+  try {
+    const { message } = req.body;
+    if (!message || !message.trim()) return res.status(400).json({ error: '메시지를 입력하세요' });
+    db.prepare('INSERT INTO direct_messages (sender_id, receiver_id, message) VALUES (?,?,?)').run(
+      req.user.id, req.params.userId, message.trim());
+    saveDb();
+    const msg = get(`SELECT d.*, u.nickname, u.email FROM direct_messages d
+      LEFT JOIN users u ON d.sender_id = u.id
+      WHERE d.sender_id = ? AND d.receiver_id = ? ORDER BY d.id DESC LIMIT 1`,
+      [req.user.id, req.params.userId]);
+    io.to('dm_' + req.params.userId).emit('dm-message', msg);
+    io.to('dm_' + req.user.id).emit('dm-message', msg);
+    res.json(msg);
+  } catch(e) {
+    console.error('DM 전송 오류:', e);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // 곡 수정 권한 체크 헬퍼 (editor 이상만 허용)

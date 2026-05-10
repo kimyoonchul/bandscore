@@ -2101,20 +2101,19 @@
           method: 'POST', headers: getAuthHeaders(),
           body: JSON.stringify({ message: msg })
         });
-        if (res.ok) {
-          const data = await res.json();
-          const container = document.getElementById('dmMessages');
-          const el = document.createElement('div');
-          el.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end';
-          const time = data.created_at ? new Date(data.created_at + 'Z').toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
-          el.innerHTML = `
-            <div style="max-width:80%;padding:0.4rem 0.7rem;border-radius:0.8rem 0.8rem 0.2rem 0.8rem;background:var(--primary);color:#fff;font-size:0.8rem;line-height:1.4;word-break:break-word">${data.message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
-            <span style="font-size:0.58rem;color:var(--text-muted);margin-top:0.1rem">${time}</span>
-          `;
-          container.appendChild(el);
-          setTimeout(() => container.scrollTop = container.scrollHeight, 50);
-        }
-      } catch(e) { alert('DM 전송 실패'); }
+        const data = await res.json();
+        if (!res.ok) { alert('DM 전송 실패: ' + (data.error || res.status)); return; }
+        const container = document.getElementById('dmMessages');
+        const el = document.createElement('div');
+        el.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end';
+        const time = data.created_at ? new Date(data.created_at + 'Z').toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+        el.innerHTML = `
+          <div style="max-width:80%;padding:0.4rem 0.7rem;border-radius:0.8rem 0.8rem 0.2rem 0.8rem;background:var(--primary);color:#fff;font-size:0.8rem;line-height:1.4;word-break:break-word">${data.message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+          <span style="font-size:0.58rem;color:var(--text-muted);margin-top:0.1rem">${time}</span>
+        `;
+        container.appendChild(el);
+        setTimeout(() => container.scrollTop = container.scrollHeight, 50);
+      } catch(e) { console.error('DM 전송 실패:', e); alert('DM 전송 실패: ' + e.message); }
     }
 
     async function leaveStage() {
