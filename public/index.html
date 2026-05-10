@@ -599,6 +599,10 @@
             <div id="stageStats" style="font-size:0.78rem;color:var(--text-secondary);line-height:1.6"></div>
           </div>
         </div>
+        <!-- Stage 탈퇴 -->
+        <div style="text-align:right;margin-bottom:1rem">
+          <button class="btn btn-ghost btn-sm" onclick="leaveStage()" style="font-size:0.7rem;color:var(--text-muted);opacity:0.6">🚪 Stage 탈퇴</button>
+        </div>
 
         <!-- 곡 목록 제목 -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
@@ -1842,6 +1846,22 @@
 
     function showStageSettings() {
       alert('Stage 설정 기능은 준비 중입니다');
+    }
+
+    async function leaveStage() {
+      if (!confirm('정말 이 Stage를 탈퇴하시겠습니까?\n탈퇴 후에는 초대코드로 다시 참가해야 합니다.')) return;
+      try {
+        const res = await fetch(`/api/stages/${currentStageId}/leave`, {
+          method: 'POST', headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.error);
+        currentStageId = null;
+        localStorage.removeItem('backstage_lastStage');
+        showPanel('welcome');
+        loadSidebarTree(true);
+        alert('Stage를 탈퇴했습니다');
+      } catch(e) { alert('탈퇴 처리 실패'); }
     }
 
   </script>

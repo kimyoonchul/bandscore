@@ -379,7 +379,7 @@
       { id: 13, title: 'Stage 대시보드 UI', desc: '멤버 목록(아바타+역할), 초대코드 카드, 통계(곡/멤버/생성일). Stage 선택 시 자동 표시. 마지막 선택 Stage localStorage 복원.', tags: ['group', 'ui'], phase: '2', status: 'done', priority: 'high' },
       { id: 14, title: 'Stage 내 곡 만들기 & 관리', desc: '곡 CRUD를 Stage 컨텍스트로 확장 완료. stage_id FK 추가. Stage별 곡 필터링.', tags: ['group', 'song'], phase: '2', status: 'done', priority: 'critical' },
       { id: 15, title: 'Stage 멤버 온라인 상태', desc: 'Socket.IO로 Stage 멤버 온/오프라인 실시간 표시. 현재 어떤 곡을 보고 있는지 표시.', tags: ['group', 'social'], phase: '2', status: 'todo', priority: 'low' },
-      { id: 16, title: '멤버 강퇴 & Stage 탈퇴', desc: 'admin이 멤버 강퇴 가능. 본인 탈퇴 기능. 마지막 admin 탈퇴 시 경고.', tags: ['group'], phase: '2', status: 'todo', priority: 'medium' },
+      { id: 16, title: '멤버 강퇴 & Stage 탈퇴', desc: 'admin이 멤버 강퇴(확인 프롬프트). 본인 탈퇴(마지막 admin 경고). 강퇴/탈퇴 후 트리 자동 갱신.', tags: ['group'], phase: '2', status: 'done', priority: 'medium' },
       { id: 17, title: '기존 곡 데이터 이관 (Stage 매핑)', desc: 'chuli8944@gmail.com 계정의 "성수역 6번출구" Stage에 기존 곡 자동 매핑. 서버 initDb에서 stage_id=NULL인 곡을 자동 이관.', tags: ['infra', 'song'], phase: '2', status: 'done', priority: 'critical' },
       { id: 18, title: '프로필 편집 페이지', desc: '우측상단 닉네임 클릭 → /profile. 닉네임 수정, 비밀번호 변경(현재PW 검증), 계정 정보 표시. API: PUT /api/auth/me, PUT /api/auth/password.', tags: ['auth', 'ui'], phase: '2', status: 'done', priority: 'high' },
       { id: 19, title: '메인 UI 트리 구조 사이드바', desc: '좌측 사이드바에 Stage→Song 트리. 우측은 선택항목 컨텐츠 패널. PC(고정)/태블릿(접힘)/모바일(햄버거). 2패널 레이아웃 완성.', tags: ['ui', 'group'], phase: '2', status: 'done', priority: 'critical' },
