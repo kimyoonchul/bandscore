@@ -198,9 +198,22 @@
 </div>
 
 <script>
-  // 이미 로그인되어 있으면 메인으로
+  // 초대코드 감지 (URL: /invite/CODE)
+  const inviteCode = window.location.pathname.startsWith('/invite/') ? window.location.pathname.split('/invite/')[1] : null;
+
+  // 이미 로그인되어 있으면
   if (localStorage.getItem('backstage_token')) {
-    window.location.href = '/';
+    if (inviteCode) { joinByInvite(inviteCode); }
+    else { window.location.href = '/'; }
+  }
+
+  // 초대코드가 있으면 안내 표시
+  if (inviteCode) {
+    setTimeout(() => {
+      const el = document.getElementById('successMsg');
+      el.textContent = '🎭 Stage 초대를 받았습니다! 로그인 또는 가입 후 자동 참가됩니다.';
+      el.style.display = 'block';
+    }, 100);
   }
 
   function showTab(tab) {
@@ -256,7 +269,8 @@
       localStorage.setItem('backstage_token', data.token);
       localStorage.setItem('backstage_user', JSON.stringify(data.user));
       showSuccess('로그인 성공! 이동 중...');
-      setTimeout(() => window.location.href = '/', 500);
+      if (inviteCode) { await joinByInvite(inviteCode); }
+      else { setTimeout(() => window.location.href = '/', 500); }
     } catch (e) {
       showError('서버에 연결할 수 없습니다');
     } finally {
@@ -288,12 +302,33 @@
       localStorage.setItem('backstage_token', data.token);
       localStorage.setItem('backstage_user', JSON.stringify(data.user));
       showSuccess('가입 완료! 이동 중...');
-      setTimeout(() => window.location.href = '/', 500);
+      if (inviteCode) { await joinByInvite(inviteCode); }
+      else { setTimeout(() => window.location.href = '/', 500); }
     } catch (e) {
       showError('서버에 연결할 수 없습니다');
     } finally {
       btn.disabled = false; btn.textContent = '가입하기';
     }
+  }
+
+  async function joinByInvite(code) {
+    try {
+      const token = localStorage.getItem('backstage_token');
+      const res = await fetch('/api/stages/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ invite_code: code })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showSuccess(`${data.message || 'Stage에 참가했습니다!'} 이동 중...`);
+      } else if (res.status === 409) {
+        showSuccess('이미 참가한 Stage입니다. 이동 중...');
+      } else {
+        showError(data.error || '초대코드 처리 실패');
+      }
+    } catch(e) { showError('서버 오류'); }
+    setTimeout(() => window.location.href = '/', 1000);
   }
 </script>
 </body>

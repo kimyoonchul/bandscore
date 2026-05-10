@@ -57,6 +57,10 @@ cleanRoutes.forEach(name => {
     else res.status(404).send('Page not found');
   });
 });
+// 초대 URL: /invite/:code → 로그인 페이지로 이동 (초대코드 포함)
+app.get('/invite/:code', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(uploadsDir));

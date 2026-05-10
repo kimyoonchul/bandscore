@@ -394,6 +394,7 @@
       { id: 45, title: 'Stage 채팅', desc: 'Stage별 실시간 채팅. Socket.IO 활용. DB: stage_messages 테이블. 컨텐츠 패널에 채팅 탭 추가. 곡 목록 옆에 채팅 탭 전환.', tags: ['social', 'group'], phase: '3', status: 'todo', priority: 'critical' },
       { id: 46, title: 'DM (1:1 메시지)', desc: '멤버 클릭 시 DM 보내기. DB: direct_messages 테이블. 읽음/안읽음 표시. 메인 UI에 DM 목록 접근.', tags: ['social'], phase: '3', status: 'todo', priority: 'high' },
       { id: 47, title: 'Stage 설정 편집', desc: 'admin이 Stage 이름, 설명 수정. 설정 모달 또는 인라인 편집. API: PUT /api/stages/:id.', tags: ['group', 'admin'], phase: '3', status: 'todo', priority: 'high' },
+      { id: 48, title: '초대 URL 가입 자동 참가', desc: '/invite/:code URL로 접속 → 로그인/가입 → 자동 Stage 참가. 초대 모달에서 URL 형태로 표시. 링크 복사 버튼.', tags: ['group', 'social'], phase: '3', status: 'done', priority: 'critical' },
 
       // ═══ Phase 4: 관리자 & 확장 ═══
       { id: 30, title: '/admin 관리자 페이지 — 대시보드', desc: '전체 사용자 수, Stage 수, 곡 수 통계. 최근 가입자, 활성 사용자 차트. 서버 상태 모니터링.', tags: ['admin', 'ui'], phase: '4', status: 'todo', priority: 'critical' },
