@@ -370,14 +370,14 @@
       { id: 5, title: 'JWT 미들웨어 & API 보호', desc: 'authMiddleware, optionalAuth 미들웨어 구현. Bearer 토큰 검증, 만료 처리.', tags: ['auth', 'infra'], phase: '1', status: 'done', priority: 'critical' },
       { id: 6, title: '사용자 프로필 편집', desc: 'GET/PUT /api/auth/me 구현. 닉네임 변경 가능. 프로필 이미지는 Stage와 함께 구현 예정.', tags: ['auth', 'ui'], phase: '1', status: 'done', priority: 'medium' },
       { id: 7, title: '로그인 필수 리다이렉트', desc: '미로그인 시 /login.html로 자동 이동. 둘러보기 제거. 로그아웃 시 로그인 페이지 이동.', tags: ['auth', 'ui'], phase: '1', status: 'done', priority: 'high' },
-      { id: 8, title: '관리자 계정 설정', desc: 'chuli8944@gmail.com을 유일한 admin 계정으로 설정. 회원가입 시 해당 이메일이면 role=admin 자동 부여.', tags: ['admin', 'auth'], phase: '1', status: 'todo', priority: 'critical' },
+      { id: 8, title: '관리자 계정 설정', desc: 'chuli8944@gmail.com을 유일한 admin 계정으로 설정. 회원가입 시 해당 이메일이면 role=admin 자동 부여.', tags: ['admin', 'auth'], phase: '1', status: 'done', priority: 'critical' },
 
       // ═══ Phase 2: 그룹(Stage) 시스템 ═══
-      { id: 10, title: '내 Stage 만들기', desc: '그룹명, 설명, 커버 이미지 설정. 생성자가 자동으로 admin 역할. Stage 고유 URL 생성.', tags: ['group'], phase: '2', status: 'todo', priority: 'critical' },
-      { id: 11, title: 'Stage 초대 시스템', desc: '초대 링크 생성 (만료시간 설정 가능). 링크 클릭 시 Stage 자동 가입. 초대 코드 방식도 지원.', tags: ['group', 'social'], phase: '2', status: 'todo', priority: 'critical' },
+      { id: 10, title: '내 Stage 만들기', desc: '그룹명, 설명 설정. 생성자 자동 admin. 고유 초대코드 자동 생성. Stage 생성 모달 UI 완성.', tags: ['group'], phase: '2', status: 'done', priority: 'critical' },
+      { id: 11, title: 'Stage 초대 시스템', desc: '초대코드 자동 생성. 코드로 Stage 참가 API/UI 완성. 코드 복사 기능 구현.', tags: ['group', 'social'], phase: '2', status: 'done', priority: 'critical' },
       { id: 12, title: 'Stage 멤버 역할 관리', desc: 'admin / editor / viewer 3단계 권한. admin: 모든 권한, editor: 곡 추가/수정, viewer: 읽기/재생 전용.', tags: ['group', 'admin'], phase: '2', status: 'todo', priority: 'high' },
       { id: 13, title: 'Stage 대시보드 UI', desc: '멤버 목록, 곡 목록, 최근 활동 피드. Stage 설정 편집 (이름, 설명, 커버).', tags: ['group', 'ui'], phase: '2', status: 'todo', priority: 'high' },
-      { id: 14, title: 'Stage 내 곡 만들기 & 관리', desc: '기존 곡 CRUD를 Stage 컨텍스트로 확장. Stage 멤버만 해당 곡 접근 가능. 곡 정렬/검색.', tags: ['group', 'song'], phase: '2', status: 'todo', priority: 'critical' },
+      { id: 14, title: 'Stage 내 곡 만들기 & 관리', desc: '곡 CRUD를 Stage 컨텍스트로 확장 완료. stage_id FK 추가. Stage별 곡 필터링.', tags: ['group', 'song'], phase: '2', status: 'done', priority: 'critical' },
       { id: 15, title: 'Stage 멤버 온라인 상태', desc: 'Socket.IO로 Stage 멤버 온/오프라인 실시간 표시. 현재 어떤 곡을 보고 있는지 표시.', tags: ['group', 'social'], phase: '2', status: 'todo', priority: 'low' },
       { id: 16, title: '멤버 강퇴 & Stage 탈퇴', desc: 'admin이 멤버 강퇴 가능. 본인 탈퇴 기능. 마지막 admin 탈퇴 시 경고.', tags: ['group'], phase: '2', status: 'todo', priority: 'medium' },
       { id: 17, title: '기존 곡 데이터 이관 (Stage 매핑)', desc: '기존 5곡 + 업로드 14개 파일을 기본 Stage에 자동 매핑. 이관 스크립트 작성. 데이터 무손실 보장.', tags: ['infra', 'song'], phase: '2', status: 'todo', priority: 'critical' },
