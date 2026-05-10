@@ -485,6 +485,23 @@ app.post('/api/stages/:id/leave', authMiddleware, (req, res) => {
 
 // ── API Routes ──
 
+// 곡 수정 권한 체크 헬퍼 (editor 이상만 허용)
+function checkSongEditPermission(req, res, songOrStageId, isStageId = false) {
+  const userId = req.user ? req.user.id : null;
+  if (!userId) { res.status(401).json({ error: '로그인이 필요합니다' }); return false; }
+  let stageId = isStageId ? songOrStageId : null;
+  if (!isStageId) {
+    const song = get('SELECT stage_id FROM songs WHERE id = ?', [songOrStageId]);
+    if (!song) { res.status(404).json({ error: '곡을 찾을 수 없습니다' }); return false; }
+    stageId = song.stage_id;
+  }
+  if (!stageId) return true; // stage 없는 곡은 허용
+  const membership = get('SELECT role FROM stage_members WHERE stage_id = ? AND user_id = ?', [stageId, userId]);
+  if (!membership) { res.status(403).json({ error: '이 Stage의 멤버가 아닙니다' }); return false; }
+  if (membership.role === 'viewer') { res.status(403).json({ error: '편집 권한이 없습니다 (viewer)' }); return false; }
+  return true;
+}
+
 app.get('/api/songs', (req, res) => {
   const stageId = req.query.stage_id;
   let songs;
@@ -507,8 +524,9 @@ app.put('/api/songs/reorder', (req, res) => {
   res.json({ ok: true });
 });
 
-app.post('/api/songs', (req, res) => {
+app.post('/api/songs', authMiddleware, (req, res) => {
   const { name, bpm, time_signature, count_in_bars, stage_id } = req.body;
+  if (stage_id && !checkSongEditPermission(req, res, stage_id, true)) return;
   const id = uuidv4();
   run('INSERT INTO songs (id,name,bpm,time_signature,count_in_bars,stage_id) VALUES (?,?,?,?,?,?)',
     [id, name || '새 곡', bpm || 120, time_signature || '4/4', count_in_bars || 2, stage_id || null]);
@@ -529,9 +547,10 @@ app.get('/api/songs/:id', (req, res) => {
   res.json(song);
 });
 
-app.put('/api/songs/:id', (req, res) => {
+app.put('/api/songs/:id', authMiddleware, (req, res) => {
   const song = get('SELECT * FROM songs WHERE id = ?', [req.params.id]);
   if (!song) return res.status(404).json({ error: 'Not found' });
+  if (!checkSongEditPermission(req, res, req.params.id)) return;
   const { name, bpm, time_signature, count_in_bars, inst_delay_ms } = req.body;
   run('UPDATE songs SET name=?, bpm=?, time_signature=?, count_in_bars=?, inst_delay_ms=? WHERE id=?',
     [name ?? song.name, bpm ?? song.bpm, time_signature ?? song.time_signature,
@@ -541,7 +560,8 @@ app.put('/api/songs/:id', (req, res) => {
 });
 
 // Cover image upload
-app.post('/api/songs/:id/cover', uploadAny.single('cover'), (req, res) => {
+app.post('/api/songs/:id/cover', authMiddleware, uploadAny.single('cover'), (req, res) => {
+  if (!checkSongEditPermission(req, res, req.params.id)) return;
   const song = get('SELECT * FROM songs WHERE id = ?', [req.params.id]);
   if (!song) return res.status(404).json({ error: 'Not found' });
   if (!req.file) return res.status(400).json({ error: 'No file' });
@@ -555,7 +575,8 @@ app.post('/api/songs/:id/cover', uploadAny.single('cover'), (req, res) => {
 });
 
 // Inst audio upload
-app.post('/api/songs/:id/inst', uploadAny.single('inst'), (req, res) => {
+app.post('/api/songs/:id/inst', authMiddleware, uploadAny.single('inst'), (req, res) => {
+  if (!checkSongEditPermission(req, res, req.params.id)) return;
   const song = get('SELECT * FROM songs WHERE id = ?', [req.params.id]);
   if (!song) return res.status(404).json({ error: 'Not found' });
   if (!req.file) return res.status(400).json({ error: 'No file' });
@@ -567,7 +588,8 @@ app.post('/api/songs/:id/inst', uploadAny.single('inst'), (req, res) => {
   res.json({ inst_filename: req.file.filename });
 });
 
-app.delete('/api/songs/:id', (req, res) => {
+app.delete('/api/songs/:id', authMiddleware, (req, res) => {
+  if (!checkSongEditPermission(req, res, req.params.id)) return;
   const parts = query('SELECT pdf_filename FROM parts WHERE song_id = ?', [req.params.id]);
   parts.forEach(p => {
     const fp = path.join(uploadsDir, p.pdf_filename);
@@ -582,7 +604,8 @@ app.delete('/api/songs/:id', (req, res) => {
 });
 
 // Parts
-app.post('/api/songs/:songId/parts', upload.single('pdf'), (req, res) => {
+app.post('/api/songs/:songId/parts', authMiddleware, upload.single('pdf'), (req, res) => {
+  if (!checkSongEditPermission(req, res, req.params.songId)) return;
   if (!req.file) return res.status(400).json({ error: 'PDF 파일이 필요합니다' });
   const id = uuidv4();
   const totalPages = parseInt(req.body.totalPages) || 1;
@@ -597,7 +620,7 @@ app.post('/api/songs/:songId/parts', upload.single('pdf'), (req, res) => {
   res.json(part);
 });
 
-app.delete('/api/parts/:id', (req, res) => {
+app.delete('/api/parts/:id', authMiddleware, (req, res) => {
   const part = get('SELECT pdf_filename FROM parts WHERE id = ?', [req.params.id]);
   if (part) {
     const fp = path.join(uploadsDir, part.pdf_filename);

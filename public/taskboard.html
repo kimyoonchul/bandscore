@@ -387,7 +387,7 @@
       { id: 44, title: '실서버 기존 데이터 이관', desc: '실서버 DB에서 chuli8944@gmail.com 계정 확인 후 "성수역 6번출구" Stage 생성, 기존 곡 매핑. SQL: INSERT INTO stages(id,name,description,created_by,invite_code) SELECT uuid(),\"성수역 6번출구\",\"어썸 성수점 밴드\",(SELECT id FROM users WHERE email=\"chuli8944@gmail.com\"),upper(substr(hex(randomblob(4)),1,8)); INSERT INTO stage_members(stage_id,user_id,role) SELECT s.id,s.created_by,\"admin\" FROM stages s WHERE s.name=\"성수역 6번출구\"; UPDATE songs SET stage_id=(SELECT id FROM stages WHERE name=\"성수역 6번출구\") WHERE stage_id IS NULL;', tags: ['infra', 'song'], phase: '2', status: 'todo', priority: 'critical' },
 
       // ═══ Phase 3: 플레이어 & 악보 고도화 ═══
-      { id: 20, title: '악보 업로드 권한 분리', desc: 'editor 이상만 PDF 업로드/수정 가능. viewer는 악보 조회/재생만 가능.', tags: ['song', 'auth'], phase: '3', status: 'todo', priority: 'high' },
+      { id: 20, title: '악보 업로드 권한 분리', desc: 'editor 이상만 곡 생성/수정/삭제/업로드 가능. viewer는 조회/재생만. checkSongEditPermission 헬퍼로 서버 일괄 적용.', tags: ['song', 'auth'], phase: '3', status: 'done', priority: 'high' },
       { id: 21, title: '연습 기록 저장', desc: '곡별 연습 시간, 횟수 기록. 개인별 연습 통계 대시보드. Stage 전체 연습 현황 공유.', tags: ['player', 'song'], phase: '3', status: 'todo', priority: 'medium' },
       { id: 22, title: '메모 / 주석 기능', desc: '악보 위에 개인 메모 남기기 (포스트잇 스타일). 다른 멤버 메모는 비공개.', tags: ['player', 'ui'], phase: '3', status: 'todo', priority: 'medium' },
       { id: 23, title: '셋리스트 (Set List) 기능', desc: '공연/연습용 곡 순서 세트 구성. 셋리스트 순서대로 자동 곡 전환. 저장 & 공유.', tags: ['song', 'group'], phase: '3', status: 'todo', priority: 'medium' },
