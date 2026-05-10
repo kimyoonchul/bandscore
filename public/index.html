@@ -1657,8 +1657,7 @@
       const el = document.querySelector(`[data-song-id="${songId}"]`);
       if (el) el.classList.add('active');
 
-      loadSongDetail(songId);
-      showPanel('songDetail');
+      openSong(songId);
 
       // 모바일에서 자동 닫기
       if (window.innerWidth < 1024) closeSidebar();
