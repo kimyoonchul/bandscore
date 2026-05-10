@@ -611,6 +611,125 @@ app.post('/api/dm/:userId', authMiddleware, (req, res) => {
   }
 });
 
+// ── Admin API (chuli8944@gmail.com 전용) ──
+function adminMiddleware(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({ error: '로그인이 필요합니다' });
+  try {
+    const decoded = require('jsonwebtoken').verify(authHeader.split(' ')[1], JWT_SECRET);
+    if (decoded.email !== ADMIN_EMAIL && decoded.role !== 'admin') {
+      return res.status(403).json({ error: '관리자만 접근 가능합니다' });
+    }
+    req.user = decoded;
+    next();
+  } catch(e) { return res.status(401).json({ error: '토큰이 만료되었습니다' }); }
+}
+
+// 전체 통계
+app.get('/api/admin/stats', adminMiddleware, (req, res) => {
+  const userCount = get('SELECT COUNT(*) as c FROM users').c;
+  const stageCount = get('SELECT COUNT(*) as c FROM stages').c;
+  const songCount = get('SELECT COUNT(*) as c FROM songs').c;
+  const partCount = get('SELECT COUNT(*) as c FROM parts').c;
+  const msgCount = get('SELECT COUNT(*) as c FROM stage_messages').c;
+  const dmCount = get('SELECT COUNT(*) as c FROM direct_messages').c;
+  const recentUsers = query('SELECT id, email, nickname, role, created_at, last_login FROM users ORDER BY created_at DESC LIMIT 5');
+  res.json({ userCount, stageCount, songCount, partCount, msgCount, dmCount, recentUsers });
+});
+
+// 전체 회원 목록
+app.get('/api/admin/users', adminMiddleware, (req, res) => {
+  const users = query(`
+    SELECT u.id, u.email, u.nickname, u.role, u.created_at, u.last_login,
+      (SELECT COUNT(*) FROM stage_members WHERE user_id = u.id) as stage_count
+    FROM users u ORDER BY u.created_at DESC
+  `);
+  res.json(users);
+});
+
+// 회원 역할 변경
+app.put('/api/admin/users/:id/role', adminMiddleware, (req, res) => {
+  const { role } = req.body;
+  if (!['admin', 'user'].includes(role)) return res.status(400).json({ error: '잘못된 역할입니다' });
+  run('UPDATE users SET role = ? WHERE id = ?', [role, req.params.id]);
+  res.json({ ok: true });
+});
+
+// 회원 삭제
+app.delete('/api/admin/users/:id', adminMiddleware, (req, res) => {
+  const user = get('SELECT email FROM users WHERE id = ?', [req.params.id]);
+  if (!user) return res.status(404).json({ error: '사용자를 찾을 수 없습니다' });
+  if (user.email === ADMIN_EMAIL) return res.status(403).json({ error: '관리자 계정은 삭제할 수 없습니다' });
+  run('DELETE FROM users WHERE id = ?', [req.params.id]);
+  res.json({ ok: true });
+});
+
+// 전체 Stage 목록
+app.get('/api/admin/stages', adminMiddleware, (req, res) => {
+  const stages = query(`
+    SELECT s.*, u.email as creator_email, u.nickname as creator_nickname,
+      (SELECT COUNT(*) FROM stage_members WHERE stage_id = s.id) as member_count,
+      (SELECT COUNT(*) FROM songs WHERE stage_id = s.id) as song_count,
+      (SELECT COUNT(*) FROM stage_messages WHERE stage_id = s.id) as msg_count
+    FROM stages s LEFT JOIN users u ON s.created_by = u.id
+    ORDER BY s.created_at DESC
+  `);
+  res.json(stages);
+});
+
+// Stage 삭제
+app.delete('/api/admin/stages/:id', adminMiddleware, (req, res) => {
+  run('DELETE FROM stages WHERE id = ?', [req.params.id]);
+  res.json({ ok: true });
+});
+
+// 전체 곡 목록 (어드민용, 파일 크기 포함)
+app.get('/api/admin/songs', adminMiddleware, (req, res) => {
+  const songs = query(`
+    SELECT s.*, st.name as stage_name, u.nickname as creator_nickname,
+      (SELECT COUNT(*) FROM parts WHERE song_id = s.id) as part_count
+    FROM songs s
+    LEFT JOIN stages st ON s.stage_id = st.id
+    LEFT JOIN users u ON (SELECT created_by FROM stages WHERE id = s.stage_id) = u.id
+    ORDER BY s.created_at DESC
+  `);
+  // 각 곡의 파일 크기 계산
+  songs.forEach(s => {
+    const parts = query('SELECT pdf_filename FROM parts WHERE song_id = ?', [s.id]);
+    let totalSize = 0;
+    parts.forEach(p => {
+      try {
+        const fp = require('path').join(uploadsDir, p.pdf_filename);
+        if (fs.existsSync(fp)) totalSize += fs.statSync(fp).size;
+      } catch(e) {}
+    });
+    if (s.cover_filename) {
+      try {
+        const fp = require('path').join(uploadsDir, s.cover_filename);
+        if (fs.existsSync(fp)) totalSize += fs.statSync(fp).size;
+      } catch(e) {}
+    }
+    s.total_size = totalSize;
+  });
+  res.json(songs);
+});
+
+// 곡 삭제 (어드민용)
+app.delete('/api/admin/songs/:id', adminMiddleware, (req, res) => {
+  const song = get('SELECT * FROM songs WHERE id = ?', [req.params.id]);
+  if (!song) return res.status(404).json({ error: '곡을 찾을 수 없습니다' });
+  // 관련 파일 삭제
+  const parts = query('SELECT pdf_filename FROM parts WHERE song_id = ?', [req.params.id]);
+  parts.forEach(p => {
+    try { fs.unlinkSync(require('path').join(uploadsDir, p.pdf_filename)); } catch(e) {}
+  });
+  if (song.cover_filename) {
+    try { fs.unlinkSync(require('path').join(uploadsDir, song.cover_filename)); } catch(e) {}
+  }
+  run('DELETE FROM songs WHERE id = ?', [req.params.id]);
+  res.json({ ok: true });
+});
+
 // 곡 수정 권한 체크 헬퍼 (editor 이상만 허용)
 function checkSongEditPermission(req, res, songOrStageId, isStageId = false) {
   const userId = req.user ? req.user.id : null;
