@@ -1,19 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- 어쿠스틱 기타 스타일 - 심플하고 알아보기 쉽게 -->
-  <!-- 바디 (8자 모양) -->
-  <ellipse cx="16" cy="24" rx="11" ry="7.5" fill="#2d7a5a"/>
-  <ellipse cx="16" cy="17" rx="8" ry="5.5" fill="#35946a"/>
-  <!-- 사운드홀 -->
-  <circle cx="16" cy="23" r="3.5" fill="#1a5c3f"/>
-  <circle cx="16" cy="23" r="2.5" fill="#0d4a30"/>
-  <!-- 넥 -->
-  <rect x="14" y="1" width="4" height="14" rx="1" fill="#d4a574"/>
-  <!-- 헤드 -->
-  <rect x="13.5" y="0" width="5" height="3" rx="1.5" fill="#c49464"/>
-  <!-- 줄 -->
-  <line x1="15" y1="3" x2="15" y2="27" stroke="rgba(255,255,255,0.4)" stroke-width="0.4"/>
-  <line x1="16" y1="3" x2="16" y2="27" stroke="rgba(255,255,255,0.4)" stroke-width="0.4"/>
-  <line x1="17" y1="3" x2="17" y2="27" stroke="rgba(255,255,255,0.4)" stroke-width="0.4"/>
-  <!-- 브릿지 -->
-  <rect x="13.5" y="27" width="5" height="1" rx="0.5" fill="#c49464"/>
+  <defs>
+    <linearGradient id="doorGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f43f5e" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#fbbf24" stop-opacity="0.3"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- 배경 -->
+  <rect width="32" height="32" rx="7.5" fill="#1e1b4b"/>
+  <!-- 새어나오는 빛 -->
+  <polygon points="13,6.4 25.6,1.6 25.6,30.4 13,25.6" fill="url(#doorGlow)" filter="url(#glow)"/>
+  <!-- 열린 문 -->
+  <polygon points="13,6.4 19.2,8 19.2,24 13,25.6" fill="#312e81"/>
+  <!-- 문 손잡이 -->
+  <circle cx="14.4" cy="16" r="0.64" fill="#475569"/>
+  <!-- 음표 -->
+  <g transform="translate(20.8, 11.2) rotate(15)" fill="#fff" filter="url(#glow)">
+    <circle cx="1.6" cy="6.4" r="1.9"/>
+    <circle cx="8" cy="4.8" r="1.9"/>
+    <rect x="2.9" y="1.3" width="1" height="5.1"/>
+    <rect x="9.3" y="-0.3" width="1" height="5.1"/>
+    <polygon points="2.9,1.3 10.2,-0.3 10.2,1.3 3.8,3.2"/>
+  </g>
+  <!-- 반짝이 -->
+  <path d="M 27.2,6.4 L 27.8,8 L 29.4,8.6 L 27.8,9.3 L 27.2,10.9 L 26.6,9.3 L 25,8.6 L 26.6,8 Z" fill="#fbbf24" filter="url(#glow)"/>
+  <path d="M 17.6,4.8 L 17.9,5.8 L 18.9,6.1 L 17.9,6.4 L 17.6,7.4 L 17.3,6.4 L 16.3,6.1 L 17.3,5.8 Z" fill="#f43f5e"/>
 </svg>

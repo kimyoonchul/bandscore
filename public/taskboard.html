@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backstage — Task Board</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --accent: #f43f5e;
+      --accent-light: #fbbf24;
+      --bg: #000000;
+      --bg-card: #0d0d0d;
+      --bg-elevated: #1a1a1a;
+      --border: rgba(255,255,255,0.06);
+      --border-hover: rgba(244,63,94,0.4);
+      --text: #f0ece6;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --gradient: linear-gradient(135deg, #f43f5e 0%, #fbbf24 100%);
+      --radius: 0.75rem;
+      --radius-lg: 1rem;
+      --shadow: 0 8px 32px rgba(0,0,0,0.5);
+      --ease: cubic-bezier(0.4,0,0.2,1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    .logo-icon {
+      width: 2.2rem;
+      height: 2.2rem;
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+
+    .logo-icon svg { width: 100%; height: 100%; display: block; }
+
+    .logo-text {
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-sub {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    /* ── Phase Tabs ── */
+    .phase-tabs {
+      display: flex;
+      gap: 0.25rem;
+      padding: 0.75rem 2rem;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .phase-tab {
+      padding: 0.5rem 1.25rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 2rem;
+      cursor: pointer;
+      transition: all 0.25s var(--ease);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .phase-tab:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+    .phase-tab.active {
+      background: var(--gradient);
+      color: #000;
+    }
+
+    .phase-tab .count {
+      background: rgba(0,0,0,0.2);
+      padding: 0.1rem 0.5rem;
+      border-radius: 1rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .phase-tab.active .count { background: rgba(0,0,0,0.3); }
+
+    /* ── Board ── */
+    .board {
+      display: flex;
+      gap: 1.25rem;
+      padding: 1.5rem 2rem;
+      overflow-x: auto;
+      min-height: calc(100vh - 8rem);
+      align-items: flex-start;
+    }
+
+    .column {
+      min-width: 320px;
+      max-width: 360px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .column-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: var(--bg-elevated);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    .column-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .column-count {
+      background: rgba(255,255,255,0.08);
+      padding: 0.15rem 0.6rem;
+      border-radius: 1rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    /* ── Task Card ── */
+    .task-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.125rem;
+      cursor: pointer;
+      transition: all 0.3s var(--ease);
+    }
+
+    .task-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(244,63,94,0.08);
+    }
+
+    .task-priority {
+      display: inline-block;
+      width: 100%;
+      height: 3px;
+      border-radius: 2px;
+      margin-bottom: 0.75rem;
+    }
+
+    .priority-critical { background: var(--gradient); }
+    .priority-high { background: #f43f5e; }
+    .priority-medium { background: #fbbf24; }
+    .priority-low { background: #71717a; }
+
+    .task-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      margin-bottom: 0.375rem;
+      line-height: 1.4;
+    }
+
+    .task-desc {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      margin-bottom: 0.75rem;
+    }
+
+    .task-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .tag {
+      padding: 0.2rem 0.6rem;
+      border-radius: 0.375rem;
+      font-size: 0.68rem;
+      font-weight: 600;
+      border: 1px solid;
+    }
+
+    .tag-auth { color: #818cf8; border-color: rgba(129,140,248,0.3); background: rgba(129,140,248,0.08); }
+    .tag-group { color: #34d399; border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.08); }
+    .tag-song { color: #fbbf24; border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.08); }
+    .tag-admin { color: #f43f5e; border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.08); }
+    .tag-ui { color: #a78bfa; border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.08); }
+    .tag-infra { color: #67e8f9; border-color: rgba(103,232,249,0.3); background: rgba(103,232,249,0.08); }
+    .tag-player { color: #fb923c; border-color: rgba(251,146,60,0.3); background: rgba(251,146,60,0.08); }
+    .tag-social { color: #f472b6; border-color: rgba(244,114,182,0.3); background: rgba(244,114,182,0.08); }
+
+    .task-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .task-phase {
+      padding: 0.15rem 0.5rem;
+      border-radius: 0.25rem;
+      font-weight: 600;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .phase-1 { background: rgba(244,63,94,0.15); color: #f43f5e; }
+    .phase-2 { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .phase-3 { background: rgba(52,211,153,0.15); color: #34d399; }
+    .phase-4 { background: rgba(129,140,248,0.15); color: #818cf8; }
+
+    /* ── Summary Cards ── */
+    .summary-bar {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem 2rem 0;
+    }
+
+    .summary-card {
+      flex: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      text-align: center;
+    }
+
+    .summary-num {
+      font-size: 1.8rem;
+      font-weight: 900;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .summary-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 0.25rem;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .header { padding: 0.75rem 1rem; }
+      .phase-tabs { padding: 0.5rem 1rem; }
+      .board { padding: 1rem; gap: 1rem; }
+      .column { min-width: 280px; }
+      .summary-bar { flex-direction: column; padding: 0.75rem 1rem 0; gap: 0.5rem; }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="doorGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#f43f5e" stop-opacity="1"/>
+              <stop offset="100%" stop-color="#fbbf24" stop-opacity="0.3"/>
+            </linearGradient>
+            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <rect width="100" height="100" rx="24" fill="#1e1b4b"/>
+          <polygon points="40,20 80,5 80,95 40,80" fill="url(#doorGlow)" filter="url(#glow)"/>
+          <polygon points="40,20 60,25 60,75 40,80" fill="#312e81"/>
+          <circle cx="45" cy="50" r="2" fill="#475569"/>
+          <g transform="translate(65, 35) rotate(15)" fill="#fff" filter="url(#glow)">
+            <circle cx="5" cy="20" r="6"/><circle cx="25" cy="15" r="6"/>
+            <rect x="9" y="4" width="3" height="16"/><rect x="29" y="-1" width="3" height="16"/>
+            <polygon points="9,4 32,-1 32,5 12,10"/>
+          </g>
+          <path d="M 85,20 L 87,25 L 92,27 L 87,29 L 85,34 L 83,29 L 78,27 L 83,25 Z" fill="#fbbf24" filter="url(#glow)"/>
+          <path d="M 55,15 L 56,18 L 59,19 L 56,20 L 55,23 L 54,20 L 51,19 L 54,18 Z" fill="#f43f5e"/>
+        </svg>
+      </div>
+      <span class="logo-text">Backstage</span>
+    </div>
+    <div class="header-sub">서비스 개발 로드맵 · Task Board</div>
+  </div>
+
+  <!-- Phase Tabs -->
+  <div class="phase-tabs">
+    <button class="phase-tab active" onclick="filterPhase('all', this)">전체 <span class="count" id="countAll">0</span></button>
+    <button class="phase-tab" onclick="filterPhase('1', this)">🔴 Phase 1 · MVP <span class="count" id="count1">0</span></button>
+    <button class="phase-tab" onclick="filterPhase('2', this)">🟡 Phase 2 · 그룹 <span class="count" id="count2">0</span></button>
+    <button class="phase-tab" onclick="filterPhase('3', this)">🟢 Phase 3 · 플레이어 <span class="count" id="count3">0</span></button>
+    <button class="phase-tab" onclick="filterPhase('4', this)">🟣 Phase 4 · 확장 <span class="count" id="count4">0</span></button>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-bar">
+    <div class="summary-card"><div class="summary-num" id="sumTotal">0</div><div class="summary-label">전체 태스크</div></div>
+    <div class="summary-card"><div class="summary-num" id="sumTodo">0</div><div class="summary-label">대기</div></div>
+    <div class="summary-card"><div class="summary-num" id="sumProgress">0</div><div class="summary-label">진행중</div></div>
+    <div class="summary-card"><div class="summary-num" id="sumDone">0</div><div class="summary-label">완료</div></div>
+  </div>
+
+  <!-- Board -->
+  <div class="board" id="board"></div>
+
+  <script>
+    const TASKS = [
+      // ═══ Phase 1: MVP — 인증 & 기본 구조 ═══
+      { id: 1, title: 'DB 스키마 설계 (users, stages, members)', desc: 'users, stages, stage_members, invitations 테이블 설계. 기존 songs/parts 테이블에 stage_id FK 추가.', tags: ['infra'], phase: '1', status: 'todo', priority: 'critical' },
+      { id: 2, title: '회원가입 / 로그인 (이메일+비밀번호)', desc: 'bcrypt 해싱, JWT 토큰 발급, 리프레시 토큰 구조. 이메일 인증은 Phase 4로 후순위.', tags: ['auth'], phase: '1', status: 'todo', priority: 'critical' },
+      { id: 3, title: 'Google OAuth 2.0 로그인', desc: 'passport-google-oauth20 연동. 최초 로그인 시 자동 회원가입. 프로필 이미지/닉네임 연동.', tags: ['auth'], phase: '1', status: 'todo', priority: 'high' },
+      { id: 4, title: '로그인/회원가입 UI 페이지', desc: '레트로 선셋 테마 적용. 소셜 로그인 버튼, 폼 밸리데이션, 로딩 상태, 에러 피드백.', tags: ['auth', 'ui'], phase: '1', status: 'todo', priority: 'high' },
+      { id: 5, title: 'JWT 미들웨어 & API 보호', desc: 'Express 미들웨어로 인증 필요 API 보호. 토큰 만료 시 리프레시 흐름 구현.', tags: ['auth', 'infra'], phase: '1', status: 'todo', priority: 'critical' },
+      { id: 6, title: '사용자 프로필 편집', desc: '닉네임, 프로필 이미지 변경. 내가 속한 Stage 목록 조회.', tags: ['auth', 'ui'], phase: '1', status: 'todo', priority: 'medium' },
+
+      // ═══ Phase 2: 그룹(Stage) 시스템 ═══
+      { id: 10, title: '내 Stage 만들기', desc: '그룹명, 설명, 커버 이미지 설정. 생성자가 자동으로 admin 역할. Stage 고유 URL 생성.', tags: ['group'], phase: '2', status: 'todo', priority: 'critical' },
+      { id: 11, title: 'Stage 초대 시스템', desc: '초대 링크 생성 (만료시간 설정 가능). 링크 클릭 시 Stage 자동 가입. 초대 코드 방식도 지원.', tags: ['group', 'social'], phase: '2', status: 'todo', priority: 'critical' },
+      { id: 12, title: 'Stage 멤버 역할 관리', desc: 'admin / editor / viewer 3단계 권한. admin: 모든 권한, editor: 곡 추가/수정, viewer: 읽기/재생 전용.', tags: ['group', 'admin'], phase: '2', status: 'todo', priority: 'high' },
+      { id: 13, title: 'Stage 대시보드 UI', desc: '멤버 목록, 곡 목록, 최근 활동 피드. Stage 설정 편집 (이름, 설명, 커버).', tags: ['group', 'ui'], phase: '2', status: 'todo', priority: 'high' },
+      { id: 14, title: 'Stage 내 곡 만들기 & 관리', desc: '기존 곡 CRUD를 Stage 컨텍스트로 확장. Stage 멤버만 해당 곡 접근 가능. 곡 정렬/검색.', tags: ['group', 'song'], phase: '2', status: 'todo', priority: 'critical' },
+      { id: 15, title: 'Stage 멤버 온라인 상태', desc: 'Socket.IO로 Stage 멤버 온/오프라인 실시간 표시. 현재 어떤 곡을 보고 있는지 표시.', tags: ['group', 'social'], phase: '2', status: 'todo', priority: 'low' },
+      { id: 16, title: '멤버 강퇴 & Stage 탈퇴', desc: 'admin이 멤버 강퇴 가능. 본인 탈퇴 기능. 마지막 admin 탈퇴 시 경고.', tags: ['group'], phase: '2', status: 'todo', priority: 'medium' },
+
+      // ═══ Phase 3: 플레이어 & 악보 고도화 ═══
+      { id: 20, title: '악보 업로드 권한 분리', desc: 'editor 이상만 PDF 업로드/수정 가능. viewer는 악보 조회/재생만 가능.', tags: ['song', 'auth'], phase: '3', status: 'todo', priority: 'high' },
+      { id: 21, title: '연습 기록 저장', desc: '곡별 연습 시간, 횟수 기록. 개인별 연습 통계 대시보드. Stage 전체 연습 현황 공유.', tags: ['player', 'song'], phase: '3', status: 'todo', priority: 'medium' },
+      { id: 22, title: '메모 / 주석 기능', desc: '악보 위에 개인 메모 남기기 (포스트잇 스타일). 다른 멤버 메모는 비공개.', tags: ['player', 'ui'], phase: '3', status: 'todo', priority: 'medium' },
+      { id: 23, title: '셋리스트 (Set List) 기능', desc: '공연/연습용 곡 순서 세트 구성. 셋리스트 순서대로 자동 곡 전환. 저장 & 공유.', tags: ['song', 'group'], phase: '3', status: 'todo', priority: 'medium' },
+      { id: 24, title: '기존 BandScore → Backstage 브랜딩 전환', desc: '로고, 파비콘(레트로 선셋), 타이틀, 메타태그 전체 교체. PWA manifest 업데이트.', tags: ['ui'], phase: '3', status: 'todo', priority: 'high' },
+
+      // ═══ Phase 4: 관리자 & 확장 ═══
+      { id: 30, title: '/admin 관리자 페이지 — 대시보드', desc: '전체 사용자 수, Stage 수, 곡 수 통계. 최근 가입자, 활성 사용자 차트. 서버 상태 모니터링.', tags: ['admin', 'ui'], phase: '4', status: 'todo', priority: 'critical' },
+      { id: 31, title: '/admin 회원 관리', desc: '회원 목록 조회, 검색, 필터. 회원 상세 (가입일, 소속 Stage, 활동). 계정 비활성화/삭제.', tags: ['admin'], phase: '4', status: 'todo', priority: 'critical' },
+      { id: 32, title: '/admin Stage 관리', desc: '전체 Stage 목록. Stage별 멤버 수, 곡 수 통계. 문제 Stage 강제 삭제/비활성화.', tags: ['admin', 'group'], phase: '4', status: 'todo', priority: 'high' },
+      { id: 33, title: '/admin 곡 관리', desc: '전체 곡 목록. 용량 큰 파일 확인. 미사용 업로드 파일 정리 도구.', tags: ['admin', 'song'], phase: '4', status: 'todo', priority: 'high' },
+      { id: 34, title: '알림 시스템', desc: 'Stage 초대, 새 곡 추가, 연습 시작 등 알림. 인앱 알림 + 이메일 알림 (선택).', tags: ['social', 'infra'], phase: '4', status: 'todo', priority: 'medium' },
+      { id: 35, title: '배포 & 인프라', desc: 'Docker 컨테이너화. nginx 리버스 프록시. SSL 인증서. 자동 백업 스크립트. CI/CD 파이프라인.', tags: ['infra'], phase: '4', status: 'todo', priority: 'high' },
+      { id: 36, title: 'PWA & 오프라인 지원', desc: 'Service Worker로 악보 캐싱. 오프라인에서도 마지막 본 악보 조회 가능. 앱 설치 배너.', tags: ['infra', 'ui'], phase: '4', status: 'todo', priority: 'low' },
+    ];
+
+    const STATUS_COLS = [
+      { key: 'todo', title: '📋 대기 (To Do)', icon: '📋' },
+      { key: 'progress', title: '🔨 진행중', icon: '🔨' },
+      { key: 'review', title: '👀 리뷰', icon: '👀' },
+      { key: 'done', title: '✅ 완료', icon: '✅' },
+    ];
+
+    let currentPhase = 'all';
+
+    function filterPhase(phase, btn) {
+      currentPhase = phase;
+      document.querySelectorAll('.phase-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      renderBoard();
+    }
+
+    function renderBoard() {
+      const board = document.getElementById('board');
+      const filtered = currentPhase === 'all' ? TASKS : TASKS.filter(t => t.phase === currentPhase);
+
+      board.innerHTML = STATUS_COLS.map(col => {
+        const colTasks = filtered.filter(t => t.status === col.key);
+        return `
+          <div class="column">
+            <div class="column-header">
+              <span class="column-title">${col.title}</span>
+              <span class="column-count">${colTasks.length}</span>
+            </div>
+            ${colTasks.map(t => `
+              <div class="task-card" data-phase="${t.phase}">
+                <div class="task-priority priority-${t.priority}"></div>
+                <div class="task-title">${t.title}</div>
+                <div class="task-desc">${t.desc}</div>
+                <div class="task-tags">${t.tags.map(tag => `<span class="tag tag-${tag}">${tag}</span>`).join('')}</div>
+                <div class="task-footer">
+                  <span class="task-phase phase-${t.phase}">Phase ${t.phase}</span>
+                  <span>${t.priority === 'critical' ? '🔥 Critical' : t.priority === 'high' ? '⬆️ High' : t.priority === 'medium' ? '➡️ Medium' : '⬇️ Low'}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }).join('');
+
+      // Update counts
+      const all = TASKS;
+      document.getElementById('countAll').textContent = all.length;
+      ['1','2','3','4'].forEach(p => {
+        document.getElementById('count' + p).textContent = all.filter(t => t.phase === p).length;
+      });
+
+      document.getElementById('sumTotal').textContent = filtered.length;
+      document.getElementById('sumTodo').textContent = filtered.filter(t => t.status === 'todo').length;
+      document.getElementById('sumProgress').textContent = filtered.filter(t => t.status === 'progress').length;
+      document.getElementById('sumDone').textContent = filtered.filter(t => t.status === 'done').length;
+    }
+
+    renderBoard();
+  </script>
+</body>
+</html>

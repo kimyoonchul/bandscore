@@ -23,6 +23,12 @@ const multer = require('multer');
 const initSqlJs = require('sql.js');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+// JWT 설정
+const JWT_SECRET = process.env.JWT_SECRET || 'backstage_secret_' + require('crypto').randomBytes(16).toString('hex');
+const JWT_EXPIRES = '7d';
 
 const app = express();
 const server = http.createServer(app);
@@ -144,13 +150,126 @@ async function initDb() {
     page_number INTEGER NOT NULL,
     FOREIGN KEY (part_id) REFERENCES parts(id) ON DELETE CASCADE
   )`);
+  // ── Users 테이블 ──
+  db.run(`CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT,
+    nickname TEXT NOT NULL,
+    profile_image TEXT,
+    provider TEXT DEFAULT 'local',
+    provider_id TEXT,
+    role TEXT DEFAULT 'user',
+    created_at TEXT DEFAULT (datetime('now')),
+    last_login TEXT
+  )`);
   saveDb();
   // Migration: 기존 DB에 새 컬럼 추가
   try { db.run('ALTER TABLE songs ADD COLUMN cover_filename TEXT'); saveDb(); } catch(e) {}
   try { db.run('ALTER TABLE songs ADD COLUMN inst_filename TEXT'); saveDb(); } catch(e) {}
   try { db.run('ALTER TABLE songs ADD COLUMN inst_delay_ms INTEGER DEFAULT 0'); saveDb(); } catch(e) {}
   try { db.run('ALTER TABLE parts ADD COLUMN style_settings TEXT'); saveDb(); } catch(e) {}
+  // users 테이블 마이그레이션
+  try { db.run('ALTER TABLE users ADD COLUMN role TEXT DEFAULT \'user\''); saveDb(); } catch(e) {}
+  try { db.run('ALTER TABLE users ADD COLUMN last_login TEXT'); saveDb(); } catch(e) {}
 }
+
+// ── Auth Middleware ──
+function authMiddleware(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: '로그인이 필요합니다' });
+  }
+  try {
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (e) {
+    return res.status(401).json({ error: '토큰이 만료되었습니다. 다시 로그인하세요.' });
+  }
+}
+
+function optionalAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      req.user = jwt.verify(authHeader.split(' ')[1], JWT_SECRET);
+    } catch (e) { /* ignore */ }
+  }
+  next();
+}
+
+// ── Auth API Routes ──
+
+// 회원가입
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { email, password, nickname } = req.body;
+    if (!email || !password || !nickname) {
+      return res.status(400).json({ error: '이메일, 비밀번호, 닉네임을 모두 입력하세요' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ error: '비밀번호는 6자 이상이어야 합니다' });
+    }
+    const existing = get('SELECT id FROM users WHERE email = ?', [email]);
+    if (existing) {
+      return res.status(409).json({ error: '이미 가입된 이메일입니다' });
+    }
+    const id = uuidv4();
+    const passwordHash = await bcrypt.hash(password, 10);
+    run('INSERT INTO users (id, email, password_hash, nickname) VALUES (?,?,?,?)',
+      [id, email, passwordHash, nickname]);
+    const token = jwt.sign({ id, email, nickname, role: 'user' }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+    run('UPDATE users SET last_login = datetime(\'now\') WHERE id = ?', [id]);
+    res.json({ token, user: { id, email, nickname, role: 'user' } });
+  } catch (e) {
+    console.error('Register error:', e);
+    res.status(500).json({ error: '회원가입 처리 중 오류가 발생했습니다' });
+  }
+});
+
+// 로그인
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: '이메일과 비밀번호를 입력하세요' });
+    }
+    const user = get('SELECT * FROM users WHERE email = ?', [email]);
+    if (!user) {
+      return res.status(401).json({ error: '이메일 또는 비밀번호가 올바르지 않습니다' });
+    }
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) {
+      return res.status(401).json({ error: '이메일 또는 비밀번호가 올바르지 않습니다' });
+    }
+    const token = jwt.sign(
+      { id: user.id, email: user.email, nickname: user.nickname, role: user.role || 'user' },
+      JWT_SECRET, { expiresIn: JWT_EXPIRES }
+    );
+    run('UPDATE users SET last_login = datetime(\'now\') WHERE id = ?', [user.id]);
+    res.json({ token, user: { id: user.id, email: user.email, nickname: user.nickname, profile_image: user.profile_image, role: user.role || 'user' } });
+  } catch (e) {
+    console.error('Login error:', e);
+    res.status(500).json({ error: '로그인 처리 중 오류가 발생했습니다' });
+  }
+});
+
+// 내 프로필
+app.get('/api/auth/me', authMiddleware, (req, res) => {
+  const user = get('SELECT id, email, nickname, profile_image, role, created_at, last_login FROM users WHERE id = ?', [req.user.id]);
+  if (!user) return res.status(404).json({ error: '사용자를 찾을 수 없습니다' });
+  res.json(user);
+});
+
+// 프로필 수정
+app.put('/api/auth/me', authMiddleware, (req, res) => {
+  const { nickname } = req.body;
+  if (nickname) run('UPDATE users SET nickname = ? WHERE id = ?', [nickname, req.user.id]);
+  const user = get('SELECT id, email, nickname, profile_image, role FROM users WHERE id = ?', [req.user.id]);
+  res.json(user);
+});
 
 // ── API Routes ──
 
@@ -475,7 +594,7 @@ io.on('connection', (socket) => {
 // Start
 initDb().then(() => {
   server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🎵 BandScore running at http://localhost:${PORT}`);
+    console.log(`🎵 Backstage running at http://localhost:${PORT}`);
   });
 }).catch(err => {
   console.error('DB init failed:', err);

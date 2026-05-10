@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backstage — 사용 가이드</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --accent: #f43f5e; --accent-light: #fbbf24;
+      --bg: #000; --bg-card: #0d0d0d; --bg-elevated: #1a1a1a;
+      --border: rgba(255,255,255,0.06); --text: #f0ece6;
+      --text-secondary: #a1a1aa; --text-muted: #71717a;
+      --gradient: linear-gradient(135deg, #f43f5e 0%, #fbbf24 100%);
+      --radius: 0.75rem;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+    /* Header */
+    .header { background: rgba(0,0,0,0.85); backdrop-filter: blur(24px); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .logo { display: flex; align-items: center; gap: 0.75rem; font-size: 1.4rem; font-weight: 900; text-decoration: none; }
+    .logo-text { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .back-btn { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; font-weight: 600; padding: 0.4rem 1rem; border: 1px solid var(--border); border-radius: 2rem; transition: all 0.2s; }
+    .back-btn:hover { border-color: var(--accent); color: var(--text); }
+
+    /* Nav */
+    .toc { position: fixed; left: 0; top: 4rem; width: 220px; padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 0.25rem; z-index: 50; }
+    .toc a { color: var(--text-muted); text-decoration: none; font-size: 0.78rem; font-weight: 500; padding: 0.4rem 0.75rem; border-radius: 0.5rem; border-left: 2px solid transparent; transition: all 0.2s; }
+    .toc a:hover, .toc a.active { color: var(--text); background: rgba(255,255,255,0.03); border-left-color: var(--accent); }
+
+    /* Content */
+    .content { max-width: 720px; margin: 0 auto; padding: 3rem 2rem 6rem; margin-left: 220px; }
+
+    .hero { text-align: center; padding: 3rem 0 4rem; margin-left: -220px; }
+    .hero h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 0.75rem; }
+    .hero h1 span { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { color: var(--text-secondary); font-size: 1.05rem; max-width: 500px; margin: 0 auto; }
+
+    section { margin-bottom: 3.5rem; scroll-margin-top: 5rem; }
+    section h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.625rem; }
+    section h2 .num { background: var(--gradient); color: #000; width: 2rem; height: 2rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 900; flex-shrink: 0; }
+    section h3 { font-size: 1.05rem; font-weight: 700; color: var(--accent-light); margin: 1.5rem 0 0.75rem; }
+
+    .step-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; transition: border-color 0.2s; }
+    .step-card:hover { border-color: rgba(244,63,94,0.2); }
+    .step-card .step-num { display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--bg-elevated); border: 1px solid var(--border); font-size: 0.72rem; font-weight: 800; color: var(--accent); margin-right: 0.5rem; flex-shrink: 0; }
+    .step-card .step-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.375rem; display: flex; align-items: center; }
+    .step-card .step-desc { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; }
+    .step-card .step-desc code { background: var(--bg-elevated); padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem; color: var(--accent-light); }
+
+    .tip { background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.15); border-radius: var(--radius); padding: 1rem 1.25rem; margin: 1rem 0; font-size: 0.85rem; color: var(--text-secondary); }
+    .tip::before { content: '💡 TIP'; display: block; font-weight: 800; font-size: 0.72rem; color: var(--accent-light); margin-bottom: 0.375rem; letter-spacing: 0.05em; }
+
+    .warn { background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.15); border-radius: var(--radius); padding: 1rem 1.25rem; margin: 1rem 0; font-size: 0.85rem; color: var(--text-secondary); }
+    .warn::before { content: '⚠️ 주의'; display: block; font-weight: 800; font-size: 0.72rem; color: var(--accent); margin-bottom: 0.375rem; }
+
+    .faq-item { border-bottom: 1px solid var(--border); padding: 1rem 0; }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-q { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.5rem; cursor: pointer; }
+    .faq-q::before { content: 'Q. '; color: var(--accent); }
+    .faq-a { color: var(--text-secondary); font-size: 0.85rem; padding-left: 1.5rem; }
+
+    .kbd { background: var(--bg-elevated); border: 1px solid var(--border); padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-size: 0.78rem; font-weight: 600; }
+
+    @media (max-width: 768px) {
+      .toc { display: none; }
+      .content { margin-left: 0; padding: 2rem 1rem 4rem; }
+      .hero { margin-left: 0; padding: 2rem 0 3rem; }
+      .hero h1 { font-size: 1.8rem; }
+      .header { padding: 0.75rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <a class="logo" href="/"><span>🎵</span> <span class="logo-text">Backstage</span></a>
+  <a class="back-btn" href="/">← 메인으로</a>
+</div>
+
+<nav class="toc" id="toc">
+  <a href="#intro">소개</a>
+  <a href="#start">시작하기</a>
+  <a href="#songs">곡 관리</a>
+  <a href="#score">악보 업로드</a>
+  <a href="#player">플레이어</a>
+  <a href="#sync">실시간 합주</a>
+  <a href="#faq">FAQ</a>
+</nav>
+
+<div class="content">
+  <div class="hero">
+    <h1><span>Backstage</span> 사용 가이드</h1>
+    <p>무대에 오르기 전, 묵묵히 합을 맞추는 공간.<br>밴드 합주를 위한 악보 자동 넘김 서비스입니다.</p>
+  </div>
+
+  <section id="intro">
+    <h2><span class="num">1</span> Backstage란?</h2>
+    <p style="color:var(--text-secondary);font-size:0.95rem;margin-bottom:1rem">
+      Backstage는 밴드 멤버들이 악보를 BPM에 맞춰 자동으로 넘기며 함께 합주할 수 있는 웹 서비스입니다.
+    </p>
+    <div class="step-card">
+      <div class="step-title">✨ 주요 기능</div>
+      <div class="step-desc">
+        • <strong>악보 자동 넘김</strong> — BPM과 마디 수 기반으로 PDF 악보를 자동 스크롤<br>
+        • <strong>실시간 동기화</strong> — 여러 멤버가 동시에 같은 곡을 재생하면 자동 싱크<br>
+        • <strong>오선 감지</strong> — PDF에서 악보 줄(시스템)을 자동/수동으로 인식<br>
+        • <strong>Inst 음원</strong> — 반주 MP3를 업로드하여 악보와 함께 재생<br>
+        • <strong>다양한 뷰 모드</strong> — 1단/2단/세로스크롤 보기 지원
+      </div>
+    </div>
+  </section>
+
+  <section id="start">
+    <h2><span class="num">2</span> 시작하기</h2>
+    <div class="step-card">
+      <div class="step-title"><span class="step-num">1</span> 접속하기</div>
+      <div class="step-desc">PC 또는 태블릿의 브라우저에서 공유받은 URL로 접속합니다. 별도 앱 설치 없이 바로 사용할 수 있습니다.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-title"><span class="step-num">2</span> 메인 화면</div>
+      <div class="step-desc">접속하면 등록된 곡들이 <strong>앨범 형태</strong>로 표시됩니다. 곡을 클릭하면 상세 페이지로 이동합니다.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-title"><span class="step-num">3</span> 곡 선택 → 파트 선택 → 재생</div>
+      <div class="step-desc">곡 상세에서 <strong>내 파트(악기)</strong>를 클릭하면 악보 플레이어가 열립니다. ▶ 버튼으로 재생하세요.</div>
+    </div>
+    <div class="tip">태블릿(iPad)에서 사용하면 악보를 가장 편하게 볼 수 있습니다. 보면대에 태블릿을 올려놓고 사용해보세요!</div>
+  </section>
+
+  <section id="songs">
+    <h2><span class="num">3</span> 곡 관리</h2>
+    <h3>새 곡 추가하기</h3>
+    <div class="step-card">
+      <div class="step-title"><span class="step-num">1</span> 우측 상단 <code>＋ 새 곡</code> 버튼 클릭</div>
+      <div class="step-desc">곡 이름을 입력하고 생성합니다.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-title"><span class="step-num">2</span> 곡 설정하기</div>
+      <div class="step-desc">
+        생성 후 <strong>⚙️ 설정</strong>에서 다음을 입력합니다:<br>
+        • <strong>BPM</strong> — 곡의 빠르기 (메트로놈 기준)<br>
+        • <strong>박자</strong> — 4/4, 3/4, 6/8 등<br>
+        • <strong>카운트인</strong> — 재생 전 준비 마디 수<br>
+        • <strong>커버 이미지</strong> — 앨범 표지 (선택)<br>
+        • <strong>Inst 음원</strong> — 반주 MP3 파일 (선택)
+      </div>
+    </div>
+    <div class="warn">곡을 삭제하면 해당 곡의 모든 파트와 악보 데이터가 함께 삭제됩니다. 신중하게 삭제하세요.</div>
+  </section>
+
+  <section id="score">
+    <h2><span class="num">4</span> 악보 업로드</h2>
+    <div class="step-card">
+      <div class="step-title"><span class="step-num">1</span> 파트 추가</div>
+      <div class="step-desc">곡 상세 페이지에서 <code>➕ 악보 업로드</code>를 클릭합니다. 파트명(예: 보컬, 기타, 드럼)을 입력하고 PDF를 선택합니다.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-title"><span class="step-num">2</span> 오선 감지 (시스템 편집)</div>
+      <div class="step-desc">
+        업로드 후 파트를 클릭 → <strong>오선 편집기</strong>가 열립니다.<br>
+        • <strong>자동 감지</strong>: 기본 패턴으로 줄을 나눕니다<br>
+        • <strong>수동 조정</strong>: 각 줄의 위치와 마디 수를 직접 설정<br>
+        • 줄마다 <strong>도돌이표, 볼타</strong> 설정도 가능합니다
+      </div>
+    </div>
+    <div class="step-card">
+      <div class="step-title"><span class="step-num">3</span> 마디 수 설정</div>
+      <div class="step-desc">각 줄(시스템)에 포함된 마디 수를 정확히 입력해야 자동 넘김이 정확해집니다. BPM과 박자를 기반으로 시간이 자동 계산됩니다.</div>
+    </div>
+    <div class="tip">오선 감지가 잘 안 되면 <strong>수동 패턴</strong>을 사용하세요. 예: <code>4,4,4,4</code> (4줄, 각 4마디)</div>
+  </section>
+
+  <section id="player">
+    <h2><span class="num">5</span> 플레이어 사용법</h2>
+    <h3>기본 조작</h3>
+    <div class="step-card">
+      <div class="step-desc">
+        • <strong>▶ 재생</strong> — 카운트인 후 BPM에 맞춰 악보 자동 넘김 시작<br>
+        • <strong>⏸ 일시정지</strong> — 현재 위치에서 정지<br>
+        • <strong>⏹ 정지</strong> — 처음으로 되돌아가기<br>
+        • <strong>시크바</strong> — 드래그하여 원하는 위치로 이동<br>
+        • <strong>BPM ±</strong> — 실시간 템포 조절
+      </div>
+    </div>
+    <h3>보기 모드</h3>
+    <div class="step-card">
+      <div class="step-desc">
+        • <strong>1단 보기</strong> — 한 페이지씩 표시 (기본)<br>
+        • <strong>2단 보기</strong> — 두 페이지를 나란히 (태블릿 가로 모드 추천)<br>
+        • <strong>세로 스크롤</strong> — 전체 악보를 위아래로 스크롤
+      </div>
+    </div>
+    <h3>스타일 설정</h3>
+    <div class="step-card">
+      <div class="step-desc">
+        우측 <strong>⚙️ 설정 패널</strong>에서 악보 표시를 커스터마이즈할 수 있습니다:<br>
+        • 좌/우 여백, 시스템 간격<br>
+        • 진행선 색상/두께<br>
+        • 비활성 영역 어둡기<br>
+        설정은 파트별로 저장됩니다.
+      </div>
+    </div>
+  </section>
+
+  <section id="sync">
+    <h2><span class="num">6</span> 실시간 합주</h2>
+    <div class="step-card">
+      <div class="step-desc">
+        여러 멤버가 <strong>같은 곡</strong>에 접속하면 자동으로 세션이 연결됩니다.<br><br>
+        • 한 사람이 <strong>▶ 재생</strong>하면 모든 멤버에게 동시에 카운트인 시작<br>
+        • <strong>일시정지, 정지, 템포 변경</strong>도 모두 동기화<br>
+        • 상단 멤버 배지를 클릭하면 현재 접속자 목록 확인 가능<br>
+        • Inst 음원도 동기화되어 모두 같은 반주를 들을 수 있습니다
+      </div>
+    </div>
+    <h3>솔로 / 투게더 모드</h3>
+    <div class="step-card">
+      <div class="step-desc">
+        • <strong>Together</strong> — 다른 멤버와 동기화 (합주 모드)<br>
+        • <strong>Solo</strong> — 혼자 독립적으로 재생 (개인 연습 모드)
+      </div>
+    </div>
+    <div class="tip">합주 시 모든 멤버가 "Together" 모드인지 확인하세요. Solo 모드에서는 동기화가 안 됩니다.</div>
+  </section>
+
+  <section id="faq">
+    <h2><span class="num">7</span> FAQ</h2>
+    <div class="faq-item">
+      <div class="faq-q">악보가 BPM과 안 맞아요</div>
+      <div class="faq-a">오선 편집기에서 각 줄의 <strong>마디 수</strong>가 정확한지 확인하세요. 마디 수가 틀리면 넘기는 타이밍이 어긋납니다.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">PDF가 업로드 안 돼요</div>
+      <div class="faq-a">PDF 파일만 지원됩니다. 이미지 파일(JPG, PNG)은 먼저 PDF로 변환 후 업로드하세요.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">태블릿에서 화면이 잘려요</div>
+      <div class="faq-a">브라우저의 <strong>전체 화면</strong> 모드를 사용해보세요. 또는 보기 모드를 변경해보세요.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">다른 멤버와 싱크가 안 맞아요</div>
+      <div class="faq-a">네트워크 상태에 따라 약간의 지연이 있을 수 있습니다. 모두 같은 Wi-Fi에 접속하면 지연이 줄어듭니다.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Inst 음원이 재생 안 돼요</div>
+      <div class="faq-a">브라우저 정책상 <strong>화면을 한 번 터치</strong>해야 오디오가 활성화됩니다. 재생 전에 화면을 터치하세요.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">도돌이표가 있는 곡은 어떻게 하나요?</div>
+      <div class="faq-a">오선 편집기에서 각 줄의 <strong>반복 시작/끝</strong>과 <strong>볼타</strong> 설정을 사용하세요. 재생 순서 편집도 가능합니다.</div>
+    </div>
+  </section>
+</div>
+
+<script>
+  // TOC active highlight on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const tocLinks = document.querySelectorAll('.toc a');
+  window.addEventListener('scroll', () => {
+    let cur = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) cur = s.id; });
+    tocLinks.forEach(a => { a.classList.toggle('active', a.getAttribute('href') === '#' + cur); });
+  });
+</script>
+</body>
+</html>

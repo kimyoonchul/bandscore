@@ -6,18 +6,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>AsomeScorePlayer - 밴드 악보 자동 넘김</title>
-  <meta name="description" content="밴드 연주용 악보 자동 넘김 및 실시간 동기화 웹앱 · 성수역 6번출구">
+  <title>Backstage - 밴드 악보 자동 넘김</title>
+  <meta name="description" content="Backstage — 밴드 연주용 악보 자동 넘김 및 실시간 동기화">
   <!-- Open Graph -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="AsomeScorePlayer 🎸">
-  <meta property="og:description" content="실시간 합주 · 성수역 6번출구">
+  <meta property="og:title" content="Backstage 🎵">
+  <meta property="og:description" content="밴드 악보 자동 넘김 · 실시간 합주">
   <meta property="og:image" content="/icons/base2.svg">
   <meta property="og:locale" content="ko_KR">
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="AsomeScorePlayer 🎸">
-  <meta name="twitter:description" content="실시간 합주">
+  <meta name="twitter:title" content="Backstage 🎵">
+  <meta name="twitter:description" content="밴드 악보 자동 넘김 · 실시간 합주">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="/css/style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -523,10 +523,18 @@
 <body style="display:flex;flex-direction:column;min-height:100vh">
 
   <header class="app-header">
-    <div class="app-logo" onclick="showSongList()" style="cursor:pointer"><span class="icon">🎸</span> AsomeScorePlayer
+    <div class="app-logo" onclick="showSongList()" style="cursor:pointer"><img src="/favicon.svg" alt="Backstage" style="width:1.4em;height:1.4em;vertical-align:-0.25em;margin-right:0.25em;border-radius:0.25em"> <span style="background:linear-gradient(135deg,#f43f5e,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:900">Backstage</span>
     </div>
-    <button class="btn btn-primary" id="btnNewSong" onclick="showNewSongModal()">＋ <span class="btn-label">새
-        곡</span></button>
+    <div style="display:flex;align-items:center;gap:0.5rem">
+      <button class="btn btn-primary" id="btnNewSong" onclick="showNewSongModal()">＋ <span class="btn-label">새
+          곡</span></button>
+      <div id="authArea" style="display:flex;align-items:center;gap:0.5rem">
+        <div id="userInfo" style="display:none;align-items:center;gap:0.5rem">
+          <span id="userNickname" style="color:var(--primary-light);font-size:0.82rem;font-weight:600"></span>
+          <button class="btn btn-ghost btn-sm" onclick="logout()" style="font-size:0.75rem;padding:0.25rem 0.5rem">로그아웃</button>
+        </div>
+      </div>
+    </div>
   </header>
 
   <div class="container" id="mainContainer" style="flex:1">
@@ -624,8 +632,19 @@
   </div>
 
 
-  <!-- ═══════════════ BAND FOOTER ═══════════════ -->
-  <footer class="band-footer" id="bandFooter">
+  <!-- ═══════════════ NEW SERVICE FOOTER ═══════════════ -->
+  <footer class="service-footer">
+    <div class="service-footer-inner">
+      <span class="sf-logo">🎵 Backstage</span>
+      <span class="sf-sep">·</span>
+      <a href="/guide.html" class="sf-link">가이드</a>
+      <span class="sf-sep">·</span>
+      <span class="sf-copy" id="easterEggTrigger">© 2026 Backstage</span>
+    </div>
+  </footer>
+
+  <!-- ═══════════════ HIDDEN BAND FOOTER (Easter Egg: 5번 클릭) ═══════════════ -->
+  <div class="band-footer" id="bandFooter" style="display:none">
     <div class="footer-trigger" onclick="toggleFooter()">
       <span class="footer-copy-text">© 2026 성수역 6번출구</span>
       <span class="footer-hint">👆</span>
@@ -750,7 +769,7 @@
 
         <div class="footer-bottom-info">
           <span class="footer-ai-badge">🤖 AI Generated</span>
-          <span class="footer-powered">Powered by AsomeScorePlayer</span>
+          <span class="footer-powered">Powered by Backstage</span>
         </div>
 
       </div>
@@ -1329,6 +1348,24 @@
       if (el) { if (d > 0) el.textContent = 'D-' + d; else if (d === 0) el.textContent = 'D-DAY!🔥'; else el.textContent = '완료!'; }
     })();
 
+    // 이스터에그: © Backstage 5번 클릭 → 밴드 푸터 표시
+    (function() {
+      let clicks = 0, timer = null;
+      const trigger = document.getElementById('easterEggTrigger');
+      if (trigger) {
+        trigger.addEventListener('click', () => {
+          clicks++;
+          clearTimeout(timer);
+          timer = setTimeout(() => clicks = 0, 2000);
+          if (clicks >= 5) {
+            const bf = document.getElementById('bandFooter');
+            if (bf) { bf.style.display = bf.style.display === 'none' ? '' : 'none'; }
+            clicks = 0;
+          }
+        });
+      }
+    })();
+
     function masterCardFlip(el) {
       if (el.dataset.animating) return;
       el.dataset.animating = '1';
@@ -1404,6 +1441,31 @@
         wrapper.classList.remove('scrolling');
       }
     }
+
+    // ── Auth State ──
+    function checkAuthState() {
+      const token = localStorage.getItem('backstage_token');
+      const userStr = localStorage.getItem('backstage_user');
+      if (!token || !userStr) {
+        // 미로그인 시 로그인 페이지로 이동
+        window.location.href = '/login.html';
+        return;
+      }
+      const userInfo = document.getElementById('userInfo');
+      const userNickname = document.getElementById('userNickname');
+      try {
+        const user = JSON.parse(userStr);
+        if (userInfo) { userInfo.style.display = 'flex'; }
+        if (userNickname) userNickname.textContent = user.nickname || user.email;
+      } catch(e) { window.location.href = '/login.html'; }
+    }
+    function logout() {
+      localStorage.removeItem('backstage_token');
+      localStorage.removeItem('backstage_user');
+      window.location.href = '/login.html';
+    }
+    // 페이지 로드 시 인증 상태 확인
+    document.addEventListener('DOMContentLoaded', checkAuthState);
 
   </script>
 
@@ -2865,16 +2927,7 @@
     </div>
   </div>
 
-  <!-- 서비스명 투표 배너 -->
-  <a href="/favicon_preview.html" id="brandBanner" class="brand-banner">
-    <span class="brand-banner-emoji">🎸</span>
-    <span class="brand-banner-text">
-      <strong>새로운 서비스를 준비하고 있어요!</strong>
-      <span class="brand-banner-sub">로고 & 이름 구경하기 →</span>
-    </span>
-    <button class="brand-banner-close"
-      onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('brandBanner').style.display='none';">✕</button>
-  </a>
+  <!-- brandBanner 제거됨 -->
   <style>
     .brand-banner {
       position: fixed;
