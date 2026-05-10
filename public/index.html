@@ -1865,7 +1865,7 @@
             <button onclick="kickMember('${m.id}','${(m.nickname || m.email).replace(/'/g, "\\'")}')" style="background:none;border:none;cursor:pointer;font-size:0.6rem;opacity:0.5;padding:0;margin-left:0.1rem" title="강퇴" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'">✕</button>
           ` : isMe ? `
             <span style="font-size:0.6rem">${roleIcon}</span>
-            <button onclick="leaveStage()" style="background:var(--bg-surface);border:1px solid var(--border);border-radius:0.25rem;cursor:pointer;font-size:0.6rem;opacity:0.8;padding:0.1rem 0.3rem;margin-left:0.3rem" title="Stage 탈퇴" onmouseover="this.style.opacity='1';this.style.borderColor='var(--primary)'" onmouseout="this.style.opacity='0.8';this.style.borderColor='var(--border)'">🚪 탈퇴</button>
+            <button onclick="leaveStage()" style="background:rgba(244,63,94,0.15);color:#f43f5e;border:1px solid rgba(244,63,94,0.3);border-radius:0.25rem;cursor:pointer;font-size:0.6rem;opacity:0.9;padding:0.15rem 0.4rem;margin-left:0.3rem;font-weight:600;transition:all 0.2s" title="Stage 탈퇴" onmouseover="this.style.background='rgba(244,63,94,0.25)';this.style.borderColor='#f43f5e'" onmouseout="this.style.background='rgba(244,63,94,0.15)';this.style.borderColor='rgba(244,63,94,0.3)'">🚪 탈퇴</button>
           ` : `<span style="font-size:0.6rem">${roleIcon}</span>`;
           const dmClick = !isMe ? `onclick="openDmChat('${m.id}','${(m.nickname || m.email.split('@')[0]).replace(/'/g, "\\\\'")}')"` : '';
           return `<div style="display:flex;align-items:center;gap:0.4rem;background:var(--bg-elevated);padding:0.3rem 0.5rem;border-radius:1rem;font-size:0.72rem;font-weight:600;color:var(--text-secondary);">
@@ -1920,7 +1920,44 @@
 
 
     function showStageSettings() {
-      alert('Stage 설정 기능은 준비 중입니다');
+      if (!currentStageId) return;
+      // 현재 Stage 정보를 사이드바 캐시에서 찾아서 입력칸에 미리 채움
+      const stage = stagesCache.find(s => s.id === currentStageId);
+      document.getElementById('stageSettingName').value = stage ? stage.name : document.getElementById('currentStageName').textContent;
+      document.getElementById('stageSettingDesc').value = stage ? (stage.description || '') : '';
+      document.getElementById('stageSettingsModal').classList.add('active');
+      document.getElementById('stageSettingName').focus();
+    }
+
+    async function saveStageSettings() {
+      const name = document.getElementById('stageSettingName').value.trim();
+      const description = document.getElementById('stageSettingDesc').value.trim();
+      if (!name) { alert('Stage 이름을 입력하세요'); return; }
+      try {
+        const res = await fetch(`/api/stages/${currentStageId}`, {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ name, description })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.error || '저장에 실패했습니다');
+          return;
+        }
+        const updated = await res.json();
+        // 헤더 Stage 이름 바로 갱신
+        document.getElementById('currentStageName').textContent = updated.name;
+        // 사이드바 캐시 및 트리 갱신
+        const idx = stagesCache.findIndex(s => s.id === currentStageId);
+        if (idx !== -1) {
+          stagesCache[idx].name = updated.name;
+          stagesCache[idx].description = updated.description;
+        }
+        renderSidebarTree();
+        closeModal('stageSettingsModal');
+      } catch (e) {
+        alert('저장 중 오류가 발생했습니다');
+      }
     }
 
     // ── Stage 채팅 ──
@@ -2244,7 +2281,26 @@
     </div>
   </div>
 
-  <!-- New Song Modal -->
+  <!-- Stage 설정 모달 -->
+  <div class="modal-overlay" id="stageSettingsModal">
+    <div class="modal">
+      <div class="modal-title">⚙️ Stage 설정</div>
+      <div class="form-group">
+        <label>Stage 이름</label>
+        <input class="form-control" id="stageSettingName" placeholder="Stage 이름" maxlength="30">
+      </div>
+      <div class="form-group">
+        <label>설명</label>
+        <input class="form-control" id="stageSettingDesc" placeholder="밴드 소개를 간단히 적어주세요">
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button class="btn btn-ghost" onclick="closeModal('stageSettingsModal')">취소</button>
+        <button class="btn btn-primary" onclick="saveStageSettings()">💾 저장</button>
+      </div>
+    </div>
+  </div>
+
+
   <div class="modal-overlay" id="newSongModal">
     <div class="modal">
       <div class="modal-title">🎸 새 곡 만들기</div>

@@ -470,6 +470,19 @@ app.post('/api/stages/join', authMiddleware, (req, res) => {
   res.json({ message: `${stage.name} Stage에 참가했습니다!`, stage_id: stage.id });
 });
 
+// Stage 설정 편집 (admin만)
+app.put('/api/stages/:id', authMiddleware, (req, res) => {
+  const membership = get('SELECT role FROM stage_members WHERE stage_id = ? AND user_id = ?',
+    [req.params.id, req.user.id]);
+  if (!membership || membership.role !== 'admin') return res.status(403).json({ error: '권한이 없습니다' });
+  const { name, description } = req.body;
+  if (!name || !name.trim()) return res.status(400).json({ error: 'Stage 이름을 입력하세요' });
+  run('UPDATE stages SET name = ?, description = ? WHERE id = ?',
+    [name.trim(), (description || '').trim(), req.params.id]);
+  const stage = get('SELECT * FROM stages WHERE id = ?', [req.params.id]);
+  res.json(stage);
+});
+
 // Stage 멤버 역할 변경 (admin만)
 app.put('/api/stages/:id/members/:userId', authMiddleware, (req, res) => {
   const membership = get('SELECT role FROM stage_members WHERE stage_id = ? AND user_id = ?',
