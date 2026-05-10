@@ -1,3 +1,3 @@
 cd /d f:\workspace\bandscore
 git add -A
-git commit -m "feat: admin account, header logo fix, taskboard update"
+git commit -m "feat: Phase 2 Stage system - DB schema, API, UI"

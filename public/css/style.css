@@ -690,3 +690,67 @@ select.form-control { cursor: pointer; }
   cursor: default;
   user-select: none;
 }
+
+/* ================================================================
+   STAGE CARDS
+   ================================================================ */
+.stage-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+.stage-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--wood-gradient);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.stage-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(244,63,94,0.1);
+}
+.stage-card:hover::before { opacity: 1; }
+.stage-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.stage-card-icon { font-size: 1.5rem; }
+.stage-card-role {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 1rem;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-muted);
+}
+.stage-card-name {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+}
+.stage-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+  min-height: 1.1rem;
+}
+.stage-card-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}

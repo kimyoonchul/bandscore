@@ -27,7 +27,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 // JWT 설정
-const JWT_SECRET = process.env.JWT_SECRET || 'backstage_secret_' + require('crypto').randomBytes(16).toString('hex');
+const JWT_SECRET = process.env.JWT_SECRET || 'backstage_jwt_secret_2026_do_not_share';
 const JWT_EXPIRES = '7d';
 const ADMIN_EMAIL = 'chuli8944@gmail.com';
 
@@ -164,6 +164,37 @@ async function initDb() {
     created_at TEXT DEFAULT (datetime('now')),
     last_login TEXT
   )`);
+  // ── Stages 테이블 ──
+  db.run(`CREATE TABLE IF NOT EXISTS stages (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    cover_image TEXT,
+    created_by TEXT NOT NULL,
+    invite_code TEXT UNIQUE,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+  )`);
+  db.run(`CREATE TABLE IF NOT EXISTS stage_members (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    stage_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    role TEXT DEFAULT 'viewer',
+    joined_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (stage_id) REFERENCES stages(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(stage_id, user_id)
+  )`);
+  db.run(`CREATE TABLE IF NOT EXISTS stage_invitations (
+    id TEXT PRIMARY KEY,
+    stage_id TEXT NOT NULL,
+    created_by TEXT NOT NULL,
+    expires_at TEXT,
+    max_uses INTEGER DEFAULT 0,
+    use_count INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (stage_id) REFERENCES stages(id) ON DELETE CASCADE
+  )`);
   saveDb();
   // Migration: 기존 DB에 새 컬럼 추가
   try { db.run('ALTER TABLE songs ADD COLUMN cover_filename TEXT'); saveDb(); } catch(e) {}
@@ -173,6 +204,8 @@ async function initDb() {
   // users 테이블 마이그레이션
   try { db.run('ALTER TABLE users ADD COLUMN role TEXT DEFAULT \'user\''); saveDb(); } catch(e) {}
   try { db.run('ALTER TABLE users ADD COLUMN last_login TEXT'); saveDb(); } catch(e) {}
+  // songs에 stage_id 추가 (기존 곡은 NULL → 나중에 이관)
+  try { db.run('ALTER TABLE songs ADD COLUMN stage_id TEXT'); saveDb(); } catch(e) {}
 }
 
 // ── Auth Middleware ──
@@ -273,10 +306,127 @@ app.put('/api/auth/me', authMiddleware, (req, res) => {
   res.json(user);
 });
 
+// ── Stage API Routes ──
+
+// 내 Stage 목록
+app.get('/api/stages', authMiddleware, (req, res) => {
+  const stages = query(`
+    SELECT s.*, sm.role as my_role,
+    (SELECT COUNT(*) FROM stage_members WHERE stage_id = s.id) as member_count,
+    (SELECT COUNT(*) FROM songs WHERE stage_id = s.id) as song_count
+    FROM stages s
+    JOIN stage_members sm ON s.id = sm.stage_id AND sm.user_id = ?
+    ORDER BY s.created_at DESC
+  `, [req.user.id]);
+  res.json(stages);
+});
+
+// Stage 만들기
+app.post('/api/stages', authMiddleware, (req, res) => {
+  const { name, description } = req.body;
+  if (!name || !name.trim()) return res.status(400).json({ error: 'Stage 이름을 입력하세요' });
+  const id = uuidv4();
+  const inviteCode = uuidv4().slice(0, 8);
+  run('INSERT INTO stages (id, name, description, created_by, invite_code) VALUES (?,?,?,?,?)',
+    [id, name.trim(), description || '', req.user.id, inviteCode]);
+  run('INSERT INTO stage_members (stage_id, user_id, role) VALUES (?,?,?)',
+    [id, req.user.id, 'admin']);
+  const stage = get('SELECT * FROM stages WHERE id = ?', [id]);
+  res.json({ ...stage, my_role: 'admin', member_count: 1, song_count: 0 });
+});
+
+// Stage 상세
+app.get('/api/stages/:id', authMiddleware, (req, res) => {
+  const membership = get('SELECT role FROM stage_members WHERE stage_id = ? AND user_id = ?',
+    [req.params.id, req.user.id]);
+  if (!membership) return res.status(403).json({ error: '이 Stage의 멤버가 아닙니다' });
+  const stage = get('SELECT * FROM stages WHERE id = ?', [req.params.id]);
+  if (!stage) return res.status(404).json({ error: 'Stage를 찾을 수 없습니다' });
+  const members = query(`
+    SELECT u.id, u.nickname, u.email, u.profile_image, sm.role, sm.joined_at
+    FROM stage_members sm JOIN users u ON sm.user_id = u.id
+    WHERE sm.stage_id = ? ORDER BY sm.joined_at ASC
+  `, [req.params.id]);
+  const songs = query('SELECT * FROM songs WHERE stage_id = ? ORDER BY sort_order ASC, created_at DESC',
+    [req.params.id]);
+  songs.forEach(s => {
+    const r = get('SELECT COUNT(*) as c FROM parts WHERE song_id = ?', [s.id]);
+    s.partCount = r ? r.c : 0;
+  });
+  res.json({ ...stage, my_role: membership.role, members, songs });
+});
+
+// Stage 초대코드 조회
+app.get('/api/stages/:id/invite', authMiddleware, (req, res) => {
+  const membership = get('SELECT role FROM stage_members WHERE stage_id = ? AND user_id = ?',
+    [req.params.id, req.user.id]);
+  if (!membership || membership.role === 'viewer') return res.status(403).json({ error: '초대 권한이 없습니다' });
+  const stage = get('SELECT invite_code FROM stages WHERE id = ?', [req.params.id]);
+  res.json({ invite_code: stage.invite_code });
+});
+
+// 초대코드로 Stage 참가
+app.post('/api/stages/join', authMiddleware, (req, res) => {
+  const { invite_code } = req.body;
+  if (!invite_code) return res.status(400).json({ error: '초대 코드를 입력하세요' });
+  const stage = get('SELECT * FROM stages WHERE invite_code = ?', [invite_code]);
+  if (!stage) return res.status(404).json({ error: '유효하지 않은 초대 코드입니다' });
+  const existing = get('SELECT id FROM stage_members WHERE stage_id = ? AND user_id = ?',
+    [stage.id, req.user.id]);
+  if (existing) return res.status(409).json({ error: '이미 이 Stage의 멤버입니다' });
+  run('INSERT INTO stage_members (stage_id, user_id, role) VALUES (?,?,?)',
+    [stage.id, req.user.id, 'editor']);
+  res.json({ message: `${stage.name} Stage에 참가했습니다!`, stage_id: stage.id });
+});
+
+// Stage 멤버 역할 변경 (admin만)
+app.put('/api/stages/:id/members/:userId', authMiddleware, (req, res) => {
+  const membership = get('SELECT role FROM stage_members WHERE stage_id = ? AND user_id = ?',
+    [req.params.id, req.user.id]);
+  if (!membership || membership.role !== 'admin') return res.status(403).json({ error: '권한이 없습니다' });
+  const { role } = req.body;
+  if (!['admin', 'editor', 'viewer'].includes(role)) return res.status(400).json({ error: '잘못된 역할입니다' });
+  run('UPDATE stage_members SET role = ? WHERE stage_id = ? AND user_id = ?',
+    [role, req.params.id, req.params.userId]);
+  res.json({ message: '역할이 변경되었습니다' });
+});
+
+// Stage 멤버 강퇴 (admin만)
+app.delete('/api/stages/:id/members/:userId', authMiddleware, (req, res) => {
+  const membership = get('SELECT role FROM stage_members WHERE stage_id = ? AND user_id = ?',
+    [req.params.id, req.user.id]);
+  if (!membership || membership.role !== 'admin') return res.status(403).json({ error: '권한이 없습니다' });
+  if (req.params.userId === req.user.id) return res.status(400).json({ error: '자기 자신을 강퇴할 수 없습니다' });
+  run('DELETE FROM stage_members WHERE stage_id = ? AND user_id = ?',
+    [req.params.id, req.params.userId]);
+  res.json({ message: '멤버가 강퇴되었습니다' });
+});
+
+// Stage 탈퇴
+app.post('/api/stages/:id/leave', authMiddleware, (req, res) => {
+  const membership = get('SELECT role FROM stage_members WHERE stage_id = ? AND user_id = ?',
+    [req.params.id, req.user.id]);
+  if (!membership) return res.status(404).json({ error: '이 Stage의 멤버가 아닙니다' });
+  if (membership.role === 'admin') {
+    const adminCount = get('SELECT COUNT(*) as c FROM stage_members WHERE stage_id = ? AND role = ?',
+      [req.params.id, 'admin']);
+    if (adminCount.c <= 1) return res.status(400).json({ error: '마지막 관리자는 탈퇴할 수 없습니다. 다른 멤버에게 관리자를 넘겨주세요.' });
+  }
+  run('DELETE FROM stage_members WHERE stage_id = ? AND user_id = ?',
+    [req.params.id, req.user.id]);
+  res.json({ message: 'Stage를 탈퇴했습니다' });
+});
+
 // ── API Routes ──
 
 app.get('/api/songs', (req, res) => {
-  const songs = query('SELECT * FROM songs ORDER BY sort_order ASC, created_at DESC');
+  const stageId = req.query.stage_id;
+  let songs;
+  if (stageId) {
+    songs = query('SELECT * FROM songs WHERE stage_id = ? ORDER BY sort_order ASC, created_at DESC', [stageId]);
+  } else {
+    songs = query('SELECT * FROM songs ORDER BY sort_order ASC, created_at DESC');
+  }
   songs.forEach(s => {
     const r = get('SELECT COUNT(*) as c FROM parts WHERE song_id = ?', [s.id]);
     s.partCount = r ? r.c : 0;
@@ -292,10 +442,10 @@ app.put('/api/songs/reorder', (req, res) => {
 });
 
 app.post('/api/songs', (req, res) => {
-  const { name, bpm, time_signature, count_in_bars } = req.body;
+  const { name, bpm, time_signature, count_in_bars, stage_id } = req.body;
   const id = uuidv4();
-  run('INSERT INTO songs (id,name,bpm,time_signature,count_in_bars) VALUES (?,?,?,?,?)',
-    [id, name || '새 곡', bpm || 120, time_signature || '4/4', count_in_bars || 2]);
+  run('INSERT INTO songs (id,name,bpm,time_signature,count_in_bars,stage_id) VALUES (?,?,?,?,?,?)',
+    [id, name || '새 곡', bpm || 120, time_signature || '4/4', count_in_bars || 2, stage_id || null]);
   res.json(get('SELECT * FROM songs WHERE id = ?', [id]));
 });
 
