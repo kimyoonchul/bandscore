@@ -206,17 +206,6 @@ async function initDb() {
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (stage_id) REFERENCES stages(id) ON DELETE CASCADE
   )`);
-  // ── 연습 기록 테이블 ──
-  db.run(`CREATE TABLE IF NOT EXISTS practice_logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id TEXT NOT NULL,
-    song_id TEXT NOT NULL,
-    stage_id TEXT,
-    duration_sec INTEGER DEFAULT 0,
-    started_at TEXT DEFAULT (datetime('now')),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (song_id) REFERENCES songs(id) ON DELETE CASCADE
-  )`);
   saveDb();
   // Migration: 기존 DB에 새 컬럼 추가
   try { db.run('ALTER TABLE songs ADD COLUMN cover_filename TEXT'); saveDb(); } catch(e) {}
@@ -496,36 +485,6 @@ app.post('/api/stages/:id/leave', authMiddleware, (req, res) => {
 
 // ── API Routes ──
 
-// ── 연습 기록 API ──
-// 연습 기록 저장
-app.post('/api/practice', authMiddleware, (req, res) => {
-  const { song_id, stage_id, duration_sec } = req.body;
-  if (!song_id || !duration_sec || duration_sec < 5) return res.json({ skipped: true }); // 5초 미만은 무시
-  run('INSERT INTO practice_logs (user_id, song_id, stage_id, duration_sec) VALUES (?,?,?,?)',
-    [req.user.id, song_id, stage_id || null, duration_sec]);
-  res.json({ success: true });
-});
-
-// 내 곡별 연습 통계
-app.get('/api/practice/song/:songId', authMiddleware, (req, res) => {
-  const stats = get(`SELECT COUNT(*) as count, COALESCE(SUM(duration_sec),0) as total_sec
-    FROM practice_logs WHERE user_id = ? AND song_id = ?`,
-    [req.user.id, req.params.songId]);
-  const last = get('SELECT started_at FROM practice_logs WHERE user_id = ? AND song_id = ? ORDER BY started_at DESC LIMIT 1',
-    [req.user.id, req.params.songId]);
-  res.json({ ...stats, last_practice: last ? last.started_at : null });
-});
-
-// 내 전체 연습 통계
-app.get('/api/practice/me', authMiddleware, (req, res) => {
-  const total = get('SELECT COUNT(*) as count, COALESCE(SUM(duration_sec),0) as total_sec FROM practice_logs WHERE user_id = ?',
-    [req.user.id]);
-  const bySong = query(`SELECT p.song_id, s.name as song_name, COUNT(*) as count, SUM(p.duration_sec) as total_sec
-    FROM practice_logs p LEFT JOIN songs s ON p.song_id = s.id
-    WHERE p.user_id = ? GROUP BY p.song_id ORDER BY total_sec DESC LIMIT 10`,
-    [req.user.id]);
-  res.json({ total, bySong });
-});
 
 // 곡 수정 권한 체크 헬퍼 (editor 이상만 허용)
 function checkSongEditPermission(req, res, songOrStageId, isStageId = false) {
