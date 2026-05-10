@@ -538,9 +538,11 @@ app.post('/api/stages/:stageId/messages', authMiddleware, (req, res) => {
   saveDb();
   const msg = get(`SELECT m.id, m.message, m.created_at, m.user_id, u.nickname, u.email
     FROM stage_messages m LEFT JOIN users u ON m.user_id = u.id
-    WHERE m.id = last_insert_rowid()`);
+    WHERE m.stage_id = ? AND m.user_id = ? ORDER BY m.id DESC LIMIT 1`, [stageId, req.user.id]);
   // Socket.IO로 실시간 전송
-  io.to('stage_' + stageId).emit('stage-message', msg);
+  if (msg) {
+    io.to('stage_' + stageId).emit('stage-message', msg);
+  }
   res.json(msg);
 });
 
