@@ -47,6 +47,17 @@ const uploadsDir = path.join(dataDir, 'uploads');
 
 // Middleware
 app.use(express.json());
+
+// Clean URL routes (확장자 없이 접근)
+const cleanRoutes = ['login', 'guide', 'player', 'taskboard', 'profile', 'admin'];
+cleanRoutes.forEach(name => {
+  app.get(`/${name}`, (req, res) => {
+    const filePath = path.join(__dirname, 'public', `${name}.html`);
+    if (fs.existsSync(filePath)) res.sendFile(filePath);
+    else res.status(404).send('Page not found');
+  });
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(uploadsDir));
 

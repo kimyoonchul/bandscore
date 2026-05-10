@@ -528,7 +528,7 @@
     <div style="display:flex;align-items:center;gap:0.5rem">
       <div id="authArea" style="display:flex;align-items:center;gap:0.5rem">
         <div id="userInfo" style="display:none;align-items:center;gap:0.5rem">
-          <span id="userNickname" style="color:var(--primary-light);font-size:0.82rem;font-weight:600;cursor:pointer" onclick="location.href='/profile.html'"></span>
+          <span id="userNickname" style="color:var(--primary-light);font-size:0.82rem;font-weight:600;cursor:pointer" onclick="location.href='/profile'"></span>
           <button class="btn btn-ghost btn-sm" onclick="logout()" style="font-size:0.75rem;padding:0.25rem 0.5rem">로그아웃</button>
         </div>
       </div>
@@ -661,7 +661,7 @@
     <div class="service-footer-inner">
       <span class="sf-logo">🎵 Backstage</span>
       <span class="sf-sep">·</span>
-      <a href="/guide.html" class="sf-link">가이드</a>
+      <a href="/guide" class="sf-link">가이드</a>
       <span class="sf-sep">·</span>
       <span class="sf-copy" id="easterEggTrigger">© 2026 Backstage</span>
     </div>
@@ -1472,7 +1472,7 @@
       const userStr = localStorage.getItem('backstage_user');
       if (!token || !userStr) {
         // 미로그인 시 로그인 페이지로 이동
-        window.location.href = '/login.html';
+        window.location.href = '/login';
         return;
       }
       const userInfo = document.getElementById('userInfo');
@@ -1481,12 +1481,12 @@
         const user = JSON.parse(userStr);
         if (userInfo) { userInfo.style.display = 'flex'; }
         if (userNickname) userNickname.textContent = user.nickname || user.email;
-      } catch(e) { window.location.href = '/login.html'; }
+      } catch(e) { window.location.href = '/login'; }
     }
     function logout() {
       localStorage.removeItem('backstage_token');
       localStorage.removeItem('backstage_user');
-      window.location.href = '/login.html';
+      window.location.href = '/login';
     }
     // 페이지 로드 시 인증 상태 확인 → Stage 목록 로드
     document.addEventListener('DOMContentLoaded', () => {
@@ -1978,7 +1978,7 @@
     }
 
     function openPlayer(partId) {
-      window.open(`/player.html?songId=${currentSong.id}&partId=${partId}`, '_blank');
+      window.open(`/player?songId=${currentSong.id}&partId=${partId}`, '_blank');
     }
 
     function downloadPartPdf(partId) {

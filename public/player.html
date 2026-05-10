@@ -1597,7 +1597,7 @@
         // 현재 partId가 유효하지 않으면 첫 번째 파트로 리다이렉트
         if (song.parts.length > 0) {
           const firstPart = song.parts[0];
-          window.location.href = `/player.html?songId=${songId}&partId=${firstPart.id}`;
+          window.location.href = `/player?songId=${songId}&partId=${firstPart.id}`;
         } else {
           window.location.href = '/#song/' + songId;
         }
