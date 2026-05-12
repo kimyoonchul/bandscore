@@ -1889,7 +1889,6 @@
             <button onclick="kickMember('${m.id}','${(m.nickname || m.email).replace(/'/g, "\\'")}')" style="background:none;border:none;cursor:pointer;font-size:0.6rem;opacity:0.5;padding:0;margin-left:0.1rem" title="강퇴" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'">✕</button>
           ` : isMe ? `
             <span style="font-size:0.6rem">${roleIcon}</span>
-            <button onclick="leaveStage()" style="background:rgba(244,63,94,0.15);color:#f43f5e;border:1px solid rgba(244,63,94,0.3);border-radius:0.25rem;cursor:pointer;font-size:0.6rem;opacity:0.9;padding:0.15rem 0.4rem;margin-left:0.3rem;font-weight:600;transition:all 0.2s" title="Stage 탈퇴" onmouseover="this.style.background='rgba(244,63,94,0.25)';this.style.borderColor='#f43f5e'" onmouseout="this.style.background='rgba(244,63,94,0.15)';this.style.borderColor='rgba(244,63,94,0.3)'">🚪 탈퇴</button>
           ` : `<span style="font-size:0.6rem">${roleIcon}</span>`;
           const dmClick = !isMe ? `onclick="openDmChat('${m.id}','${(m.nickname || m.email.split('@')[0]).replace(/'/g, "\\\\'")}')"` : '';
           return `<div style="display:flex;align-items:center;gap:0.4rem;background:var(--bg-elevated);padding:0.3rem 0.5rem;border-radius:1rem;font-size:0.72rem;font-weight:600;color:var(--text-secondary);">
@@ -1909,9 +1908,9 @@
 
         // 현재 역할 저장
         currentStageRole = data.my_role;
-        // 설정 버튼 (admin만)
+        // 설정/정보 버튼 (모두에게 표시)
         const settingsBtn = document.getElementById('stageSettingsBtn');
-        if (settingsBtn) settingsBtn.style.display = data.my_role === 'admin' ? '' : 'none';
+        if (settingsBtn) settingsBtn.style.display = '';
       } catch (e) { console.error('Stage 대시보드 로드 실패:', e); }
     }
 
@@ -1947,10 +1946,19 @@
       if (!currentStageId) return;
       // 현재 Stage 정보를 사이드바 캐시에서 찾아서 입력칸에 미리 채움
       const stage = stagesCache.find(s => s.id === currentStageId);
-      document.getElementById('stageSettingName').value = stage ? stage.name : document.getElementById('currentStageName').textContent;
-      document.getElementById('stageSettingDesc').value = stage ? (stage.description || '') : '';
+      const nameInput = document.getElementById('stageSettingName');
+      const descInput = document.getElementById('stageSettingDesc');
+      nameInput.value = stage ? stage.name : document.getElementById('currentStageName').textContent;
+      descInput.value = stage ? (stage.description || '') : '';
+      
+      const isAdmin = currentStageRole === 'admin';
+      nameInput.disabled = !isAdmin;
+      descInput.disabled = !isAdmin;
+      const saveBtn = document.getElementById('btnSaveStageSettings');
+      if(saveBtn) saveBtn.style.display = isAdmin ? '' : 'none';
+
       document.getElementById('stageSettingsModal').classList.add('active');
-      document.getElementById('stageSettingName').focus();
+      if (isAdmin) nameInput.focus();
     }
 
     async function saveStageSettings() {
@@ -2317,9 +2325,12 @@
         <label>설명</label>
         <input class="form-control" id="stageSettingDesc" placeholder="밴드 소개를 간단히 적어주세요">
       </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
-        <button class="btn btn-ghost" onclick="closeModal('stageSettingsModal')">취소</button>
-        <button class="btn btn-primary" onclick="saveStageSettings()">💾 저장</button>
+      <div style="display:flex;justify-content:space-between;margin-top:16px;align-items:center">
+        <button class="btn btn-danger btn-sm" onclick="leaveStage()" style="padding:0.4rem 0.8rem;font-size:0.8rem">🚪 탈퇴</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="closeModal('stageSettingsModal')">닫기</button>
+          <button class="btn btn-primary" id="btnSaveStageSettings" onclick="saveStageSettings()">💾 저장</button>
+        </div>
       </div>
     </div>
   </div>

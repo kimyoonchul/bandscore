@@ -25,6 +25,7 @@ const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 
 // JWT 설정
 const JWT_SECRET = process.env.JWT_SECRET || 'backstage_jwt_secret_2026_do_not_share';
@@ -49,7 +50,7 @@ const uploadsDir = path.join(dataDir, 'uploads');
 app.use(express.json());
 
 // Clean URL routes (확장자 없이 접근)
-const cleanRoutes = ['login', 'guide', 'player', 'taskboard', 'profile', 'admin'];
+const cleanRoutes = ['login', 'guide', 'player', 'taskboard', 'profile', 'admin', 'reset-password'];
 cleanRoutes.forEach(name => {
   app.get(`/${name}`, (req, res) => {
     const filePath = path.join(__dirname, 'public', `${name}.html`);
@@ -231,6 +232,16 @@ async function initDb() {
     FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
   )`);
+  // ── 비밀번호 재설정 토큰 테이블 ──
+  db.run(`CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    token TEXT UNIQUE NOT NULL,
+    expires_at TEXT NOT NULL,
+    used INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  )`);
   saveDb();
   // Migration: 기존 DB에 새 컬럼 추가
   try { db.run('ALTER TABLE songs ADD COLUMN cover_filename TEXT'); saveDb(); } catch(e) {}
@@ -394,6 +405,103 @@ app.put('/api/auth/password', authMiddleware, async (req, res) => {
   } catch (e) {
     console.error('Password change error:', e);
     res.status(500).json({ error: '비밀번호 변경 중 오류가 발생했습니다' });
+  }
+});
+
+// ── 비밀번호 찾기: 이메일로 재설정 링크 발송 ──
+const EMAIL_USER = process.env.EMAIL_USER || '';
+const EMAIL_PASS = process.env.EMAIL_PASS || '';
+const APP_URL = process.env.APP_URL || 'http://localhost:3001';
+
+function createMailTransporter() {
+  if (!EMAIL_USER || !EMAIL_PASS) return null;
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: EMAIL_USER, pass: EMAIL_PASS }
+  });
+}
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: '이메일을 입력하세요' });
+
+    // 이메일 존재 여부와 무관하게 항상 성공 응답 (보안: 이메일 존재 여부 노출 방지)
+    const user = get('SELECT id, nickname FROM users WHERE email = ?', [email]);
+    if (!user) {
+      return res.json({ message: '입력하신 이메일로 재설정 링크를 발송했습니다.' });
+    }
+
+    // 기존 토큰 무효화
+    run('UPDATE password_reset_tokens SET used = 1 WHERE user_id = ? AND used = 0', [user.id]);
+
+    // 새 토큰 생성 (1시간 유효)
+    const token = require('crypto').randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    run('INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?,?,?)', [user.id, token, expiresAt]);
+
+    const resetUrl = `${APP_URL}/reset-password?token=${token}`;
+    console.log(`🔑 비밀번호 재설정 링크 (${email}): ${resetUrl}`);
+
+    const transporter = createMailTransporter();
+    if (transporter) {
+      await transporter.sendMail({
+        from: `"Backstage" <${EMAIL_USER}>`,
+        to: email,
+        subject: '[Backstage] 비밀번호 재설정 안내',
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#0d0d0d;color:#f0ece6;border-radius:12px">
+            <h2 style="background:linear-gradient(135deg,#f43f5e,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:0 0 8px">🎭 Backstage</h2>
+            <h3 style="margin:0 0 24px;color:#f0ece6">비밀번호 재설정</h3>
+            <p style="color:#a1a1aa;margin:0 0 24px">안녕하세요, <strong style="color:#f0ece6">${user.nickname}</strong>님!<br>비밀번호 재설정 요청을 받았습니다.</p>
+            <a href="${resetUrl}" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#f43f5e,#fbbf24);color:#000;font-weight:800;text-decoration:none;border-radius:8px;font-size:1rem">비밀번호 재설정하기</a>
+            <p style="color:#71717a;font-size:0.82rem;margin:24px 0 0">링크는 <strong>1시간</strong> 후 만료됩니다.<br>본인이 요청하지 않았다면 이 메일을 무시하세요.</p>
+          </div>
+        `
+      });
+    }
+
+    res.json({ message: '입력하신 이메일로 재설정 링크를 발송했습니다.' });
+  } catch (e) {
+    console.error('Forgot password error:', e);
+    res.status(500).json({ error: '처리 중 오류가 발생했습니다' });
+  }
+});
+
+// 토큰 유효성 검증
+app.get('/api/auth/reset-password/:token', (req, res) => {
+  const { token } = req.params;
+  const record = get(
+    `SELECT prt.user_id, u.email, u.nickname FROM password_reset_tokens prt
+     JOIN users u ON u.id = prt.user_id
+     WHERE prt.token = ? AND prt.used = 0 AND prt.expires_at > datetime('now')`,
+    [token]
+  );
+  if (!record) return res.status(400).json({ error: '링크가 만료되었거나 유효하지 않습니다' });
+  res.json({ email: record.email, nickname: record.nickname });
+});
+
+// 비밀번호 재설정 실행
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) return res.status(400).json({ error: '요청이 올바르지 않습니다' });
+    if (newPassword.length < 6) return res.status(400).json({ error: '비밀번호는 6자 이상이어야 합니다' });
+
+    const record = get(
+      `SELECT user_id FROM password_reset_tokens WHERE token = ? AND used = 0 AND expires_at > datetime('now')`,
+      [token]
+    );
+    if (!record) return res.status(400).json({ error: '링크가 만료되었거나 유효하지 않습니다' });
+
+    const hash = await bcrypt.hash(newPassword, 10);
+    run('UPDATE users SET password_hash = ? WHERE id = ?', [hash, record.user_id]);
+    run('UPDATE password_reset_tokens SET used = 1 WHERE token = ?', [token]);
+
+    res.json({ message: '비밀번호가 성공적으로 변경되었습니다' });
+  } catch (e) {
+    console.error('Reset password error:', e);
+    res.status(500).json({ error: '처리 중 오류가 발생했습니다' });
   }
 });
 
