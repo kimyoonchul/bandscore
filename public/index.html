@@ -2067,11 +2067,42 @@
       } catch (e) { console.error('채팅 로드 실패:', e); }
     }
 
+    // ── 메시지 타임스탬프 포맷 (인스타 스타일) ──
+    function formatMsgTime(raw) {
+      if (!raw) return '';
+      // ISO 문자열이면 그대로, SQLite 문자열이면 +Z 보정
+      const iso = raw.endsWith('Z') || raw.includes('+') ? raw : raw + 'Z';
+      const d = new Date(iso);
+      if (isNaN(d)) return '';
+      const now = new Date();
+      const diffMs = now - d;
+      const diffMin = Math.floor(diffMs / 60000);
+      const diffHr = Math.floor(diffMs / 3600000);
+
+      // 1분 미만
+      if (diffMin < 1) return '방금';
+      // 1시간 미만
+      if (diffHr < 1) return diffMin + '분 전';
+      // 오늘
+      const isToday = d.toDateString() === now.toDateString();
+      if (isToday) return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+      // 어제
+      const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+      if (d.toDateString() === yesterday.toDateString()) return '어제 ' + d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+      // 이번 주 (7일 이내)
+      if (diffMs < 7 * 24 * 3600000) {
+        const days = ['일', '월', '화', '수', '목', '금', '토'];
+        return days[d.getDay()] + '요일 ' + d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+      }
+      // 그 이상
+      return d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+    }
+
     function appendChatMessage(m) {
       const container = document.getElementById('chatMessages');
       const currentUserId = JSON.parse(localStorage.getItem('backstage_user') || '{}').id;
       const isMe = m.user_id === currentUserId;
-      const time = m.created_at ? new Date(m.created_at + 'Z').toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+      const time = formatMsgTime(m.created_at);
       const name = m.nickname || (m.email ? m.email.split('@')[0] : '?');
       const el = document.createElement('div');
       el.style.cssText = `display:flex;flex-direction:column;${isMe ? 'align-items:flex-end' : 'align-items:flex-start'}`;
@@ -2236,7 +2267,7 @@
           const isMe = m.sender_id === currentUserId;
           const el = document.createElement('div');
           el.style.cssText = `display:flex;flex-direction:column;${isMe ? 'align-items:flex-end' : 'align-items:flex-start'}`;
-          const time = m.created_at ? new Date(m.created_at + 'Z').toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+          const time = formatMsgTime(m.created_at);
           el.innerHTML = `
             <div style="max-width:80%;padding:0.4rem 0.7rem;border-radius:${isMe ? '0.8rem 0.8rem 0.2rem 0.8rem' : '0.8rem 0.8rem 0.8rem 0.2rem'};background:${isMe ? 'var(--primary)' : 'var(--bg-elevated)'};color:${isMe ? '#fff' : 'var(--text)'};font-size:0.8rem;line-height:1.4;word-break:break-word">${m.message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
             <span style="font-size:0.58rem;color:var(--text-muted);margin-top:0.1rem">${time}</span>
@@ -2273,7 +2304,7 @@
         const container = document.getElementById('dmMessages');
         const el = document.createElement('div');
         el.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end';
-        const time = data.created_at ? new Date(data.created_at + 'Z').toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+        const time = formatMsgTime(data.created_at);
         el.innerHTML = `
           <div style="max-width:80%;padding:0.4rem 0.7rem;border-radius:0.8rem 0.8rem 0.2rem 0.8rem;background:var(--primary);color:#fff;font-size:0.8rem;line-height:1.4;word-break:break-word">${data.message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
           <span style="font-size:0.58rem;color:var(--text-muted);margin-top:0.1rem">${time}</span>
