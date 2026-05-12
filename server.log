@@ -1,6 +1,5 @@
-◇ injected env (5) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (5) from .env // tip: ⌘ suppress logs { quiet: true }
 🌐 APP_URL: http://localhost:3001 (development)
 🎵 Backstage running at http://localhost:3001
-🔌 Connected: A1XnUdScEU2OobbCAAAB
-🔌 Connected: eGp79di_rhBiXEDzAAAD
-🔌 Connected: KGn6JrjzVvtI7547AAAF
+🔌 Connected: w6NshI4ZGN4zvV6UAAAB
+🔌 Connected: RaHizabDn57NK6CLAAAD

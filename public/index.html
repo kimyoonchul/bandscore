@@ -1610,21 +1610,41 @@
         setTimeout(() => { openSong(songId); }, 300); // 렌더링 안정성을 위해 약간 대기
       }
 
-      // 모바일 키보드 시 뷰포트 크기 고정 (헤더/푸터 밀림 방지)
+      // 모바일 키보드 시 레이아웃 고정 (채팅/DM 입력창 밀림 방지)
       if (window.visualViewport) {
-        const resizeHandler = () => {
-          document.body.style.height = window.visualViewport.height + 'px';
-          // 채팅창 스크롤 하단으로 유지
-          if (document.getElementById('chatPanel') && document.getElementById('chatPanel').style.display !== 'none') {
+        const applyViewport = () => {
+          const vv = window.visualViewport;
+          // body를 실제 보이는 뷰포트 영역에 정확히 맞춤
+          document.body.style.height = vv.height + 'px';
+          document.body.style.top = vv.offsetTop + 'px';
+          document.body.style.position = 'fixed';
+          document.body.style.width = '100%';
+          // 채팅 메시지 하단 유지
+          if (document.getElementById('chatPanel')?.style.display !== 'none') {
             scrollChatBottom();
           }
-          if (document.getElementById('dmChatView') && document.getElementById('dmChatView').style.display !== 'none') {
+          const dmChatView = document.getElementById('dmChatView');
+          if (dmChatView?.style.display !== 'none') {
             const container = document.getElementById('dmMessages');
             if (container) setTimeout(() => container.scrollTop = container.scrollHeight, 50);
           }
         };
-        window.visualViewport.addEventListener('resize', resizeHandler);
-        resizeHandler();
+        const resetViewport = () => {
+          // 키보드 내려갔을 때 원래대로
+          document.body.style.position = '';
+          document.body.style.top = '';
+          document.body.style.height = '';
+          document.body.style.width = '';
+        };
+        window.visualViewport.addEventListener('resize', applyViewport);
+        window.visualViewport.addEventListener('scroll', applyViewport);
+        // 채팅/DM 입력창 포커스 시 즉시 보정, 블러 시 해제
+        ['chatInput', 'dmInput'].forEach(id => {
+          document.getElementById(id)?.addEventListener('focus', applyViewport);
+          document.getElementById(id)?.addEventListener('blur', () => {
+            setTimeout(resetViewport, 100); // 약간 딜레이 후 해제
+          });
+        });
       }
 
       // 외부 클릭 시 드롭다운 닫기
