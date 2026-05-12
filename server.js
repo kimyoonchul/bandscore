@@ -534,12 +534,12 @@ app.get('/api/stages', authMiddleware, (req, res) => {
 
 // Stage 만들기
 app.post('/api/stages', authMiddleware, (req, res) => {
-  const { name, description } = req.body;
+  const { name, description, emoji } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: 'Stage 이름을 입력하세요' });
   const id = uuidv4();
   const inviteCode = uuidv4().slice(0, 8);
-  run('INSERT INTO stages (id, name, description, created_by, invite_code) VALUES (?,?,?,?,?)',
-    [id, name.trim(), description || '', req.user.id, inviteCode]);
+  run('INSERT INTO stages (id, name, description, created_by, invite_code, emoji) VALUES (?,?,?,?,?,?)',
+    [id, name.trim(), description || '', req.user.id, inviteCode, emoji || null]);
   run('INSERT INTO stage_members (stage_id, user_id, role) VALUES (?,?,?)',
     [id, req.user.id, 'admin']);
   const stage = get('SELECT * FROM stages WHERE id = ?', [id]);

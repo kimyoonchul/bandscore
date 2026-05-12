@@ -583,11 +583,11 @@
     <main class="content-panel" id="contentPanel">
       <!-- Welcome State (아무것도 선택 안 됨) -->
       <div id="welcomePanel" class="welcome-panel" style="flex:1;overflow-y:auto;min-height:0">
-        <div class="icon">🎭</div>
+        <div class="icon">🎙️</div>
         <h2>Backstage에 오신 걸 환영합니다</h2>
         <p>좌측에서 Stage나 곡을 선택하세요.<br>새 Stage를 만들거나 초대코드로 참가할 수도 있어요.</p>
         <div style="display:flex;gap:0.75rem;margin-top:1.5rem;flex-wrap:wrap;justify-content:center">
-          <button class="btn btn-primary" onclick="showCreateStageModal()">🎭 Stage 만들기</button>
+          <button class="btn btn-primary" onclick="showCreateStageModal()">＋ Stage 만들기</button>
           <button class="btn btn-ghost" onclick="showJoinStageModal()">🔗 초대코드 참가</button>
         </div>
       </div>
@@ -1820,17 +1820,19 @@
     async function createStage() {
       const name = document.getElementById('newStageName').value.trim();
       const desc = document.getElementById('newStageDesc').value.trim();
+      const emoji = document.getElementById('newStageEmoji').value.trim();
       if (!name) return alert('Stage 이름을 입력하세요');
       try {
         const res = await fetch('/api/stages', {
           method: 'POST', headers: getAuthHeaders(),
-          body: JSON.stringify({ name, description: desc })
+          body: JSON.stringify({ name, description: desc, emoji })
         });
         const data = await res.json();
         if (!res.ok) return alert(data.error);
         closeModal('createStageModal');
         document.getElementById('newStageName').value = '';
         document.getElementById('newStageDesc').value = '';
+        document.getElementById('newStageEmoji').value = '';
         await loadSidebarTree();
         selectStage(data.id, data.name);
       } catch (e) { alert('오류가 발생했습니다'); }
@@ -2279,7 +2281,7 @@
   <!-- Stage 만들기 모달 -->
   <div class="modal-overlay" id="createStageModal">
     <div class="modal">
-      <div class="modal-title">🎭 새 Stage 만들기</div>
+      <div class="modal-title">＋ 새 Stage 만들기</div>
       <div class="form-group">
         <label>Stage 이름</label>
         <input class="form-control" id="newStageName" placeholder="예: 성수역 6번출구" maxlength="30">
@@ -2287,6 +2289,23 @@
       <div class="form-group">
         <label>설명 (선택)</label>
         <input class="form-control" id="newStageDesc" placeholder="밴드 소개를 간단히 적어주세요">
+      </div>
+      <div class="form-group">
+        <label>대표 이모지 (선택)</label>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <input class="form-control" id="newStageEmoji" placeholder="예: 🎸" maxlength="4" style="width:5rem;text-align:center;font-size:1.2rem">
+          <div style="display:flex;gap:0.3rem;flex-wrap:wrap">
+            <span onclick="document.getElementById('newStageEmoji').value=this.textContent" style="cursor:pointer;font-size:1.3rem;padding:0.2rem;border-radius:0.3rem;transition:background 0.15s" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">🎸</span>
+            <span onclick="document.getElementById('newStageEmoji').value=this.textContent" style="cursor:pointer;font-size:1.3rem;padding:0.2rem;border-radius:0.3rem;transition:background 0.15s" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">🥁</span>
+            <span onclick="document.getElementById('newStageEmoji').value=this.textContent" style="cursor:pointer;font-size:1.3rem;padding:0.2rem;border-radius:0.3rem;transition:background 0.15s" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">🎹</span>
+            <span onclick="document.getElementById('newStageEmoji').value=this.textContent" style="cursor:pointer;font-size:1.3rem;padding:0.2rem;border-radius:0.3rem;transition:background 0.15s" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">🎺</span>
+            <span onclick="document.getElementById('newStageEmoji').value=this.textContent" style="cursor:pointer;font-size:1.3rem;padding:0.2rem;border-radius:0.3rem;transition:background 0.15s" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">🎻</span>
+            <span onclick="document.getElementById('newStageEmoji').value=this.textContent" style="cursor:pointer;font-size:1.3rem;padding:0.2rem;border-radius:0.3rem;transition:background 0.15s" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">🎙️</span>
+            <span onclick="document.getElementById('newStageEmoji').value=this.textContent" style="cursor:pointer;font-size:1.3rem;padding:0.2rem;border-radius:0.3rem;transition:background 0.15s" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">🎵</span>
+            <span onclick="document.getElementById('newStageEmoji').value=this.textContent" style="cursor:pointer;font-size:1.3rem;padding:0.2rem;border-radius:0.3rem;transition:background 0.15s" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">🌟</span>
+            <span onclick="document.getElementById('newStageEmoji').value=this.textContent" style="cursor:pointer;font-size:1.3rem;padding:0.2rem;border-radius:0.3rem;transition:background 0.15s" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">🔥</span>
+          </div>
+        </div>
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
         <button class="btn btn-ghost" onclick="closeModal('createStageModal')">취소</button>
@@ -2606,8 +2625,7 @@
     // ── Song Detail ──
     async function openSong(id) {
       currentSong = await api(`/api/songs/${id}`);
-      document.getElementById('songListView').style.display = 'none';
-      document.getElementById('songDetailView').style.display = 'block';
+      showPanel('songDetail'); // dmPanel 포함 모든 패널 정리
       window.location.hash = 'song/' + id;
       renderSongDetail();
     }
