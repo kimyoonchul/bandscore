@@ -459,7 +459,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         html: `
           <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#0d0d0d;color:#f0ece6;border-radius:12px">
             <div style="display:flex;align-items:center;gap:10px;margin:0 0 20px">
-              <img src="${APP_URL}/favicon.png" alt="Backstage" width="36" height="36" style="border-radius:8px;display:block">
+              <span style="font-size:2rem;line-height:1">🎭</span>
               <span style="font-size:1.5rem;font-weight:900;color:#f0ece6">Backstage</span>
             </div>
             <h3 style="margin:0 0 24px;color:#f0ece6">비밀번호 재설정</h3>

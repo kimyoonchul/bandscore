@@ -567,13 +567,11 @@
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
     <!-- ═══ LEFT SIDEBAR — Tree Navigation ═══ -->
     <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header" style="flex-direction: column; align-items: stretch; gap: 0.5rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h3 style="margin:0;">🎭 내 Stage</h3>
-        </div>
-        <div style="display: flex; gap: 0.5rem;">
-          <button class="btn btn-primary btn-sm" onclick="showCreateStageModal()" style="flex:1; font-size:0.75rem; padding:0.4rem;">＋ 새 Stage</button>
-          <button class="btn btn-ghost btn-sm" onclick="showJoinStageModal()" style="flex:1; font-size:0.75rem; padding:0.4rem;">🔗 코드 참가</button>
+      <div class="sidebar-header">
+        <h3>🎭 내 Stage</h3>
+        <div style="display:flex;gap:0.3rem">
+          <button class="btn btn-primary btn-sm" onclick="showCreateStageModal()" style="font-size:0.72rem;padding:0.3rem 0.6rem;min-height:1.8rem" title="새 Stage 만들기">＋</button>
+          <button class="btn btn-ghost btn-sm" onclick="showJoinStageModal()" style="font-size:0.72rem;padding:0.3rem 0.6rem;min-height:1.8rem" title="초대코드로 참가">🔗</button>
         </div>
       </div>
       <div class="sidebar-scroll" id="sidebarTree">
