@@ -1,4 +1,5 @@
-◇ injected env (5) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+◇ injected env (5) from .env // tip: ⌘ override existing { override: true }
 🌐 APP_URL: http://localhost:3001 (development)
 🎵 Backstage running at http://localhost:3001
-🔌 Connected: KHc0NHUIPo7RjmZEAAAB
+🔌 Connected: 6eq6UTGvS90uC-B1AAAB
+🔌 Connected: afbeFNBqFBWWQg7rAAAD

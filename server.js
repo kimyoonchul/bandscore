@@ -254,6 +254,8 @@ async function initDb() {
   try { db.run('ALTER TABLE users ADD COLUMN last_login TEXT'); saveDb(); } catch(e) {}
   // songs에 stage_id 추가 (기존 곡은 NULL → 나중에 이관)
   try { db.run('ALTER TABLE songs ADD COLUMN stage_id TEXT'); saveDb(); } catch(e) {}
+  // stages 테이블 emoji 컬럼
+  try { db.run('ALTER TABLE stages ADD COLUMN emoji TEXT DEFAULT NULL'); saveDb(); } catch(e) {}
 
   // ── 기존 곡 데이터 이관: stage_id가 NULL인 곡 → '성수역 6번출구' Stage ──
   const orphanSongs = query("SELECT id FROM songs WHERE stage_id IS NULL");
@@ -593,10 +595,10 @@ app.put('/api/stages/:id', authMiddleware, (req, res) => {
   const membership = get('SELECT role FROM stage_members WHERE stage_id = ? AND user_id = ?',
     [req.params.id, req.user.id]);
   if (!membership || membership.role !== 'admin') return res.status(403).json({ error: '권한이 없습니다' });
-  const { name, description } = req.body;
+  const { name, description, emoji } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: 'Stage 이름을 입력하세요' });
-  run('UPDATE stages SET name = ?, description = ? WHERE id = ?',
-    [name.trim(), (description || '').trim(), req.params.id]);
+  run('UPDATE stages SET name = ?, description = ?, emoji = ? WHERE id = ?',
+    [name.trim(), (description || '').trim(), emoji || null, req.params.id]);
   const stage = get('SELECT * FROM stages WHERE id = ?', [req.params.id]);
   res.json(stage);
 });
