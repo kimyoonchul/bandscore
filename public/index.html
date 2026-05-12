@@ -1764,13 +1764,16 @@
     // ── Stage 선택 (트리 클릭) ──
     function selectStage(stageId, stageName) {
       const wasOpen = currentStageId === stageId;
-      // 트리 토글 (접기/펼치기)
+
+      // Stage 1개 & 이미 열린 경우 → 아무것도 안 함 (DOM 건드리기 전에 먼저 체크)
+      if (wasOpen && stagesCache.length <= 1) return;
+
+      // 트리 전체 리셋
       document.querySelectorAll('.tree-node-header').forEach(h => h.classList.remove('active'));
       document.querySelectorAll('.tree-toggle').forEach(t => t.classList.remove('open'));
       document.querySelectorAll('.tree-children').forEach(c => c.style.display = 'none');
 
       if (wasOpen) {
-        if (stagesCache.length <= 1) return; // 스테이지가 하나뿐이면 취소 방지
         // 같은 Stage 재클릭 → 접기
         currentStageId = null;
         showPanel('welcome');
