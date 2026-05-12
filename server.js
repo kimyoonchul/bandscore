@@ -458,7 +458,10 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         subject: '[Backstage] 비밀번호 재설정 안내',
         html: `
           <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#0d0d0d;color:#f0ece6;border-radius:12px">
-            <h2 style="background:linear-gradient(135deg,#f43f5e,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:0 0 8px">🎭 Backstage</h2>
+            <div style="display:flex;align-items:center;gap:10px;margin:0 0 20px">
+              <img src="${APP_URL}/favicon.svg" alt="Backstage" width="36" height="36" style="border-radius:8px;display:block">
+              <span style="font-size:1.5rem;font-weight:900;background:linear-gradient(135deg,#f43f5e,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Backstage</span>
+            </div>
             <h3 style="margin:0 0 24px;color:#f0ece6">비밀번호 재설정</h3>
             <p style="color:#a1a1aa;margin:0 0 24px">안녕하세요, <strong style="color:#f0ece6">${user.nickname}</strong>님!<br>비밀번호 재설정 요청을 받았습니다.</p>
             <a href="${resetUrl}" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#f43f5e,#fbbf24);color:#000;font-weight:800;text-decoration:none;border-radius:8px;font-size:1rem">비밀번호 재설정하기</a>
