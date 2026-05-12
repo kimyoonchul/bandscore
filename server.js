@@ -1,3 +1,4 @@
+require('dotenv').config(); // .env 파일 로드
 /**
  * ================================================================
  * AsomeScorePlayer — Server
@@ -411,7 +412,13 @@ app.put('/api/auth/password', authMiddleware, async (req, res) => {
 // ── 비밀번호 찾기: 이메일로 재설정 링크 발송 ──
 const EMAIL_USER = process.env.EMAIL_USER || '';
 const EMAIL_PASS = process.env.EMAIL_PASS || '';
-const APP_URL = process.env.APP_URL || 'http://localhost:3001';
+
+// 개발/실서버 자동 감지
+const IS_PROD = process.env.NODE_ENV === 'production';
+const APP_URL = IS_PROD
+  ? (process.env.PROD_URL || 'https://your-domain.com')
+  : `http://localhost:${process.env.PORT || 3001}`;
+console.log(`🌐 APP_URL: ${APP_URL} (${IS_PROD ? 'production' : 'development'})`);
 
 function createMailTransporter() {
   if (!EMAIL_USER || !EMAIL_PASS) return null;
