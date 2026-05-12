@@ -1,4 +1,4 @@
-require('dotenv').config(); // .env 파일 로드
+require('dotenv').config({ path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env' }); // 환경에 따라 자동 로드
 /**
  * ================================================================
  * AsomeScorePlayer — Server
