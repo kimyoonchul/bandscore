@@ -371,6 +371,7 @@
       { id: 6, title: '사용자 프로필 편집', desc: 'GET/PUT /api/auth/me 구현. 닉네임 변경 가능. 프로필 이미지는 Stage와 함께 구현 예정.', tags: ['auth', 'ui'], phase: '1', status: 'done', priority: 'medium' },
       { id: 7, title: '로그인 필수 리다이렉트', desc: '미로그인 시 /login.html로 자동 이동. 둘러보기 제거. 로그아웃 시 로그인 페이지 이동.', tags: ['auth', 'ui'], phase: '1', status: 'done', priority: 'high' },
       { id: 8, title: '관리자 계정 설정', desc: 'chuli8944@gmail.com을 유일한 admin 계정으로 설정. 회원가입 시 해당 이메일이면 role=admin 자동 부여.', tags: ['admin', 'auth'], phase: '1', status: 'done', priority: 'critical' },
+      { id: 9, title: '비밀번호 찾기(재설정)', desc: '이메일로 비밀번호 재설정 링크 발송. 링크를 통한 새 비밀번호 입력 페이지 구현.', tags: ['auth', 'ui'], phase: '1', status: 'todo', priority: 'high' },
 
       // ═══ Phase 2: 그룹(Stage) 시스템 ═══
       { id: 10, title: '내 Stage 만들기', desc: '그룹명, 설명 설정. 생성자 자동 admin. 고유 초대코드 자동 생성. Stage 생성 모달 UI 완성.', tags: ['group'], phase: '2', status: 'done', priority: 'critical' },
@@ -406,6 +407,7 @@
       { id: 34, title: '알림 시스템', desc: 'Stage 초대, 새 곡 추가, 연습 시작 등 알림. 인앱 알림 + 이메일 알림 (선택).', tags: ['social', 'infra'], phase: '4', status: 'todo', priority: 'medium' },
       { id: 35, title: '배포 & 인프라', desc: 'Docker 컨테이너화. nginx 리버스 프록시. SSL 인증서. 자동 백업 스크립트. CI/CD 파이프라인.', tags: ['infra'], phase: '4', status: 'todo', priority: 'high' },
       { id: 36, title: 'PWA & 오프라인 지원', desc: 'Service Worker로 악보 캐싱. 오프라인에서도 마지막 본 악보 조회 가능. 앱 설치 배너.', tags: ['infra', 'ui'], phase: '4', status: 'todo', priority: 'low' },
+      { id: 37, title: '디스코드 커뮤니티 (CS/피드백)', desc: '공식 디스코드 서버 개설 (버그 제보, 사용 팁, 합주 소통용). 사이트 내 디스코드 초대 링크 및 위젯 연동.', tags: ['social', 'ui'], phase: '4', status: 'todo', priority: 'high' },
 
       // ═══ 브랜딩 & UI (완료) ═══
       { id: 40, title: 'Backstage 브랜딩 전환', desc: 'BandScore → Backstage. 파비콘(레트로 선셋), 타이틀, 메타태그, 헤더 로고 전체 교체.', tags: ['ui'], phase: '1', status: 'done', priority: 'critical' },
