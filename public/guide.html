@@ -52,8 +52,10 @@
     .tip { background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.15); border-radius: var(--radius); padding: 1rem 1.25rem; margin: 1rem 0; font-size: 0.85rem; color: var(--text-secondary); }
     .tip::before { content: '💡 TIP'; display: block; font-weight: 800; font-size: 0.72rem; color: var(--accent-light); margin-bottom: 0.375rem; letter-spacing: 0.05em; }
 
-    .warn { background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.15); border-radius: var(--radius); padding: 1rem 1.25rem; margin: 1rem 0; font-size: 0.85rem; color: var(--text-secondary); }
-    .warn::before { content: '⚠️ 주의'; display: block; font-weight: 800; font-size: 0.72rem; color: var(--accent); margin-bottom: 0.375rem; }
+    .highlight-card { background: linear-gradient(135deg, rgba(244,63,94,0.08) 0%, rgba(251,191,36,0.06) 100%); border: 1px solid rgba(244,63,94,0.15); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+    .highlight-card .hl-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .highlight-card .hl-title { font-weight: 800; font-size: 1rem; margin-bottom: 0.375rem; }
+    .highlight-card .hl-desc { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; }
 
     .faq-item { border-bottom: 1px solid var(--border); padding: 1rem 0; }
     .faq-item:last-child { border-bottom: none; }
@@ -61,7 +63,6 @@
     .faq-q::before { content: 'Q. '; color: var(--accent); }
     .faq-a { color: var(--text-secondary); font-size: 0.85rem; padding-left: 1.5rem; }
 
-    .kbd { background: var(--bg-elevated); border: 1px solid var(--border); padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-size: 0.78rem; font-weight: 600; }
     .guide-img { max-width: 100%; height: auto; border-radius: 0.5rem; border: 1px solid var(--border); margin: 1rem 0; display: block; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
 
     @media (max-width: 768px) {
@@ -101,12 +102,11 @@
 </div>
 
 <nav class="toc" id="toc">
-  <a href="#intro">소개</a>
+  <a href="#why">왜 Backstage?</a>
   <a href="#start">시작하기</a>
-  <a href="#songs">곡 관리</a>
-  <a href="#score">악보 업로드</a>
+  <a href="#score">악보 올리기</a>
   <a href="#player">플레이어</a>
-  <a href="#sync">실시간 합주</a>
+  <a href="#together">함께하기</a>
   <a href="#faq">FAQ</a>
 </nav>
 
@@ -116,19 +116,40 @@
     <p>무대에 오르기 전, 묵묵히 합을 맞추는 공간.<br>밴드 합주를 위한 악보 자동 넘김 서비스입니다.</p>
   </div>
 
-  <section id="intro">
-    <h2><span class="num">1</span> Backstage란?</h2>
-    <p style="color:var(--text-secondary);font-size:0.95rem;margin-bottom:1rem">
-      Backstage는 밴드 멤버들이 악보를 BPM에 맞춰 자동으로 넘기며 함께 합주할 수 있는 웹 서비스입니다.
+  <section id="why">
+    <h2><span class="num">1</span> 왜 Backstage인가요?</h2>
+    <p style="color:var(--text-secondary);font-size:0.95rem;margin-bottom:1.25rem">
+      합주실에서 악보를 넘기느라 연주가 끊긴 적 없으신가요?<br>
+      Backstage는 밴드 연습에서 겪는 불편함을 해결합니다.
     </p>
-    <div class="step-card">
-      <div class="step-title">✨ 주요 기능</div>
-      <div class="step-desc">
-        • <strong>악보 자동 넘김</strong> — BPM과 마디 수 기반으로 PDF 악보를 자동 스크롤<br>
-        • <strong>실시간 동기화</strong> — 여러 멤버가 동시에 같은 곡을 재생하면 자동 싱크<br>
-        • <strong>오선 감지</strong> — PDF에서 악보 줄(시스템)을 자동/수동으로 인식<br>
-        • <strong>Inst 음원</strong> — 반주 MP3를 업로드하여 악보와 함께 재생<br>
-        • <strong>다양한 뷰 모드</strong> — 1단/2단/세로스크롤 보기 지원
+
+    <div class="highlight-card">
+      <div class="hl-icon">📄</div>
+      <div class="hl-title">악보바다 · 악보나라 PDF 바로 사용</div>
+      <div class="hl-desc">
+        악보 사이트에서 구매한 PDF 파일을 <strong>변환 없이 그대로</strong> 업로드하세요.
+        별도 포맷 변환이나 편집 없이 바로 자동 넘김 플레이어에서 사용할 수 있습니다.
+        물론 직접 만든 PDF 악보도 OK.
+      </div>
+    </div>
+
+    <div class="highlight-card">
+      <div class="hl-icon">🎒</div>
+      <div class="hl-title">태블릿 하나면 악보 끝</div>
+      <div class="hl-desc">
+        종이 악보 뭉치를 들고 다닐 필요 없습니다.
+        iPad나 태블릿 하나를 보면대에 올려놓으면 <strong>모든 곡의 악보</strong>가 준비 완료.
+        BPM에 맞춰 자동으로 넘어가니까 손은 연주에만 집중하세요.
+      </div>
+    </div>
+
+    <div class="highlight-card">
+      <div class="hl-icon">💬</div>
+      <div class="hl-title">밴드 멤버와 실시간 소통</div>
+      <div class="hl-desc">
+        <strong>같이하기(Together)</strong> 모드로 멤버 전원의 악보가 동시에 움직입니다.
+        Stage 채팅으로 곡에 대해 의논하고, DM으로 개인 메시지를 주고받으세요.
+        합주실 밖에서도 밴드 커뮤니케이션이 이어집니다.
       </div>
     </div>
   </section>
@@ -136,129 +157,102 @@
   <section id="start">
     <h2><span class="num">2</span> 시작하기</h2>
     <div class="step-card">
-      <div class="step-title"><span class="step-num">1</span> 접속하기</div>
-      <div class="step-desc">PC 또는 태블릿의 브라우저에서 공유받은 URL로 접속합니다. 별도 앱 설치 없이 바로 사용할 수 있습니다.</div>
+      <div class="step-title"><span class="step-num">1</span> 가입 · 로그인</div>
+      <div class="step-desc">이메일 또는 <strong>Google 계정</strong>으로 간편하게 가입하세요. 별도 앱 설치 없이 브라우저에서 바로 사용합니다.</div>
     </div>
     <div class="step-card">
-      <div class="step-title"><span class="step-num">2</span> 메인 화면</div>
-      <div class="step-desc">
-        접속하면 등록된 곡들이 <strong>앨범 형태</strong>로 표시됩니다. 곡을 클릭하면 상세 페이지로 이동합니다.
-        <img src="/images/guide/1_dashboard.png" alt="대시보드 화면" class="guide-img">
-      </div>
+      <div class="step-title"><span class="step-num">2</span> Stage 만들기</div>
+      <div class="step-desc">Stage는 밴드(그룹)입니다. Stage를 만들고 멤버를 <strong>초대 링크</strong>로 초대하세요. 한 사람이 여러 Stage에 속할 수도 있습니다.</div>
     </div>
     <div class="step-card">
-      <div class="step-title"><span class="step-num">3</span> 곡 선택 → 파트 선택 → 재생</div>
-      <div class="step-desc">곡 상세에서 <strong>내 파트(악기)</strong>를 클릭하면 악보 플레이어가 열립니다. ▶ 버튼으로 재생하세요.</div>
+      <div class="step-title"><span class="step-num">3</span> 곡 추가 & 악보 업로드</div>
+      <div class="step-desc">Stage에 곡을 만들고, 파트별(보컬, 기타, 드럼 등) PDF 악보를 업로드하세요. BPM과 박자를 설정하면 자동 넘김 준비 완료!</div>
     </div>
     <div class="tip">태블릿(iPad)에서 사용하면 악보를 가장 편하게 볼 수 있습니다. 보면대에 태블릿을 올려놓고 사용해보세요!</div>
   </section>
 
-  <section id="songs">
-    <h2><span class="num">3</span> 곡 관리</h2>
-    <h3>새 곡 추가하기</h3>
-    <div class="step-card">
-      <div class="step-title"><span class="step-num">1</span> 우측 상단 <code>＋ 새 곡</code> 버튼 클릭</div>
-      <div class="step-desc">곡 이름을 입력하고 생성합니다.</div>
-    </div>
-    <div class="step-card">
-      <div class="step-title"><span class="step-num">2</span> 곡 설정하기</div>
-      <div class="step-desc">
-        생성 후 <strong>⚙️ 설정</strong>에서 다음을 입력합니다:<br>
-        • <strong>BPM</strong> — 곡의 빠르기 (메트로놈 기준)<br>
-        • <strong>박자</strong> — 4/4, 3/4, 6/8 등<br>
-        • <strong>카운트인</strong> — 재생 전 준비 마디 수<br>
-        • <strong>커버 이미지</strong> — 앨범 표지 (선택)<br>
-        • <strong>Inst 음원</strong> — 반주 MP3 파일 (선택)
-        <img src="/images/guide/2_stage_settings.png" alt="곡/Stage 설정 모달" class="guide-img">
-      </div>
-    </div>
-    <div class="warn">곡을 삭제하면 해당 곡의 모든 파트와 악보 데이터가 함께 삭제됩니다. 신중하게 삭제하세요.</div>
-  </section>
-
   <section id="score">
-    <h2><span class="num">4</span> 악보 업로드</h2>
+    <h2><span class="num">3</span> 악보 올리기</h2>
     <div class="step-card">
-      <div class="step-title"><span class="step-num">1</span> 파트 추가</div>
-      <div class="step-desc">곡 상세 페이지에서 <code>➕ 악보 업로드</code>를 클릭합니다. 파트명(예: 보컬, 기타, 드럼)을 입력하고 PDF를 선택합니다.</div>
+      <div class="step-title"><span class="step-num">1</span> PDF 업로드</div>
+      <div class="step-desc">곡 상세에서 <code>➕ 악보 업로드</code>를 클릭하고, 파트명을 입력한 뒤 PDF 파일을 선택합니다. 악보바다, 악보나라 등에서 받은 PDF를 그대로 올리면 됩니다.</div>
     </div>
     <div class="step-card">
-      <div class="step-title"><span class="step-num">2</span> 오선 감지 (시스템 편집)</div>
+      <div class="step-title"><span class="step-num">2</span> 오선 편집</div>
       <div class="step-desc">
-        업로드 후 파트를 클릭 → <strong>오선 편집기</strong>가 열립니다.<br>
-        • <strong>자동 감지</strong>: 기본 패턴으로 줄을 나눕니다<br>
-        • <strong>수동 조정</strong>: 각 줄의 위치와 마디 수를 직접 설정<br>
-        • 줄마다 <strong>도돌이표, 볼타</strong> 설정도 가능합니다
+        업로드 후 악보의 줄(시스템)을 설정합니다.<br>
+        • <strong>자동 감지</strong>로 빠르게 줄을 나누거나<br>
+        • <strong>수동 조정</strong>으로 각 줄의 마디 수를 정확히 입력<br>
+        마디 수가 정확해야 자동 넘김 타이밍이 맞습니다.
       </div>
     </div>
     <div class="step-card">
-      <div class="step-title"><span class="step-num">3</span> 마디 수 설정</div>
-      <div class="step-desc">각 줄(시스템)에 포함된 마디 수를 정확히 입력해야 자동 넘김이 정확해집니다. BPM과 박자를 기반으로 시간이 자동 계산됩니다.</div>
+      <div class="step-title"><span class="step-num">3</span> 반주(Inst) 음원 추가 (선택)</div>
+      <div class="step-desc">MP3 반주 파일을 업로드하면 악보와 함께 재생됩니다. 악보를 보면서 MR에 맞춰 연습할 수 있어요.</div>
     </div>
     <div class="tip">오선 감지가 잘 안 되면 <strong>수동 패턴</strong>을 사용하세요. 예: <code>4,4,4,4</code> (4줄, 각 4마디)</div>
   </section>
 
   <section id="player">
-    <h2><span class="num">5</span> 플레이어 사용법</h2>
+    <h2><span class="num">4</span> 플레이어 사용법</h2>
     <h3>기본 조작</h3>
     <div class="step-card">
       <div class="step-desc">
-        • <strong>▶ 재생</strong> — 카운트인 후 BPM에 맞춰 악보 자동 넘김 시작<br>
-        • <strong>⏸ 일시정지</strong> — 현재 위치에서 정지<br>
-        • <strong>⏹ 정지</strong> — 처음으로 되돌아가기<br>
-        • <strong>시크바</strong> — 드래그하여 원하는 위치로 이동<br>
-        • <strong>BPM ±</strong> — 실시간 템포 조절
+        • <strong>▶ 재생</strong> — 카운트인 후 BPM에 맞춰 악보가 자동으로 넘어갑니다<br>
+        • <strong>⏸ 일시정지 / ⏹ 정지</strong> — 멈추거나 처음으로 돌아가기<br>
+        • <strong>시크바</strong> — 드래그로 원하는 위치로 이동<br>
+        • <strong>BPM ±</strong> — 실시간 템포 조절 (느리게 연습할 때 유용!)
       </div>
     </div>
     <h3>보기 모드</h3>
     <div class="step-card">
       <div class="step-desc">
-        • <strong>1단 보기</strong> — 한 페이지씩 표시 (기본)<br>
+        • <strong>1단 보기</strong> — 한 페이지씩 (기본)<br>
         • <strong>2단 보기</strong> — 두 페이지를 나란히 (태블릿 가로 모드 추천)<br>
         • <strong>세로 스크롤</strong> — 전체 악보를 위아래로 스크롤
       </div>
     </div>
-    <h3>스타일 설정</h3>
-    <div class="step-card">
-      <div class="step-desc">
-        우측 <strong>⚙️ 설정 패널</strong>에서 악보 표시를 커스터마이즈할 수 있습니다:<br>
-        • 좌/우 여백, 시스템 간격<br>
-        • 진행선 색상/두께<br>
-        • 비활성 영역 어둡기<br>
-        설정은 파트별로 저장됩니다.
-      </div>
-    </div>
   </section>
 
-  <section id="sync">
-    <h2><span class="num">6</span> 실시간 합주</h2>
+  <section id="together">
+    <h2><span class="num">5</span> 함께하기</h2>
+    <h3>🎸 실시간 합주 동기화</h3>
     <div class="step-card">
       <div class="step-desc">
-        여러 멤버가 <strong>같은 곡</strong>에 접속하면 자동으로 세션이 연결됩니다.<br><br>
-        • 한 사람이 <strong>▶ 재생</strong>하면 모든 멤버에게 동시에 카운트인 시작<br>
-        • <strong>일시정지, 정지, 템포 변경</strong>도 모두 동기화<br>
-        • 상단 멤버 배지를 클릭하면 현재 접속자 목록 확인 가능<br>
-        • Inst 음원도 동기화되어 모두 같은 반주를 들을 수 있습니다
+        여러 멤버가 같은 곡에 접속하면 자동으로 세션이 연결됩니다.<br><br>
+        • 한 사람이 <strong>▶ 재생</strong>하면 모든 멤버에게 동시에 시작<br>
+        • 일시정지, 정지, 템포 변경도 모두 실시간 동기화<br>
+        • Inst 음원도 함께 재생되어 모두 같은 반주를 들을 수 있습니다<br><br>
+        혼자 연습할 땐 <strong>Solo</strong> 모드로 전환하세요.
       </div>
     </div>
-    <h3>솔로 / 투게더 모드</h3>
+
+    <h3>💬 Stage 채팅</h3>
     <div class="step-card">
       <div class="step-desc">
-        • <strong>Together</strong> — 다른 멤버와 동기화 (합주 모드)<br>
-        • <strong>Solo</strong> — 혼자 독립적으로 재생 (개인 연습 모드)
+        Stage 멤버들과 실시간 채팅으로 소통하세요.
+        곡 선정, 연습 일정, 편곡 논의 등 합주에 필요한 대화를 한 곳에서 나눌 수 있습니다.
       </div>
     </div>
-    <div class="tip">합주 시 모든 멤버가 "Together" 모드인지 확인하세요. Solo 모드에서는 동기화가 안 됩니다.</div>
+
+    <h3>✉️ DM (1:1 메시지)</h3>
+    <div class="step-card">
+      <div class="step-desc">
+        멤버에게 개인적으로 메시지를 보낼 수 있습니다.
+        채팅에서 닉네임을 클릭하면 바로 DM 대화를 시작할 수 있어요.
+      </div>
+    </div>
   </section>
 
   <section id="faq">
-    <h2><span class="num">7</span> FAQ</h2>
+    <h2><span class="num">6</span> FAQ</h2>
+    <div class="faq-item">
+      <div class="faq-q">어떤 악보 파일을 사용할 수 있나요?</div>
+      <div class="faq-a"><strong>PDF 파일</strong>만 지원됩니다. 악보바다, 악보나라 등에서 구매한 PDF를 그대로 업로드하세요. 이미지(JPG, PNG)는 PDF로 변환 후 업로드하면 됩니다.</div>
+    </div>
     <div class="faq-item">
       <div class="faq-q">악보가 BPM과 안 맞아요</div>
       <div class="faq-a">오선 편집기에서 각 줄의 <strong>마디 수</strong>가 정확한지 확인하세요. 마디 수가 틀리면 넘기는 타이밍이 어긋납니다.</div>
-    </div>
-    <div class="faq-item">
-      <div class="faq-q">PDF가 업로드 안 돼요</div>
-      <div class="faq-a">PDF 파일만 지원됩니다. 이미지 파일(JPG, PNG)은 먼저 PDF로 변환 후 업로드하세요.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">태블릿에서 화면이 잘려요</div>
@@ -266,15 +260,15 @@
     </div>
     <div class="faq-item">
       <div class="faq-q">다른 멤버와 싱크가 안 맞아요</div>
-      <div class="faq-a">네트워크 상태에 따라 약간의 지연이 있을 수 있습니다. 모두 같은 Wi-Fi에 접속하면 지연이 줄어듭니다.</div>
+      <div class="faq-a">네트워크 상태에 따라 약간의 지연이 있을 수 있습니다. 모두 같은 Wi-Fi에 접속하면 지연이 줄어듭니다. 또한 모든 멤버가 "Together" 모드인지 확인하세요.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">Inst 음원이 재생 안 돼요</div>
       <div class="faq-a">브라우저 정책상 <strong>화면을 한 번 터치</strong>해야 오디오가 활성화됩니다. 재생 전에 화면을 터치하세요.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q">도돌이표가 있는 곡은 어떻게 하나요?</div>
-      <div class="faq-a">오선 편집기에서 각 줄의 <strong>반복 시작/끝</strong>과 <strong>볼타</strong> 설정을 사용하세요. 재생 순서 편집도 가능합니다.</div>
+      <div class="faq-q">무료인가요?</div>
+      <div class="faq-a">네, Backstage는 <strong>무료</strong>로 제공됩니다. 서비스가 도움이 되셨다면 후원으로 응원해주세요 🙏</div>
     </div>
   </section>
 </div>

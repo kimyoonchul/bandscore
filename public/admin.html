@@ -310,6 +310,7 @@
     <button class="tab" id="tab-users" onclick="switchTab('users')">👥 회원 관리</button>
     <button class="tab" id="tab-stages" onclick="switchTab('stages')">🎭 Stage 관리</button>
     <button class="tab" id="tab-songs" onclick="switchTab('songs')">🎵 곡 관리</button>
+    <button class="tab" id="tab-donations" onclick="switchTab('donations')">☕ 후원 관리</button>
   </div>
 
   <div class="content">
@@ -383,6 +384,52 @@
             <th>관리</th>
           </tr></thead>
           <tbody id="songsTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 후원 관리 탭 -->
+    <div id="panel-donations" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <div class="section-title" style="margin:0">후원자 관리</div>
+        <button class="btn-save" onclick="showAddDonation()" style="font-size:0.78rem;padding:0.4rem 1rem">＋ 후원자 등록</button>
+      </div>
+      <div id="addDonationForm" style="display:none;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:1rem">
+        <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:flex-end">
+          <div class="edit-field" style="margin:0;flex:1;min-width:120px">
+            <label>닉네임 *</label>
+            <input id="donNickname" placeholder="송금자 닉네임">
+          </div>
+          <div class="edit-field" style="margin:0;width:100px">
+            <label>금액</label>
+            <input id="donAmount" placeholder="5,000">
+          </div>
+          <div class="edit-field" style="margin:0;width:80px">
+            <label>표시 일수</label>
+            <input id="donDays" type="number" value="7" min="1" max="90">
+          </div>
+          <div class="edit-field" style="margin:0;flex:1;min-width:150px">
+            <label>메시지 (선택)</label>
+            <input id="donMessage" placeholder="감사합니다!">
+          </div>
+          <div style="display:flex;gap:0.5rem">
+            <button class="btn-save" onclick="addDonation()" style="font-size:0.78rem;padding:0.4rem 0.875rem">등록</button>
+            <button class="btn-cancel" onclick="hideAddDonation()" style="font-size:0.78rem;padding:0.4rem 0.625rem">취소</button>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>닉네임</th>
+            <th>금액</th>
+            <th>메시지</th>
+            <th>표시 기한</th>
+            <th>등록일</th>
+            <th>상태</th>
+            <th>관리</th>
+          </tr></thead>
+          <tbody id="donationsTable"></tbody>
         </table>
       </div>
     </div>
@@ -464,13 +511,14 @@
   function switchTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.getElementById('tab-' + tab).classList.add('active');
-    ['dashboard','users','stages','songs'].forEach(p => {
+    ['dashboard','users','stages','songs','donations'].forEach(p => {
       document.getElementById('panel-' + p).style.display = p === tab ? '' : 'none';
     });
     currentTab = tab;
     if (tab === 'users') loadUsers();
     else if (tab === 'stages') loadStages();
     else if (tab === 'songs') loadSongs();
+    else if (tab === 'donations') loadDonations();
   }
 
   // ── 날짜 포맷 ──
@@ -854,6 +902,99 @@
 
   function esc(s) {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── 후원 관리 ──
+  let allDonations = [];
+
+  async function loadDonations() {
+    const tbody = document.getElementById('donationsTable');
+    tbody.innerHTML = '<tr><td colspan="7" class="loading">불러오는 중...</td></tr>';
+    try {
+      const res = await fetch('/api/admin/donations', { headers: getHeaders() });
+      allDonations = await res.json();
+      renderDonations(allDonations);
+    } catch(e) { tbody.innerHTML = '<tr><td colspan="7" class="empty">불러오기 실패</td></tr>'; }
+  }
+
+  function renderDonations(donations) {
+    const tbody = document.getElementById('donationsTable');
+    if (!donations.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">등록된 후원자가 없습니다</td></tr>'; return; }
+    tbody.innerHTML = donations.map(d => {
+      const isActive = d.approved && (!d.display_until || new Date(d.display_until) > new Date());
+      return `<tr id="don-row-${d.id}">
+        <td><strong>${esc(d.nickname)}</strong></td>
+        <td class="text-muted" id="don-amt-${d.id}">${esc(d.amount || '-')}</td>
+        <td class="text-small text-muted" id="don-msg-${d.id}">${esc(d.message || '-')}</td>
+        <td class="text-small text-muted">${d.display_until ? fmtDate(d.display_until) : '무기한'}</td>
+        <td class="text-small text-muted">${fmtDate(d.created_at)}</td>
+        <td>${isActive ? '<span class="badge badge-admin">표시중</span>' : '<span class="badge badge-user">만료</span>'}</td>
+        <td style="white-space:nowrap"><button class="btn-save" style="font-size:0.7rem;padding:0.25rem 0.5rem;margin-right:4px" onclick="editDonation(${d.id})">✏️</button><button class="btn-danger-sm" onclick="deleteDonation(${d.id},'${esc(d.nickname)}')">🗑</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function showAddDonation() {
+    document.getElementById('addDonationForm').style.display = 'block';
+    document.getElementById('donNickname').focus();
+  }
+  function hideAddDonation() {
+    document.getElementById('addDonationForm').style.display = 'none';
+  }
+
+  async function addDonation() {
+    const nickname = document.getElementById('donNickname').value.trim();
+    const amount = document.getElementById('donAmount').value.trim();
+    const displayDays = document.getElementById('donDays').value;
+    const message = document.getElementById('donMessage').value.trim();
+    if (!nickname) { alert('닉네임을 입력하세요'); return; }
+    try {
+      const res = await fetch('/api/admin/donations', {
+        method: 'POST', headers: getHeaders(),
+        body: JSON.stringify({ nickname, amount, message, displayDays })
+      });
+      if (!res.ok) { const e = await res.json(); alert(e.error); return; }
+      hideAddDonation();
+      document.getElementById('donNickname').value = '';
+      document.getElementById('donAmount').value = '';
+      document.getElementById('donMessage').value = '';
+      loadDonations();
+    } catch(e) { alert('오류 발생'); }
+  }
+
+  function editDonation(id) {
+    const d = allDonations.find(x => x.id === id);
+    if (!d) return;
+    const row = document.getElementById('don-row-' + id);
+    if (!row) return;
+    row.innerHTML = `
+      <td><strong>${esc(d.nickname)}</strong></td>
+      <td><input id="edit-amt-${id}" value="${esc(d.amount||'')}" style="width:80px;padding:4px;font-size:0.78rem" placeholder="금액"></td>
+      <td><input id="edit-msg-${id}" value="${esc(d.message||'')}" style="width:140px;padding:4px;font-size:0.78rem" placeholder="메시지"></td>
+      <td><input id="edit-days-${id}" type="number" value="7" min="1" max="90" style="width:50px;padding:4px;font-size:0.78rem" title="표시 연장 일수"></td>
+      <td colspan="2"></td>
+      <td style="white-space:nowrap"><button class="btn-save" style="font-size:0.7rem;padding:0.25rem 0.5rem;margin-right:4px" onclick="saveDonation(${id})">💾</button><button class="btn-cancel" style="font-size:0.7rem;padding:0.25rem 0.5rem" onclick="loadDonations()">취소</button></td>
+    `;
+    document.getElementById('edit-amt-' + id).focus();
+  }
+
+  async function saveDonation(id) {
+    const amount = document.getElementById('edit-amt-' + id).value.trim();
+    const message = document.getElementById('edit-msg-' + id).value.trim();
+    const displayDays = document.getElementById('edit-days-' + id).value;
+    const res = await fetch('/api/admin/donations/' + id, {
+      method: 'PUT', headers: getHeaders(),
+      body: JSON.stringify({ amount, message, displayDays })
+    });
+    if (res.ok) loadDonations();
+    else alert('수정 실패');
+  }
+
+  async function deleteDonation(id, name) {
+    if (!confirm(`"${name}" 후원 기록을 삭제하시겠습니까?`)) return;
+    const res = await fetch(`/api/admin/donations/${id}`, { method: 'DELETE', headers: getHeaders() });
+    if (res.ok) loadDonations();
+    else alert('삭제 실패');
   }
 
   init();

@@ -577,6 +577,14 @@
       <div class="sidebar-scroll" id="sidebarTree">
         <!-- 트리 노드 JS로 렌더링 -->
       </div>
+      <!-- 후원 섹션 -->
+      <div id="donationSection" style="flex-shrink:0;padding:0.5rem 0.75rem;border-top:1px solid var(--border);font-size:0.72rem">
+        <div id="donorBanner" style="display:none;padding:0.4rem 0.6rem;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.12);border-radius:0.5rem;margin-bottom:0.4rem;color:var(--text-secondary);text-align:center;animation:donorFade 0.5s ease"></div>
+        <div style="display:flex;gap:0.375rem">
+          <button onclick="showDonateModal()" style="flex:1;padding:0.5rem;background:none;border:1px dashed var(--border);border-radius:0.5rem;color:var(--text-muted);font-family:inherit;font-size:0.72rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">☕ 후원</button>
+          <a href="https://discord.gg/DcjrWxVw" target="_blank" style="flex:1;padding:0.5rem;background:none;border:1px dashed var(--border);border-radius:0.5rem;color:var(--text-muted);font-family:inherit;font-size:0.72rem;cursor:pointer;transition:all 0.2s;text-decoration:none;text-align:center" onmouseover="this.style.borderColor='#5865F2';this.style.color='#5865F2'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">💬 디스코드</a>
+        </div>
+      </div>
     </aside>
 
     <!-- ═══ RIGHT CONTENT PANEL ═══ -->
@@ -760,12 +768,49 @@
   </div>
 
 
+  <!-- ═══════════════ DONATE MODAL ═══════════════ -->
+  <div id="donateModal" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center" onclick="if(event.target===this)closeDonateModal()">
+    <div style="background:var(--bg-card,#0d0d0d);border:1px solid rgba(255,255,255,0.08);border-radius:1.25rem;padding:2rem;max-width:380px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,0.6);position:relative">
+      <button onclick="closeDonateModal()" style="position:absolute;top:0.75rem;right:0.75rem;background:none;border:none;color:#71717a;font-size:1.2rem;cursor:pointer">✕</button>
+      <div style="text-align:center;margin-bottom:1.25rem">
+        <div style="font-size:2rem;margin-bottom:0.5rem">☕</div>
+        <div style="font-size:1.1rem;font-weight:800;margin-bottom:0.375rem">Backstage 후원하기</div>
+        <div style="font-size:0.78rem;color:#a1a1aa;line-height:1.6">
+          Backstage는 <strong style="color:#f0ece6">여러분의 후원</strong>으로 운영됩니다.<br>
+          서버 비용, AI 개발비, 유지보수 등…<br>
+          작은 응원이 큰 힘이 됩니다 😢
+        </div>
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:0.75rem;padding:1rem;margin-bottom:1rem">
+        <div style="font-size:0.68rem;color:#71717a;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.5rem">후원 계좌</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem">
+          <div>
+            <div style="font-size:0.9rem;font-weight:700;color:#f0ece6">신한은행</div>
+            <div style="font-size:0.95rem;font-weight:800;color:#fbbf24;margin-top:0.125rem" id="donateAccount">110-246-059219</div>
+            <div style="font-size:0.78rem;color:#a1a1aa;margin-top:0.125rem">김윤철</div>
+          </div>
+          <button onclick="copyAccount()" style="background:linear-gradient(135deg,#f43f5e,#fbbf24);color:#000;border:none;padding:0.4rem 0.875rem;border-radius:0.5rem;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">복사</button>
+        </div>
+      </div>
+      <div style="background:rgba(244,63,94,0.06);border:1px solid rgba(244,63,94,0.15);border-radius:0.75rem;padding:0.875rem 1rem;font-size:0.78rem;color:#a1a1aa;line-height:1.6">
+        <div style="font-weight:800;font-size:0.7rem;color:#f43f5e;margin-bottom:0.25rem">📌 송금자명 규칙</div>
+        송금 시 보내는 분 이름을<br>
+        <strong style="color:#fbbf24">닉네임-백스테이지</strong>로 적어주세요!<br>
+        <span style="color:#71717a">예) 기타맨-백스테이지</span><br><br>
+        입금 확인 후 사이드바에<br>감사 메시지가 표시됩니다 🙏
+      </div>
+      <div style="text-align:center;margin-top:1rem;font-size:0.7rem;color:#52525b">3,000원 이상 후원 시 감사 메시지가 게시됩니다 ☕</div>
+    </div>
+  </div>
+
   <!-- ═══════════════ NEW SERVICE FOOTER ═══════════════ -->
   <footer class="service-footer">
     <div class="service-footer-inner">
       <span class="sf-logo">🎵 Backstage</span>
       <span class="sf-sep">·</span>
       <a href="/guide" class="sf-link">가이드</a>
+      <span class="sf-sep">·</span>
+      <a href="https://discord.gg/DcjrWxVw" target="_blank" class="sf-link">디스코드</a>
       <span class="sf-sep">·</span>
       <span class="sf-copy" id="easterEggTrigger">© 2026 Backstage</span>
     </div>
@@ -3821,8 +3866,57 @@
       if (m) {
         try { await openSong(m[1]); } catch (e) { console.warn('Song not found:', m[1]); }
       }
+      // 후원자 로드
+      loadDonors();
     }
     initApp();
+
+    // ── 후원(Donation) ──
+    function showDonateModal() {
+      const modal = document.getElementById('donateModal');
+      modal.style.display = 'flex';
+    }
+    function closeDonateModal() {
+      document.getElementById('donateModal').style.display = 'none';
+    }
+    function copyAccount() {
+      const text = document.getElementById('donateAccount').textContent.replace(/-/g, '');
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target;
+        btn.textContent = '✓ 복사됨';
+        setTimeout(() => btn.textContent = '복사', 1500);
+      });
+    }
+
+    let _donors = [];
+    let _donorIdx = 0;
+    async function loadDonors() {
+      try {
+        const res = await fetch('/api/donations/recent');
+        _donors = await res.json();
+        if (_donors.length > 0) {
+          showDonorBanner();
+          if (_donors.length > 1) setInterval(rotateDonor, 5000);
+        }
+      } catch(e) {}
+    }
+    function showDonorBanner() {
+      const banner = document.getElementById('donorBanner');
+      if (!_donors.length) { banner.style.display = 'none'; return; }
+      const d = _donors[_donorIdx % _donors.length];
+      banner.style.display = 'block';
+      const msg = d.message ? esc(d.message) : '감사합니다!';
+      banner.innerHTML = `☕ <strong style="color:var(--primary-light)">${esc(d.nickname)}</strong>님 ${msg}`;
+    }
+    function rotateDonor() {
+      _donorIdx++;
+      const banner = document.getElementById('donorBanner');
+      banner.style.opacity = '0';
+      setTimeout(() => {
+        showDonorBanner();
+        banner.style.opacity = '1';
+      }, 300);
+    }
 
     // 브라우저 뒤로가기/앞으로가기 처리
     window.addEventListener('hashchange', () => {

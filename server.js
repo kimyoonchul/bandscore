@@ -261,6 +261,17 @@ async function initDb() {
   try { db.run('ALTER TABLE songs ADD COLUMN stage_id TEXT'); saveDb(); } catch(e) {}
   // stages 테이블 emoji 컬럼
   try { db.run('ALTER TABLE stages ADD COLUMN emoji TEXT DEFAULT NULL'); saveDb(); } catch(e) {}
+  // ── Donations 테이블 ──
+  db.run(`CREATE TABLE IF NOT EXISTS donations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nickname TEXT NOT NULL,
+    amount TEXT,
+    message TEXT,
+    display_until TEXT,
+    approved INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now'))
+  )`);
+  saveDb();
 
   // ── 기존 곡 데이터 이관: stage_id가 NULL인 곡 → '성수역 6번출구' Stage ──
   const orphanSongs = query("SELECT id FROM songs WHERE stage_id IS NULL");
@@ -1021,6 +1032,54 @@ app.put('/api/admin/songs/:id', adminMiddleware, (req, res) => {
   saveDb();
   const updated = get('SELECT * FROM songs WHERE id = ?', [req.params.id]);
   res.json(updated);
+});
+
+// ── Donations API ──
+
+// 최근 후원자 (공개 API - 승인된 것만, display_until 이내)
+app.get('/api/donations/recent', (req, res) => {
+  const donors = query(`SELECT nickname, amount, message, created_at FROM donations
+    WHERE approved = 1 AND (display_until IS NULL OR display_until > datetime('now'))
+    ORDER BY created_at DESC LIMIT 10`);
+  res.json(donors);
+});
+
+// Admin: 후원자 목록 (전체)
+app.get('/api/admin/donations', adminMiddleware, (req, res) => {
+  const donations = query('SELECT * FROM donations ORDER BY created_at DESC');
+  res.json(donations);
+});
+
+// Admin: 후원자 등록
+app.post('/api/admin/donations', adminMiddleware, (req, res) => {
+  const { nickname, amount, message, displayDays } = req.body;
+  if (!nickname || !nickname.trim()) return res.status(400).json({ error: '닉네임을 입력하세요' });
+  const days = parseInt(displayDays) || 7;
+  const displayUntil = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+  run('INSERT INTO donations (nickname, amount, message, display_until, approved) VALUES (?,?,?,?,1)',
+    [nickname.trim(), (amount || '').trim(), (message || '').trim(), displayUntil]);
+  res.json({ ok: true });
+});
+
+// Admin: 후원자 수정
+app.put('/api/admin/donations/:id', adminMiddleware, (req, res) => {
+  const { amount, message, displayDays } = req.body;
+  const donation = get('SELECT * FROM donations WHERE id = ?', [req.params.id]);
+  if (!donation) return res.status(404).json({ error: '후원 기록을 찾을 수 없습니다' });
+  if (amount !== undefined) run('UPDATE donations SET amount = ? WHERE id = ?', [amount.trim(), req.params.id]);
+  if (message !== undefined) run('UPDATE donations SET message = ? WHERE id = ?', [message.trim(), req.params.id]);
+  if (displayDays) {
+    const displayUntil = new Date(Date.now() + parseInt(displayDays) * 24 * 60 * 60 * 1000).toISOString();
+    run('UPDATE donations SET display_until = ? WHERE id = ?', [displayUntil, req.params.id]);
+  }
+  saveDb();
+  res.json(get('SELECT * FROM donations WHERE id = ?', [req.params.id]));
+});
+
+// Admin: 후원자 삭제
+app.delete('/api/admin/donations/:id', adminMiddleware, (req, res) => {
+  run('DELETE FROM donations WHERE id = ?', [req.params.id]);
+  res.json({ ok: true });
 });
 
 // 곡 수정 권한 체크 헬퍼 (editor 이상만 허용)
