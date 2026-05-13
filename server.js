@@ -27,11 +27,16 @@ const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
+const { google } = require('googleapis');
 
 // JWT 설정
 const JWT_SECRET = process.env.JWT_SECRET || 'backstage_jwt_secret_2026_do_not_share';
 const JWT_EXPIRES = '7d';
 const ADMIN_EMAIL = 'chuli8944@gmail.com';
+
+// Google OAuth 2.0 설정
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 
 const app = express();
 const server = http.createServer(app);
@@ -357,6 +362,10 @@ app.post('/api/auth/login', async (req, res) => {
     if (!user) {
       return res.status(401).json({ error: '이메일 또는 비밀번호가 올바르지 않습니다' });
     }
+    // Google 전용 계정 (비밀번호 미설정)
+    if (!user.password_hash) {
+      return res.status(401).json({ error: 'Google 계정으로 가입된 이메일입니다. Google로 로그인하세요.' });
+    }
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
       return res.status(401).json({ error: '이메일 또는 비밀번호가 올바르지 않습니다' });
@@ -516,6 +525,117 @@ app.post('/api/auth/reset-password', async (req, res) => {
     res.status(500).json({ error: '처리 중 오류가 발생했습니다' });
   }
 });
+
+// ── Google OAuth 2.0 Routes ──
+if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
+  function getGoogleOAuth2Client() {
+    return new google.auth.OAuth2(
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET,
+      `${APP_URL}/auth/google/callback`
+    );
+  }
+
+  // Step 1: Google 인증 페이지로 리디렉션
+  app.get('/auth/google', (req, res) => {
+    const oauth2Client = getGoogleOAuth2Client();
+    // 초대코드가 있으면 state에 포함
+    const state = req.query.invite ? Buffer.from(JSON.stringify({ invite: req.query.invite })).toString('base64') : undefined;
+    const authUrl = oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
+      prompt: 'select_account',
+      state
+    });
+    res.redirect(authUrl);
+  });
+
+  // Step 2: Google 콜백 처리
+  app.get('/auth/google/callback', async (req, res) => {
+    try {
+      const { code, state } = req.query;
+      if (!code) return res.redirect('/login?error=' + encodeURIComponent('인증 코드가 없습니다'));
+
+      // state에서 초대코드 복원
+      let inviteCode = null;
+      if (state) {
+        try {
+          const parsed = JSON.parse(Buffer.from(state, 'base64').toString());
+          inviteCode = parsed.invite;
+        } catch(e) {}
+      }
+
+      const oauth2Client = getGoogleOAuth2Client();
+      const { tokens } = await oauth2Client.getToken(code);
+      oauth2Client.setCredentials(tokens);
+
+      // Google 사용자 정보 조회
+      const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
+      const { data: profile } = await oauth2.userinfo.get();
+
+      if (!profile.email || !profile.verified_email) {
+        return res.redirect('/login?error=' + encodeURIComponent('이메일 인증이 되지 않은 Google 계정입니다'));
+      }
+
+      const googleId = profile.id;
+      const email = profile.email.toLowerCase();
+      const nickname = profile.name || email.split('@')[0];
+      const profileImage = profile.picture || null;
+
+      // DB에서 유저 검색: provider_id로 먼저, 없으면 email로
+      let user = get('SELECT * FROM users WHERE provider = ? AND provider_id = ?', ['google', googleId]);
+
+      if (!user) {
+        // 동일 이메일로 기존 local 계정이 있는지 확인
+        user = get('SELECT * FROM users WHERE email = ?', [email]);
+
+        if (user) {
+          // 기존 계정에 Google 연결 (Account Linking)
+          run('UPDATE users SET provider = ?, provider_id = ?, profile_image = COALESCE(profile_image, ?), last_login = datetime(\'now\') WHERE id = ?',
+            ['google', googleId, profileImage, user.id]);
+          // 업데이트된 정보 다시 조회
+          user = get('SELECT * FROM users WHERE id = ?', [user.id]);
+        } else {
+          // 새 유저 생성
+          const id = uuidv4();
+          const role = (email === ADMIN_EMAIL) ? 'admin' : 'user';
+          run('INSERT INTO users (id, email, password_hash, nickname, profile_image, provider, provider_id, role, last_login) VALUES (?,?,?,?,?,?,?,?,datetime(\'now\'))',
+            [id, email, null, nickname, profileImage, 'google', googleId, role]);
+          user = get('SELECT * FROM users WHERE id = ?', [id]);
+        }
+      } else {
+        // 기존 Google 유저: last_login 업데이트
+        run('UPDATE users SET last_login = datetime(\'now\'), profile_image = COALESCE(profile_image, ?) WHERE id = ?',
+          [profileImage, user.id]);
+        user = get('SELECT * FROM users WHERE id = ?', [user.id]);
+      }
+
+      // JWT 발급
+      const token = jwt.sign(
+        { id: user.id, email: user.email, nickname: user.nickname, role: user.role || 'user' },
+        JWT_SECRET, { expiresIn: JWT_EXPIRES }
+      );
+
+      // 클라이언트로 토큰 전달 (URL 파라미터)
+      const userInfo = encodeURIComponent(JSON.stringify({
+        id: user.id, email: user.email, nickname: user.nickname,
+        profile_image: user.profile_image, role: user.role || 'user'
+      }));
+      const redirectUrl = inviteCode
+        ? `/login?token=${token}&user=${userInfo}&invite=${inviteCode}`
+        : `/login?token=${token}&user=${userInfo}`;
+      res.redirect(redirectUrl);
+
+    } catch (e) {
+      console.error('Google OAuth callback error:', e);
+      res.redirect('/login?error=' + encodeURIComponent('Google 로그인 처리 중 오류가 발생했습니다'));
+    }
+  });
+
+  console.log('🔑 Google OAuth 2.0 활성화됨');
+} else {
+  console.log('⚠️ Google OAuth 미설정 (GOOGLE_CLIENT_ID/SECRET 없음)');
+}
 
 // ── Stage API Routes ──
 
