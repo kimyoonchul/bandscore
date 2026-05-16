@@ -1202,6 +1202,28 @@
     .player-container.solo .draw-fab .dp-btn:hover {
       background: rgba(200, 149, 108, 0.1);
     }
+
+    /* inst 버튼 로딩 애니메이션 */
+    @keyframes instLoadSpin {
+      0% { border-color: transparent; border-top-color: var(--primary, #c8956c); }
+      25% { border-color: transparent; border-right-color: var(--primary, #c8956c); }
+      50% { border-color: transparent; border-bottom-color: var(--primary, #c8956c); }
+      75% { border-color: transparent; border-left-color: var(--primary, #c8956c); }
+      100% { border-color: transparent; border-top-color: var(--primary, #c8956c); }
+    }
+    #btnInst.inst-loading {
+      position: relative;
+    }
+    #btnInst.inst-loading::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border: 2px solid transparent;
+      border-top-color: var(--primary, #c8956c);
+      border-radius: 50%;
+      animation: instLoadSpin 1s linear infinite;
+      pointer-events: none;
+    }
   </style>
 </head>
 
@@ -1575,6 +1597,7 @@
     let instMuted = true;         // YouTube 방식 음소거 플래그
     let instSavedVolume = 0.8;    // 음소거 전 기억 볼륨 (기본 80%)
     let instDelayMs = 0;          // inst 음원 딜레이 (ms). 양수=지연, 음수=스킵
+    let instPreloaded = false;    // inst 프리로드 완료 여부
     let pdfUrl = '';
     let metronomeOn = false;      // 메트로놈 활성 여부
     let metroVolume = 0.6;        // 메트로놈 볼륨 (0~1)
@@ -1692,14 +1715,16 @@
         }
       } catch (e) { }
 
-      // inst 음원 로드
+      // inst 음원 로드 (fetch → Blob URL → Cache API)
       instDelayMs = song.inst_delay_ms || 0;
       if (song.inst_filename) {
-        instAudio = new Audio(`/uploads/${song.inst_filename}`);
+        instAudio = new Audio();
         instAudio.preload = 'auto';
         instAudio.loop = false;
         instAudio.volume = 0;
         document.getElementById('instVolWrap').style.display = 'inline-flex';
+        // 비동기 프리로드 시작 (로딩 중 버튼에 애니메이션)
+        preloadInstAudio(`/uploads/${song.inst_filename}`);
       }
 
       // 저장된 오디오 설정 복원 (메트로놈/inst 볼륨·음소거)
@@ -1708,6 +1733,51 @@
         updateInstUI();
       }
       updateMetroUI();
+    }
+
+    /**
+     * inst 음원 프리로드: fetch → Blob → Cache API
+     * 전체 파일을 메모리에 올려 seek 시 버퍼링 지연 제거
+     */
+    async function preloadInstAudio(url) {
+      const btn = document.getElementById('btnInst');
+      btn.classList.add('inst-loading');
+
+      try {
+        let blob;
+        // Cache API로 세션 간 캐싱
+        if ('caches' in window) {
+          const cache = await caches.open('backstage-inst-v1');
+          let cached = await cache.match(url);
+          if (cached) {
+            blob = await cached.blob();
+          } else {
+            const res = await fetch(url);
+            if (res.ok) {
+              cache.put(url, res.clone());
+              blob = await res.blob();
+            }
+          }
+        } else {
+          // Cache API 미지원 시 직접 fetch
+          const res = await fetch(url);
+          if (res.ok) blob = await res.blob();
+        }
+
+        if (blob && instAudio) {
+          const blobUrl = URL.createObjectURL(blob);
+          instAudio.src = blobUrl;
+          instPreloaded = true;
+        } else if (instAudio) {
+          // fallback: 직접 URL
+          instAudio.src = url;
+        }
+      } catch (e) {
+        // 네트워크 오류 시 fallback
+        if (instAudio) instAudio.src = url;
+      } finally {
+        btn.classList.remove('inst-loading');
+      }
     }
 
     function applyStyleToUI() {
