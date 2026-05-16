@@ -921,6 +921,17 @@ select.form-control { cursor: pointer; }
   user-select: none;
 }
 
+/* 모바일: 푸터 한 줄 유지 */
+@media (max-width: 480px) {
+  .service-footer { padding: 0.625rem 0.75rem; padding-bottom: calc(0.625rem + env(safe-area-inset-bottom, 0px)); }
+  .service-footer-inner { gap: 0.4rem; flex-wrap: nowrap; }
+  .sf-logo { display: none; }
+  .sf-logo + .sf-sep { display: none; }
+  .sf-link { font-size: 0.68rem; }
+  .sf-sep { font-size: 0.6rem; }
+  .sf-copy { font-size: 0.62rem; }
+}
+
 /* ================================================================
    STAGE CARDS
    ================================================================ */

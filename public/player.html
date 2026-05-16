@@ -29,6 +29,8 @@
   <meta name="viewport"
     content="width=device-width,initial-scale=1.0,viewport-fit=cover,user-scalable=no,maximum-scale=1">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <!-- 삼성 브라우저 야간모드 색상 반전 방지 -->
+  <meta name="color-scheme" content="only light">
   <title>Backstage Player</title>
   <meta name="description" content="Backstage — 밴드 악보 자동 넘김 · 실시간 합주">
   <meta property="og:type" content="website">
@@ -45,6 +47,11 @@
   <style>
     * {
       box-sizing: border-box
+    }
+
+    /* 삼성 브라우저 야간모드 색상 반전 방지 */
+    :root {
+      color-scheme: only light;
     }
 
     .player-container {
@@ -1542,6 +1549,28 @@
     let previewAnim = null;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let instAudio = null; // inst 음원 Audio 객체
+
+    // ── Wake Lock (재생 중 화면 켜짐 유지) ──
+    let wakeLock = null;
+    async function requestWakeLock() {
+      if (!('wakeLock' in navigator)) return;
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => { wakeLock = null; });
+      } catch (e) { /* 권한 거부 등 무시 */ }
+    }
+    async function releaseWakeLock() {
+      if (wakeLock) {
+        try { await wakeLock.release(); } catch (e) {}
+        wakeLock = null;
+      }
+    }
+    // 페이지 다시 보이면 재생 중이면 Wake Lock 재획득
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && state === 'playing') {
+        requestWakeLock();
+      }
+    });
     let instEnabled = false;
     let instMuted = true;         // YouTube 방식 음소거 플래그
     let instSavedVolume = 0.8;    // 음소거 전 기억 볼륨 (기본 80%)
@@ -2279,7 +2308,7 @@
       buildTimeline();
       curDispPage = playbackOrder[0] || 1; clearHL(); showView();
       doCountIn(() => {
-        state = 'playing'; playStartTime = Date.now(); elapsedBefore = 0;
+        state = 'playing'; playStartTime = Date.now(); elapsedBefore = 0; requestWakeLock();
         updateUI(); startAnim();
         instPlay();
         clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
@@ -2287,7 +2316,7 @@
     }
     function doPause() {
       if (soloMode) {
-        state = 'paused'; clearTimeout(hideTimer);
+        state = 'paused'; clearTimeout(hideTimer); releaseWakeLock();
         elapsedBefore += Date.now() - playStartTime;
         if (animFrame) cancelAnimationFrame(animFrame); updateUI();
         updateSeekbar(elapsedBefore / 1000);
@@ -2297,7 +2326,7 @@
     }
     function doResume() {
       if (soloMode) {
-        state = 'playing'; playStartTime = Date.now();
+        state = 'playing'; playStartTime = Date.now(); requestWakeLock();
         updateUI(); startAnim();
         instResume();
         clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
@@ -2305,7 +2334,7 @@
     }
     function doStop() {
       if (soloMode) {
-        state = 'idle'; clearTimeout(hideTimer);
+        state = 'idle'; clearTimeout(hideTimer); releaseWakeLock();
         if (animFrame) cancelAnimationFrame(animFrame);
         curDispPage = playbackOrder[0] || 1; elapsedBefore = 0;
         clearHL(); showView(); updateUI(); updateSeekbar(0);
@@ -2768,15 +2797,15 @@
         socket.emit('count-in-done');
         // 카운트인 끝나면 직접 play 시작
         soloMode = false;
-        state = 'playing'; playStartTime = Date.now(); elapsedBefore = 0; updateUI(); startAnim(); instPlay(); clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
+        state = 'playing'; playStartTime = Date.now(); elapsedBefore = 0; updateUI(); startAnim(); instPlay(); requestWakeLock(); clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
       });
     });
     socket.on('play', () => {
       if (countingIn) return;
-      state = 'playing'; playStartTime = Date.now(); elapsedBefore = 0; updateUI(); startAnim(); instPlay(); clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
+      state = 'playing'; playStartTime = Date.now(); elapsedBefore = 0; updateUI(); startAnim(); instPlay(); requestWakeLock(); clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500);
     });
     socket.on('stopped', () => {
-      state = 'idle'; clearTimeout(hideTimer);
+      state = 'idle'; clearTimeout(hideTimer); releaseWakeLock();
       if (animFrame) cancelAnimationFrame(animFrame);
       curDispPage = playbackOrder[0] || 1; elapsedBefore = 0;
       clearHL(); showView(); updateUI(); updateSeekbar(0);
@@ -2784,13 +2813,13 @@
       if (!uiVisible) { uiVisible = true; document.getElementById('topBar').classList.remove('hidden'); document.getElementById('ctrlBar').classList.remove('hidden'); showView() }
     });
     socket.on('paused', ({ elapsedMs }) => {
-      state = 'paused'; clearTimeout(hideTimer); elapsedBefore = elapsedMs;
+      state = 'paused'; clearTimeout(hideTimer); releaseWakeLock(); elapsedBefore = elapsedMs;
       if (animFrame) cancelAnimationFrame(animFrame); updateUI();
       updateSeekbar(elapsedMs / 1000);
       instPause();
       if (!uiVisible) { uiVisible = true; document.getElementById('topBar').classList.remove('hidden'); document.getElementById('ctrlBar').classList.remove('hidden'); showView() }
     });
-    socket.on('resumed', ({ elapsedMs }) => { state = 'playing'; elapsedBefore = elapsedMs; playStartTime = Date.now(); updateUI(); startAnim(); instResume(); clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500) });
+    socket.on('resumed', ({ elapsedMs }) => { state = 'playing'; elapsedBefore = elapsedMs; playStartTime = Date.now(); updateUI(); startAnim(); instResume(); requestWakeLock(); clearTimeout(hideTimer); hideTimer = setTimeout(hideUI, 1500) });
     socket.on('seeked', ({ elapsedMs }) => {
       elapsedBefore = elapsedMs;
       playStartTime = Date.now();
@@ -2842,11 +2871,14 @@
       elapsedBefore = targetSec * 1000;
       playStartTime = Date.now();
       if (state === 'idle' || state === 'paused') {
+        // audioCtx가 suspended이면 resume (모바일 필수)
+        if (audioCtx.state === 'suspended') audioCtx.resume();
         state = 'playing';
         updateUI();
         startAnim();
+        requestWakeLock();
         clearTimeout(hideTimer);
-        hideTimer = setTimeout(toggleUI, 3000);
+        hideTimer = setTimeout(hideUI, 3000);
       }
       // inst 음원 동기화
       if (instAudio && instEnabled && state === 'playing') {

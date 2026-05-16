@@ -2098,6 +2098,46 @@
       }
     }
 
+    // ── 모바일 채팅 키보드 대응: 키보드 올라오면 대시보드/헤더 숨겨서 공간 확보 ──
+    (function() {
+      const chatInput = document.getElementById('chatInput');
+      const isMobile = () => window.innerWidth <= 768;
+
+      function compactChatUI() {
+        if (!isMobile() || currentChatTab !== 'chat') return;
+        const dash = document.getElementById('stageDashboard');
+        const infoBar = document.querySelector('#songListView > .stage-info-bar');
+        if (dash) dash.style.display = 'none';
+        if (infoBar) infoBar.style.display = 'none';
+      }
+      function restoreChatUI() {
+        const dash = document.getElementById('stageDashboard');
+        const infoBar = document.querySelector('#songListView > .stage-info-bar');
+        if (dash) dash.style.display = '';
+        if (infoBar) infoBar.style.display = '';
+      }
+      chatInput.addEventListener('focus', () => {
+        compactChatUI();
+        // 약간의 딜레이 후 스크롤 (키보드 애니메이션 대기)
+        setTimeout(() => scrollChatBottom(), 300);
+      });
+      chatInput.addEventListener('blur', () => {
+        setTimeout(restoreChatUI, 150);
+      });
+      // visualViewport로도 보완 (일부 모바일 브라우저)
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+          if (!isMobile() || currentChatTab !== 'chat') return;
+          const ratio = window.visualViewport.height / window.innerHeight;
+          if (ratio < 0.75) {
+            compactChatUI();
+          } else {
+            restoreChatUI();
+          }
+        });
+      }
+    })();
+
     async function loadChatMessages() {
       if (!currentStageId) return;
       try {
