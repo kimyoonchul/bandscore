@@ -2880,8 +2880,8 @@
         clearTimeout(hideTimer);
         hideTimer = setTimeout(hideUI, 3000);
       }
-      // inst 음원 동기화
-      if (instAudio && instEnabled && state === 'playing') {
+      // inst 음원 동기화 (드래그 중에는 건너뛰고, 드래그 끝날 때 한 번만 동기화)
+      if (instAudio && instEnabled && state === 'playing' && !seekDragging) {
         instSyncToElapsed(targetSec * 1000);
       }
       // 다른 세션에 sync (솔로 모드에서는 로컬만)
@@ -2891,11 +2891,12 @@
       updateSeekbar(targetSec);
     }
 
+    let seekDragging = false; // 시크바 드래그 중 플래그
     // 시크바 클릭/드래그 이벤트
     (function () {
       const track = document.getElementById('seekTrack');
       const wrap = document.getElementById('seekBarWrap');
-      let dragging = false;
+      let lastPct = 0;
 
       function getPct(e) {
         const rect = track.getBoundingClientRect();
@@ -2903,25 +2904,38 @@
       }
 
       wrap.addEventListener('mousedown', (e) => {
-        dragging = true;
-        seekTo(getPct(e));
+        seekDragging = true;
+        lastPct = getPct(e);
+        seekTo(lastPct);
       });
       wrap.addEventListener('touchstart', (e) => {
-        dragging = true;
-        seekTo(getPct(e.touches[0]));
+        seekDragging = true;
+        lastPct = getPct(e.touches[0]);
+        seekTo(lastPct);
       }, { passive: true });
 
       document.addEventListener('mousemove', (e) => {
-        if (!dragging) return;
-        seekTo(getPct(e));
+        if (!seekDragging) return;
+        lastPct = getPct(e);
+        seekTo(lastPct);
       });
       document.addEventListener('touchmove', (e) => {
-        if (!dragging) return;
-        seekTo(getPct(e.touches[0]));
+        if (!seekDragging) return;
+        lastPct = getPct(e.touches[0]);
+        seekTo(lastPct);
       }, { passive: true });
 
-      document.addEventListener('mouseup', () => { dragging = false; });
-      document.addEventListener('touchend', () => { dragging = false; });
+      function onDragEnd() {
+        if (!seekDragging) return;
+        seekDragging = false;
+        // 드래그 종료 시점에 inst 음원 한 번만 동기화
+        if (instAudio && instEnabled && state === 'playing') {
+          const td = totalDur();
+          instSyncToElapsed(lastPct * td * 1000);
+        }
+      }
+      document.addEventListener('mouseup', onDragEnd);
+      document.addEventListener('touchend', onDragEnd);
     })();
 
     // buildTimeline 후 총 시간 업데이트
