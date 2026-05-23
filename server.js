@@ -252,6 +252,7 @@ async function initDb() {
   // Migration: 기존 DB에 새 컬럼 추가
   try { db.run('ALTER TABLE songs ADD COLUMN cover_filename TEXT'); saveDb(); } catch(e) {}
   try { db.run('ALTER TABLE songs ADD COLUMN inst_filename TEXT'); saveDb(); } catch(e) {}
+  try { db.run('ALTER TABLE songs ADD COLUMN inst_original_filename TEXT'); saveDb(); } catch(e) {}
   try { db.run('ALTER TABLE songs ADD COLUMN inst_delay_ms INTEGER DEFAULT 0'); saveDb(); } catch(e) {}
   try { db.run('ALTER TABLE parts ADD COLUMN style_settings TEXT'); saveDb(); } catch(e) {}
   // users 테이블 마이그레이션
@@ -1181,8 +1182,19 @@ app.post('/api/songs/:id/inst', authMiddleware, uploadAny.single('inst'), (req, 
     const old = path.join(uploadsDir, song.inst_filename);
     if (fs.existsSync(old)) fs.unlinkSync(old);
   }
-  run('UPDATE songs SET inst_filename=? WHERE id=?', [req.file.filename, req.params.id]);
-  res.json({ inst_filename: req.file.filename });
+  const originalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+  run('UPDATE songs SET inst_filename=?, inst_original_filename=? WHERE id=?', [req.file.filename, originalName, req.params.id]);
+  res.json({ inst_filename: req.file.filename, inst_original_filename: originalName });
+});
+
+// Inst audio download (원래 파일명으로 다운로드)
+app.get('/api/songs/:id/inst/download', (req, res) => {
+  const song = get('SELECT inst_filename, inst_original_filename, name FROM songs WHERE id = ?', [req.params.id]);
+  if (!song || !song.inst_filename) return res.status(404).json({ error: 'inst 음원이 없습니다' });
+  const filePath = path.join(uploadsDir, song.inst_filename);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: '파일을 찾을 수 없습니다' });
+  const downloadName = song.inst_original_filename || (song.name + '_inst' + path.extname(song.inst_filename));
+  res.download(filePath, downloadName);
 });
 
 app.delete('/api/songs/:id', authMiddleware, (req, res) => {

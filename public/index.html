@@ -2590,53 +2590,9 @@
     </div>
   </div>
 
-  <!-- Edit Song Modal -->
+  <!-- Edit Song Modal (내용은 showEditSongModal()에서 동적 생성) -->
   <div class="modal-overlay" id="editSongModal">
-    <div class="modal">
-      <div class="modal-title">⚙️ 곡 설정</div>
-      <div class="form-group">
-        <label>곡 이름</label>
-        <input class="form-control" id="editSongName">
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>BPM</label>
-          <input class="form-control" id="editSongBpm" type="number" min="30" max="300">
-        </div>
-        <div class="form-group">
-          <label>박자</label>
-          <select class="form-control" id="editSongTime">
-            <option value="4/4">4/4</option>
-            <option value="3/4">3/4</option>
-            <option value="6/8">6/8</option>
-            <option value="2/4">2/4</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>카운트인 (마디)</label>
-          <input class="form-control" id="editSongCountIn" type="number" min="1" max="4">
-        </div>
-      </div>
-      <div class="form-group" style="margin-top:16px">
-        <label>커버 이미지</label>
-        <div class="cover-upload">
-          <div class="cover-preview" id="editCoverPreview"><span class="placeholder">🎸</span></div>
-          <div>
-            <input type="file" id="editCoverFile" accept="image/*" style="font-size:0.85rem">
-            <p style="color:var(--text-muted);font-size:0.75rem;margin-top:4px">정사각형 이미지 권장</p>
-          </div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>inst 음원 (mp3/wav)</label>
-        <input type="file" class="form-control" id="editInstFile" accept="audio/*" style="font-size:0.85rem">
-        <p style="color:var(--text-muted);font-size:0.75rem;margin-top:4px" id="instStatus"></p>
-      </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
-        <button class="btn btn-ghost" onclick="closeModal('editSongModal')">취소</button>
-        <button class="btn btn-primary" onclick="updateSong()">저장</button>
-      </div>
-    </div>
+    <div class="modal"></div>
   </div>
 
   <script>
@@ -2648,8 +2604,11 @@
 
     // ── API Helpers ──
     async function api(url, opts = {}) {
+      const token = localStorage.getItem('backstage_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = 'Bearer ' + token;
       const r = await fetch(url, {
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         ...opts,
         body: opts.body ? JSON.stringify(opts.body) : undefined
       });
@@ -2970,8 +2929,8 @@
       <input type="file" class="form-control" id="editInstFile" accept="audio/*" style="font-size:0.85rem">
       ${s.inst_filename ? `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;padding:8px 10px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:0.5rem">
         <span style="color:#22c55e;font-size:0.8rem;font-weight:600">✅ 등록됨</span>
-        <span style="color:var(--text-muted);font-size:0.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="${esc(s.inst_filename)}">${esc(s.inst_filename)}</span>
-        <button class="btn btn-ghost" style="font-size:0.72rem;padding:0.15rem 0.4rem;flex-shrink:0" onclick="event.preventDefault();const a=document.createElement('a');a.href='/uploads/${esc(s.inst_filename)}';a.download='${esc(s.name)}_inst${s.inst_filename.substring(s.inst_filename.lastIndexOf('.'))}';a.click()">📥 다운로드</button>
+        <span style="color:var(--text-muted);font-size:0.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="${esc(s.inst_original_filename || s.inst_filename)}">${esc(s.inst_original_filename || s.inst_filename)}</span>
+        <button class="btn btn-ghost" style="font-size:0.72rem;padding:0.15rem 0.4rem;flex-shrink:0" onclick="event.preventDefault();window.open('/api/songs/${s.id}/inst/download','_blank')">📥 다운로드</button>
       </div>` : '<p style="color:var(--text-muted);font-size:0.75rem;margin-top:4px">등록된 inst 음원이 없습니다</p>'}
     </div>
     <div class="form-group" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
@@ -3011,14 +2970,16 @@
       if (coverFile && coverFile.files.length > 0) {
         const fd = new FormData();
         fd.append('cover', coverFile.files[0]);
-        await fetch(`/api/songs/${currentSong.id}/cover`, { method: 'POST', body: fd });
+        const token = localStorage.getItem('backstage_token');
+        await fetch(`/api/songs/${currentSong.id}/cover`, { method: 'POST', body: fd, headers: token ? { 'Authorization': 'Bearer ' + token } : {} });
       }
       // Upload inst if selected
       const instFile = document.getElementById('editInstFile');
       if (instFile && instFile.files.length > 0) {
         const fd = new FormData();
         fd.append('inst', instFile.files[0]);
-        await fetch(`/api/songs/${currentSong.id}/inst`, { method: 'POST', body: fd });
+        const token = localStorage.getItem('backstage_token');
+        await fetch(`/api/songs/${currentSong.id}/inst`, { method: 'POST', body: fd, headers: token ? { 'Authorization': 'Bearer ' + token } : {} });
       }
       closeModal('editSongModal');
       await openSong(currentSong.id);
