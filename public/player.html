@@ -3191,25 +3191,73 @@
 
     init();
 
-    // ── 볼륨 슬라이더 모바일 롱프레스 (꾹 누르기) 대응 ──
+    // ── 볼륨 슬라이더 모바일 롱프레스 & 다이렉트 스와이프 대응 ──
     function setupLongPressVolume() {
       const wraps = document.querySelectorAll('.metro-wrap, .inst-vol-wrap, .monitor-wrap');
       wraps.forEach(wrap => {
-        let pressTimer = null;
         const btn = wrap.querySelector('.btn');
-        if (!btn) return;
+        const sliderInput = wrap.querySelector('input[type="range"]');
+        if (!btn || !sliderInput) return;
 
-        const startPress = () => {
-          pressTimer = setTimeout(() => { wrap.classList.add('force-show'); }, 400); // 400ms 이상 누르면 팝업 고정
+        let pressTimer = null;
+        let startX = 0;
+        let startVal = 0;
+        let isDragging = false;
+
+        const startPress = (e) => {
+          isDragging = false;
+          startX = e.touches ? e.touches[0].clientX : e.clientX;
+          startVal = parseInt(sliderInput.value) || 0;
+          
+          pressTimer = setTimeout(() => { 
+            wrap.classList.add('force-show'); 
+            isDragging = true;
+          }, 300); // 300ms 꾹 누르면 팝업 & 드래그 준비
         };
-        const cancelPress = () => { if (pressTimer) clearTimeout(pressTimer); };
 
-        btn.addEventListener('touchstart', startPress, {passive: true});
-        btn.addEventListener('touchend', cancelPress, {passive: true});
-        btn.addEventListener('touchmove', cancelPress, {passive: true});
+        const doMove = (e) => {
+          if (!pressTimer && !isDragging) return;
+          const currentX = e.touches ? e.touches[0].clientX : e.clientX;
+          const diffX = currentX - startX;
+
+          // 10px 이상 움직이면 즉시 드래그 모드 전환
+          if (Math.abs(diffX) > 10) {
+            if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+            if (!isDragging) {
+              isDragging = true;
+              wrap.classList.add('force-show');
+            }
+          }
+
+          if (isDragging) {
+            if(e.cancelable) e.preventDefault(); // 화면 스크롤 방지
+            // 감도: 1픽셀당 0.8% 볼륨 이동
+            let newVal = Math.min(100, Math.max(0, startVal + (diffX * 0.8)));
+            sliderInput.value = newVal;
+            sliderInput.dispatchEvent(new Event('input'));
+          }
+        };
+
+        const cancelPress = (e) => {
+          if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+          if (isDragging) {
+            if(e.cancelable) e.preventDefault(); // 일반 클릭 이벤트 방지
+            // 드래그 종료 후 살짝 보여주다 닫기
+            setTimeout(() => { wrap.classList.remove('force-show'); }, 600);
+          }
+          isDragging = false;
+        };
+
+        // 이벤트 리스너 (터치 기반 스와이프)
+        btn.addEventListener('touchstart', startPress, {passive: false});
+        btn.addEventListener('touchmove', doMove, {passive: false});
+        btn.addEventListener('touchend', cancelPress, {passive: false});
+        btn.addEventListener('touchcancel', cancelPress, {passive: false});
+
+        // 마우스 호환
         btn.addEventListener('mousedown', startPress);
-        btn.addEventListener('mouseup', cancelPress);
-        btn.addEventListener('mouseleave', cancelPress);
+        document.addEventListener('mousemove', doMove);
+        document.addEventListener('mouseup', cancelPress);
       });
 
       // 바깥 영역 터치/클릭 시 팝업 닫기
