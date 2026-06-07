@@ -749,6 +749,12 @@
       display: flex;
     }
 
+    .inst-vol-wrap.force-show .inst-vol-slider,
+    .metro-wrap.force-show .inst-vol-slider,
+    .monitor-wrap.force-show .inst-vol-slider {
+      display: flex !important;
+    }
+
 
 
     .inst-vol-slider input[type="range"] {
@@ -1386,12 +1392,14 @@
         <button class="btn btn-ghost" onclick="toggleMetronome()" id="btnMetro" title="메트로놈 (N)"
           style="opacity:0.5">🥁</button>
       </div>
+      <!-- 마이크 실시간 기능 임시 비활성화
       <div class="monitor-wrap" style="position:relative;display:inline-flex;align-items:center">
         <div class="inst-vol-slider" id="monitorVolSlider">
           <input type="range" min="0" max="100" value="80" id="monitorVolSliderInput" oninput="setMonitorVolume(this.value)">
         </div>
         <button class="btn btn-ghost" onclick="toggleMonitor()" id="btnMonitor" title="내 목소리 모니터링 토글 (마이크 필요, 이어폰 권장)" style="opacity:0.5">🎤</button>
       </div>
+      -->
       <div class="inst-vol-wrap" id="instVolWrap" style="display:none">
         <div class="inst-vol-slider">
           <input type="range" min="0" max="100" value="0" id="instVolSliderInput" oninput="setInstVolume(this.value)">
@@ -3182,6 +3190,38 @@
     }
 
     init();
+
+    // ── 볼륨 슬라이더 모바일 롱프레스 (꾹 누르기) 대응 ──
+    function setupLongPressVolume() {
+      const wraps = document.querySelectorAll('.metro-wrap, .inst-vol-wrap, .monitor-wrap');
+      wraps.forEach(wrap => {
+        let pressTimer = null;
+        const btn = wrap.querySelector('.btn');
+        if (!btn) return;
+
+        const startPress = () => {
+          pressTimer = setTimeout(() => { wrap.classList.add('force-show'); }, 400); // 400ms 이상 누르면 팝업 고정
+        };
+        const cancelPress = () => { if (pressTimer) clearTimeout(pressTimer); };
+
+        btn.addEventListener('touchstart', startPress, {passive: true});
+        btn.addEventListener('touchend', cancelPress, {passive: true});
+        btn.addEventListener('touchmove', cancelPress, {passive: true});
+        btn.addEventListener('mousedown', startPress);
+        btn.addEventListener('mouseup', cancelPress);
+        btn.addEventListener('mouseleave', cancelPress);
+      });
+
+      // 바깥 영역 터치/클릭 시 팝업 닫기
+      const closePopup = (e) => {
+        if (!e.target.closest('.metro-wrap') && !e.target.closest('.inst-vol-wrap') && !e.target.closest('.monitor-wrap')) {
+          wraps.forEach(w => w.classList.remove('force-show'));
+        }
+      };
+      document.addEventListener('touchstart', closePopup, {passive: true});
+      document.addEventListener('mousedown', closePopup);
+    }
+    setupLongPressVolume();
   </script>
 </body>
 
