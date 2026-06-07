@@ -743,7 +743,9 @@
     .inst-vol-wrap:hover .inst-vol-slider,
     .inst-vol-slider:hover,
     .metro-wrap:hover .inst-vol-slider,
-    .metro-wrap .inst-vol-slider:hover {
+    .metro-wrap .inst-vol-slider:hover,
+    .monitor-wrap:hover .inst-vol-slider,
+    .monitor-wrap .inst-vol-slider:hover {
       display: flex;
     }
 
@@ -1384,6 +1386,12 @@
         <button class="btn btn-ghost" onclick="toggleMetronome()" id="btnMetro" title="메트로놈 (N)"
           style="opacity:0.5">🥁</button>
       </div>
+      <div class="monitor-wrap" style="position:relative;display:inline-flex;align-items:center">
+        <div class="inst-vol-slider" id="monitorVolSlider">
+          <input type="range" min="0" max="100" value="80" id="monitorVolSliderInput" oninput="setMonitorVolume(this.value)">
+        </div>
+        <button class="btn btn-ghost" onclick="toggleMonitor()" id="btnMonitor" title="내 목소리 모니터링 토글 (마이크 필요, 이어폰 권장)" style="opacity:0.5">🎤</button>
+      </div>
       <div class="inst-vol-wrap" id="instVolWrap" style="display:none">
         <div class="inst-vol-slider">
           <input type="range" min="0" max="100" value="0" id="instVolSliderInput" oninput="setInstVolume(this.value)">
@@ -1568,8 +1576,8 @@
     // ── 스타일 기본값 (파트별 DB 저장) ──
     const STYLE_DEFAULTS = { padL: 7, padR: 3, sysTopPad: 0, sysBotPad: 0, lineColor: '#c8956c', lineWidth: 2, dimOpacity: 35, showBorder: false };
     const styleSettings = { ...STYLE_DEFAULTS };
-    let previewAnim = null;
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // 레이턴시 최소화를 위해 interactive 힌트 제공
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' });
     let instAudio = null; // inst 음원 Audio 객체
 
     // ── Wake Lock (재생 중 화면 켜짐 유지) ──
@@ -2419,6 +2427,55 @@
       // inst 음원 재생 속도 동기화
       if (instAudio) instAudio.playbackRate = bpm / originalBpm;
       if (!soloMode) socket.emit('tempo-change', { bpm });
+    }
+
+    // ── 내 목소리 모니터링 (Web Audio API) ──
+    let monitorStream = null;
+    let monitorSource = null;
+    let monitorGain = null;
+    let monitorEnabled = false;
+
+    async function toggleMonitor() {
+      const btn = document.getElementById('btnMonitor');
+      if (monitorEnabled) {
+        if (monitorStream) {
+          monitorStream.getTracks().forEach(t => t.stop());
+          monitorStream = null;
+        }
+        if (monitorSource) { monitorSource.disconnect(); monitorSource = null; }
+        if (monitorGain) { monitorGain.disconnect(); monitorGain = null; }
+        monitorEnabled = false;
+        btn.style.opacity = '0.5';
+      } else {
+        try {
+          if (audioCtx.state === 'suspended') await audioCtx.resume();
+          monitorStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: { 
+              echoCancellation: false, 
+              noiseSuppression: false, 
+              autoGainControl: false,
+              latency: 0 // 시스템에 가능한 최소 레이턴시 요구
+            } 
+          });
+          monitorSource = audioCtx.createMediaStreamSource(monitorStream);
+          monitorGain = audioCtx.createGain();
+          const volInput = document.getElementById('monitorVolSliderInput');
+          monitorGain.gain.value = volInput ? parseInt(volInput.value) / 100 : 0.8;
+          monitorSource.connect(monitorGain);
+          monitorGain.connect(audioCtx.destination);
+          monitorEnabled = true;
+          btn.style.opacity = '1';
+        } catch (err) {
+          console.error("마이크 접근 오류:", err);
+          alert("마이크 접근 권한이 필요합니다. (하울링 방지를 위해 가급적 이어폰을 착용해주세요)");
+        }
+      }
+    }
+
+    function setMonitorVolume(val) {
+      if (monitorGain) {
+        monitorGain.gain.value = parseInt(val) / 100;
+      }
     }
 
     // ── inst 음원 제어 (YouTube 방식) ──
